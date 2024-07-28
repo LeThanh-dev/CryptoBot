@@ -18,6 +18,8 @@ function ToastCustom({
                 return "success"
             case 500:
                 return "error"
+            case 900:
+                return "info"
             default:
                 return "warning"
         }

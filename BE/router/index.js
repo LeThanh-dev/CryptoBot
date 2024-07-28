@@ -9,6 +9,7 @@ const dataCoinByBitRouter = require('./dataCoinByBit.route');
 const roleRouter = require('./role.route');
 const groupRouter = require('./group.route');
 const positionRouter = require('./position.route');
+const ltRouter = require('./lt.route');
 
 
 router.use('/auth', authRouter);
@@ -19,6 +20,7 @@ router.use('/dataCoinByBit', dataCoinByBitRouter);
 router.use('/role', roleRouter);
 router.use('/group', groupRouter);
 router.use('/position', positionRouter);
+router.use('/lt', ltRouter);
 
 // Sử dụng các route khác tương tự
 

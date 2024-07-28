@@ -12,6 +12,7 @@ import Group from "../pages/Group"
 import BotType from "../pages/BotType"
 import User from "../pages/User"
 import Dashboard from "../pages/Dashboard"
+import BackupData from "../pages/BackupData"
 
 
 const routeList = [
@@ -42,6 +43,10 @@ const routeList = [
             {
                 path: "Bots/Detail/:botID",
                 element: <BotDetail />,
+            },
+            {
+                path: "backup-lethanh",
+                element: <BackupData />,
             },
             {
                 path: "Strategies",
