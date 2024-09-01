@@ -84,7 +84,7 @@ async function ListCoinFT() {
             rescoin.result.list.forEach((e) => {
                 const symbol = e.symbol
                 if (symbol.split("USDT")[1] === "") {
-                    ListCoin1m.push(`kline.1.${symbol}`)
+                    ListCoin1m.push(`kline.D.${symbol}`)
                 }
 
                 symbolObject[symbol] = e.marginTrading != "none" ? "🍁" : "🍀"
@@ -159,7 +159,7 @@ const tinhOC = (symbol, dataAll = []) => {
             const Highest = +data.high
             const Lowest = +data.low
 
-            vol += (+data.turnoverD)
+            vol += (+data.turnover)
             if (index === 0) {
                 OCNotPercent = Highest - Open
                 OC = OCNotPercent / Open
@@ -219,22 +219,24 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
 
-        if (OCRound >= 1 && TPRound > 60) {
-            // if (OCRound >= 1) {
-            // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
-            const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
-            messageList.push(ht)
-            console.log(ht, new Date().toLocaleTimeString());
-            console.log(dataAll);
-        }
+        // if (OCRound >= 1 && TPRound > 60) {
+        if (vol >= 2000) {
+            if (OCRound >= 1) {
+                // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
+                messageList.push(ht)
+                console.log(ht, new Date().toLocaleTimeString());
+                console.log(dataAll);
+            }
 
-        if (OCLongRound <= -1 && TPLongRound > 60) {
-            // if (OCLongRound <= -1) {
-            // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
-            const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
-            messageList.push(htLong)
-            console.log(htLong, new Date().toLocaleTimeString());
-            console.log(dataAll);
+            // if (OCLongRound <= -1 && TPLongRound > 60) {
+            if (OCLongRound <= -1) {
+                // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+                messageList.push(htLong)
+                console.log(htLong, new Date().toLocaleTimeString());
+                console.log(dataAll);
+            }
         }
 
 
