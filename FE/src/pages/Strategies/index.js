@@ -1,3 +1,4 @@
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import RestoreIcon from '@mui/icons-material/Restore';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
@@ -5,7 +6,7 @@ import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrow
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { MenuItem, Select, TextField, Avatar, Checkbox, CircularProgress, FormLabel, FormControl, Tooltip } from '@mui/material';
+import { MenuItem, Select, TextField, Avatar, Checkbox, CircularProgress, FormLabel, FormControl, Tooltip, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import AddBreadcrumbs from '../../components/BreadcrumbsCutom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -23,12 +24,13 @@ import { getAllBotActiveByUserID } from '../../services/botService';
 import { setTotalFuture } from '../../store/slices/TotalFuture';
 import useDebounce from '../../hooks/useDebounce';
 import { useNavigate } from 'react-router-dom';
-import { setStrategiesTempData } from '../../store/slices/StrategiesTemp';
+import DialogCustom from '../../components/DialogCustom';
 
 function Strategies() {
 
     const userData = useSelector(state => state.userDataSlice.userData)
 
+    const StrategiesHistoryData = useSelector(state => state.StrategiesHistorySlice.dataList)
 
     const SCROLL_INDEX = 5
     const SCROLL_INDEX_FIRST = window.innerHeight / 30
@@ -108,6 +110,7 @@ function Strategies() {
         value: "All"
     },]);
     const [loadingDataCheckTree, setLoadingDataCheckTree] = useState(false);
+    const [openListStrategiesHistory, setOpenListStrategiesHistory] = useState(false);
 
     const dataCheckTreeSelectedRef = useRef([])
     const dataCheckTreeSelectedSymbolRef = useRef({})
@@ -610,11 +613,10 @@ function Strategies() {
             </div>
 
             <div className={styles.strategiesBtnAction}>
-                <Tooltip title="Restore Config" placement="left">
+                {StrategiesHistoryData?.length > 0 && <Tooltip title="Restore Config" placement="left">
                     <div className={styles.strategiesBtnActionItem}
                         onClick={() => {
-                            navigate("/StrategiesTemp")
-                            dispatch(setStrategiesTempData(dataCheckTreeDefaultRef.current))
+                            setOpenListStrategiesHistory(true)
                         }}
                     >
 
@@ -622,7 +624,7 @@ function Strategies() {
                             <RestoreIcon />
                         </Avatar>
                     </div>
-                </Tooltip>
+                </Tooltip>}
                 <Tooltip title="Sync Symbol" placement="left">
                     <div className={styles.strategiesBtnActionItem}
                         onClick={handleSyncSymbol}
@@ -698,6 +700,7 @@ function Strategies() {
                         setOpenCreateStrategy(data)
                     }}
                     symbolValueInput={openCreateStrategy.symbolValueInput}
+                    dataCheckTreeDefaultRef={dataCheckTreeDefaultRef}
                 />
 
             }
@@ -712,9 +715,61 @@ function Strategies() {
                     onClose={(data) => {
                         setOpenEditTreeItemMultipleDialog(data)
                     }}
+                    dataCheckTreeDefaultRef={dataCheckTreeDefaultRef}
                 />
 
             }
+
+            {openListStrategiesHistory && (
+                <DialogCustom
+                    open={true}
+                    onClose={() => {
+                        setOpenListStrategiesHistory(false)
+                    }}
+                    dialogTitle='History'
+                    hideActionBtn
+                    backdrop
+                >
+
+                    <Table className={styles.addMember}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell style={{ fontWeight: "bold" }}>STT </TableCell>
+                                <TableCell style={{ fontWeight: "bold" }}>Time Created </TableCell>
+                                <TableCell style={{ fontWeight: "bold" }}>Preview </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {
+                                StrategiesHistoryData.map((data, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            {index + 1}
+                                        </TableCell>
+                                        <TableCell>
+                                            {data.timeCreated}
+                                        </TableCell>
+                                        <TableCell>
+                                            <RemoveRedEyeIcon
+                                                className={styles.icon}
+                                                onClick={() => {
+                                                    navigate("/StrategiesHistory", {
+                                                        state: {
+                                                            data: data.data,
+                                                            timeCreated: data.timeCreated
+                                                        }
+                                                    })
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            }
+                        </TableBody>
+                    </Table>
+
+                </DialogCustom>
+            )}
 
         </div >
     );

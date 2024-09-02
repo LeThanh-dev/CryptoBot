@@ -7,15 +7,15 @@ import clsx from "clsx";
 import { createStrategies, getAllSymbol } from "../../../../services/dataCoinByBitService";
 import { useDispatch } from "react-redux";
 import { addMessageToast } from "../../../../store/slices/Toast";
+import { setStrategiesHistoryData } from "../../../../store/slices/StrategiesHistory";
 
 function CreateStrategy({
     botListInput,
     onClose,
     symbolValueInput,
+    dataCheckTreeDefaultRef
 }) {
 
-    console.log(symbolValueInput);
-    
     const formControlMinValue= .1
     const groupList = [
         {
@@ -122,6 +122,8 @@ function CreateStrategy({
         
         if (symbolGroupData.length > 0 && botList.length > 0) {
             try {
+                
+                dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
                 const res = await createStrategies({
                     data: data,
                     botListId: botList.map(item => item.value),

@@ -630,7 +630,7 @@ function CreateStrategy({
                             <TableBody>
                                 {
                                     showSpotBorrowList.map((data, index) => (
-                                        <TableRow key={data}>
+                                        <TableRow key={index}>
                                             <TableCell>
                                                 {index + 1}
                                             </TableCell>

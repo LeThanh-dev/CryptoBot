@@ -9,11 +9,13 @@ import { copyMultipleStrategiesToBot, copyMultipleStrategiesToSymbol, deleteStra
 import { verifyTokenVIP } from '../../../../services/authService';
 import { getUserByID } from '../../../../services/userService';
 import { getAllBotActive } from '../../../../services/botService';
+import { setStrategiesHistoryData } from '../../../../store/slices/StrategiesHistory';
 
 function EditMulTreeItem({
     onClose,
     botListInput,
     dataCheckTreeSelected,
+    dataCheckTreeDefaultRef
 }) {
 
     const userData = useSelector(state => state.userDataSlice.userData)
@@ -316,6 +318,8 @@ function EditMulTreeItem({
             if (checkValueMin) {
                 setLoadingSubmit(true)
 
+                dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
+
                 const res = await updateStrategiesMultiple(newData)
 
                 const { status, message } = res.data
@@ -357,6 +361,8 @@ function EditMulTreeItem({
                 parentID: dataCheckTreeItem.parentID,
             }))
 
+            dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
+
             const res = await deleteStrategiesMultiple(newData)
 
             const { status, message } = res.data
@@ -389,6 +395,8 @@ function EditMulTreeItem({
         if (symbolListSelected.length > 0 || botLisSelected.length > 0) {
             let dataChange = false
             setLoadingSubmit(true)
+            dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
+
             try {
                 let res
                 if (copyType === "Symbol") {

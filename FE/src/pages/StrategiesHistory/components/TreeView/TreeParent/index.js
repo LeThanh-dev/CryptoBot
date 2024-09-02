@@ -1,12 +1,6 @@
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
-import AddIcon from '@mui/icons-material/Add';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Checkbox, Table, TableHead, TableRow, TableCell, TableBody, Popover } from "@mui/material";
+import { Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
 import clsx from "clsx";
 import styles from "./TreeParent.module.scss"
 import TreeChild from '../TreeChild';
@@ -300,32 +294,8 @@ function TreeParent({
                         className={clsx(styles.icon, styles.iconArrow, styles.iconArrowUp)}
                     />
                 </div>
-                <MoreVertIcon
-                    className={clsx(styles.icon)}
-                    onClick={e => {
-                        setOpenSettingTreeNode({
-                            element: e.currentTarget,
-
-                        })
-                    }}
-                />
-                <Checkbox
-                    defaultChecked={treeData.bookmarkList?.includes(userData._id)}
-                    style={{
-                        padding: " 0 3px",
-                    }}
-                    sx={{
-                        color: "#b5b5b5",
-                        '&.Mui-checked': {
-                            color: "var(--yellowColor)",
-                        },
-                    }}
-                    onClick={e => {
-                        e.target.checked ? handleAddToBookmark() : handleRemoveToBookmark()
-                    }}
-                    icon={<StarBorderIcon />}
-                    checkedIcon={<StarIcon />}
-                />
+                
+                
                 <p className={styles.label}>
                     {treeData.label.split("USDT")[0]}
                     <span style={{
@@ -399,60 +369,7 @@ function TreeParent({
                     <p>Are you remove this symbol?</p>
                 </DialogCustom>
             } */}
-            <Popover
-                open={openSettingTreeNode.element}
-                anchorEl={openSettingTreeNode.element}
-                onClose={() => {
-                    setOpenSettingTreeNode("")
-                }}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-
-            >
-                <div className={styles.settingNode}>
-                    <div
-                        className={styles.settingNodeItem}
-                        onClick={() => {
-                            setOpenCreateStrategy(openCreateStrategy => ({
-                                ...openCreateStrategy,
-                                isOpen: true,
-                                symbolValueInput: [{
-                                    name: treeData.label,
-                                    value: treeData.value,
-                                }],
-                            }))
-                        }}
-                    >
-                        <AddIcon className={styles.settingNodeItemIcon} />
-                        <span className={styles.settingNodeItemText}>Add</span>
-                    </div>
-                    {/* <div className={styles.settingNodeItem}
-                        onClick={() => {
-                            setOpenDeleteTreeSymbolGroup(true)
-                        }}>
-                        <DeleteOutlineIcon
-                            className={styles.settingNodeItemIcon}
-                        />
-                        <span className={styles.settingNodeItemText}>Delete</span>
-                    </div> */}
-                    <div
-                        className={styles.settingNodeItem}
-                        onClick={handleUnActiveAllTreeItem}
-                    >
-                        <PowerSettingsNewIcon className={styles.settingNodeItemIcon} />
-                        <span className={styles.settingNodeItemText}>Off</span>
-                    </div>
-                    <div
-                        className={styles.settingNodeItem}
-                        onClick={handleActiveAllTreeItem}
-                    >
-                        <PlayCircleOutlineIcon className={styles.settingNodeItemIcon} />
-                        <span className={styles.settingNodeItemText}>On</span>
-                    </div>
-                </div>
-            </Popover>
+          
         </div>
     );
 }

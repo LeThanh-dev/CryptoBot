@@ -1,4 +1,3 @@
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import styles from "./TreeChild.module.scss"
 import { deleteStrategiesItem, updateStrategiesByID } from '../../../../../services/dataCoinByBitService';
@@ -202,13 +201,9 @@ function TreeChild({
                 <TableCell
                     className={styles.tableBodyCell}
                 >
-                    <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        color: "#3277d5",
-                        marginLeft: "-10px "
-                    }}>
+                    <div >
                         <Switch
+                            disabled
                             size='small'
                             checked={treeNode.IsActive}
                             onChange={(e) => {
@@ -234,30 +229,11 @@ function TreeChild({
                                             }
                                         })
                                     }}
-                                    
+
                                 />
                             )
                         }
-                        <EditIcon
-                            className={styles.icon}
-                            onClick={e => {
-                                e.preventDefault()
-                                setOpenUpdateStrategy({
-                                    ...openUpdateStrategy,
-                                    isOpen: true,
-                                    data: {
-                                        treeNode: {
-                                            ...treeNode,
-                                            parentID: treeData._id,
-                                        },
-                                        symbolValue: treeData.value
-                                    }
-                                })
-                            }} 
-                            style={{
-                                marginLeft: "3px"
-                            }}
-                            />
+                        
                     </div>
                 </TableCell>
                 <TableCell

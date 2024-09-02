@@ -1,17 +1,13 @@
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
+import RestoreIcon from '@mui/icons-material/Restore';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
-import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { MenuItem, Select, TextField, Avatar, Checkbox, CircularProgress, FormLabel, FormControl, Tooltip } from '@mui/material';
+import { MenuItem, Select, TextField, Avatar, FormLabel, FormControl, Tooltip, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import AddBreadcrumbs from '../../components/BreadcrumbsCutom';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from "./Strategies.module.scss"
-import { getAllStrategies, getTotalFutureByBot, syncSymbol } from '../../services/dataCoinByBitService';
-import { useDispatch, useSelector } from 'react-redux';
-import { addMessageToast } from '../../store/slices/Toast';
+import { useSelector } from 'react-redux';
 import CreateStrategy from './components/CreateStrategy';
 import EditMulTreeItem from './components/EditMulTreeItem';
 import FilterDialog from './components/FilterDialog';
@@ -19,15 +15,19 @@ import TreeParent from './components/TreeView/TreeParent';
 import { handleCheckAllCheckBox } from '../../functions';
 import clsx from 'clsx';
 import { getAllBotActiveByUserID } from '../../services/botService';
-import { setTotalFuture } from '../../store/slices/TotalFuture';
 import useDebounce from '../../hooks/useDebounce';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import DialogCustom from '../../components/DialogCustom';
 
-function StrategiesTemp() {
+function StrategiesHistory() {
 
     const userData = useSelector(state => state.userDataSlice.userData)
 
-    const strategiesTempData = useSelector(state => state.strategiesTempSlice.dataList)
+    const StrategiesHistoryDataMain = useSelector(state => state.StrategiesHistorySlice.dataList)
+
+    const [openListStrategiesHistory, setOpenListStrategiesHistory] = useState(false);
+
+    const location = useLocation()
 
 
     const SCROLL_INDEX = 5
@@ -113,7 +113,6 @@ function StrategiesTemp() {
     const dataCheckTreeSelectedSymbolRef = useRef({})
     const dataCheckTreeDefaultRef = useRef([])
     const [dataCheckTree, setDataCheckTree] = useState([]);
-    const [loadingUploadSymbol, setLoadingUploadSymbol] = useState(false);
     const [dataTreeViewIndex, setDataTreeViewIndex] = useState(SCROLL_INDEX_FIRST);
 
     const [searchKey, setSearchKey] = useState("");
@@ -126,8 +125,6 @@ function StrategiesTemp() {
     const candlestickSelectedRef = useRef("All")
     const selectAllRef = useRef(false)
     const bookmarkCheckRef = useRef(false)
-
-    const dispatch = useDispatch()
 
 
     const countTotalActive = useMemo(() => {
@@ -169,44 +166,6 @@ function StrategiesTemp() {
             }
             )
     }
- 
-
-
-
-    const handleGetAllStrategies = async (botListInput = botList.slice(1), filterStatus = false) => {
-
-        setLoadingDataCheckTree(true)
-        filterQuantityRef.current = []
-        !filterStatus && resetAfterSuccess()
-
-        dataCheckTreeSelectedRef.current = []
-        openCreateStrategy.dataChange = false
-        openEditTreeItemMultipleDialog.dataChange = false
-        setDataTreeViewIndex(SCROLL_INDEX_FIRST)
-        handleCheckAllCheckBox(false)
-
-        try {
-            window.scrollTo(0, 0)
-
-            const newDataCheckTree = strategiesTempData
-
-            dataCheckTreeDefaultRef.current = newDataCheckTree
-
-            console.log(newDataCheckTree);
-            
-
-            !filterStatus ? setDataCheckTree(newDataCheckTree) : handleFilterAll()
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Get All Strategies Error",
-            }))
-        }
-        setLoadingDataCheckTree(false)
-    }
-
-
 
 
     const handleFilterAll = () => {
@@ -284,10 +243,20 @@ function StrategiesTemp() {
     useEffect(() => {
         if (userData.userName) {
             handleGetAllBotByUserID()
-            handleGetAllStrategies()
         }
 
     }, [userData.userName]);
+
+    useEffect(() => {
+
+        if (location.state) {
+            const { data: newData } = location.state;
+            const newDataCheckTree = newData
+            dataCheckTreeDefaultRef.current = newDataCheckTree
+            setDataCheckTree(newDataCheckTree)
+        }
+    }, [location.state]);
+
 
     useEffect(() => {
         if (dataCheckTree.length > 0) {
@@ -318,14 +287,14 @@ function StrategiesTemp() {
 
     useEffect(() => {
         if (openCreateStrategy.dataChange || openEditTreeItemMultipleDialog.dataChange) {
-            handleGetAllStrategies(undefined, true)
+            navigate("/Strategies")
         }
     }, [openCreateStrategy.dataChange, openEditTreeItemMultipleDialog.dataChange]);
 
 
     return (
         <div className={styles.strategies}>
-            <AddBreadcrumbs list={["Strategies"]} />
+            <AddBreadcrumbs list={[`StrategiesHistory`]} />
 
             <div
                 style={{
@@ -493,29 +462,7 @@ function StrategiesTemp() {
                         marginLeft: "6px"
                     }}>( {countTotalActive.countActive} / {countTotalActive.totalItem} )</span>
 
-                    <span style={{ margin: "0px 2px 3px 12px", opacity: ".6", fontSize: ".9rem" }}>|</span>
-                    <div className={styles.bookmarkAll}   >
-                        <Checkbox
-                            checked={bookmarkCheckRef.current}
-                            style={{
-                                padding: " 0 6px",
-                            }}
-                            sx={{
-                                color: "#b5b5b5",
-                                '&.Mui-checked': {
-                                    color: "var(--yellowColor)",
-                                },
-                            }}
-                            onClick={e => {
-                                const value = e.target.checked;
-                                bookmarkCheckRef.current = value
-                                handleFilterAll()
-                            }}
-                            icon={<StarBorderIcon />}
-                            checkedIcon={<StarIcon />}
-                        />
-                        <span>Bookmark</span>
-                    </div>
+                    
                 </p>}
                 {
                     (dataCheckTree.length > 0 && !loadingDataCheckTree)
@@ -546,7 +493,18 @@ function StrategiesTemp() {
             </div>
 
             <div className={styles.strategiesBtnAction}>
-                
+                {StrategiesHistoryDataMain?.length > 0 && <Tooltip title="Restore Config" placement="left">
+                    <div className={styles.strategiesBtnActionItem}
+                        onClick={() => {
+                            setOpenListStrategiesHistory(true)
+                        }}
+                    >
+
+                        <Avatar variant='circular' sx={{ bgcolor: "#0a58ca" }} >
+                            <RestoreIcon />
+                        </Avatar>
+                    </div>
+                </Tooltip>}
                 <Tooltip title="Edit" placement="left">
 
                     <div className={styles.strategiesBtnActionItem}
@@ -562,7 +520,7 @@ function StrategiesTemp() {
                         </Avatar>
                     </div>
                 </Tooltip>
-              
+
 
                 {dataTreeViewIndex <= dataCheckTree.length && <KeyboardDoubleArrowDownIcon className={styles.scrollDownIcon} />}
             </div>
@@ -606,11 +564,62 @@ function StrategiesTemp() {
                         setOpenEditTreeItemMultipleDialog(data)
                     }}
                 />
-
             }
+
+            {openListStrategiesHistory && (
+                <DialogCustom
+                    open={true}
+                    onClose={() => {
+                        setOpenListStrategiesHistory(false)
+                    }}
+                    dialogTitle='History'
+                    hideActionBtn
+                    backdrop
+                >
+
+                    <Table className={styles.addMember}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell style={{ fontWeight: "bold" }}>STT </TableCell>
+                                <TableCell style={{ fontWeight: "bold" }}>Time Created </TableCell>
+                                <TableCell style={{ fontWeight: "bold" }}>Preview </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {
+                                StrategiesHistoryDataMain.map((data, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            {index + 1}
+                                        </TableCell>
+                                        <TableCell>
+                                            {data.timeCreated}
+                                        </TableCell>
+                                        <TableCell>
+                                            <RemoveRedEyeIcon
+                                                className={styles.icon}
+                                                onClick={() => {
+                                                    setOpenListStrategiesHistory(false)
+                                                    navigate("/StrategiesHistory", {
+                                                        state: {
+                                                            data: data.data,
+                                                            timeCreated: data.timeCreated
+                                                        }
+                                                    })
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            }
+                        </TableBody>
+                    </Table>
+
+                </DialogCustom>
+            )}
 
         </div >
     );
 }
 
-export default StrategiesTemp;
+export default StrategiesHistory;

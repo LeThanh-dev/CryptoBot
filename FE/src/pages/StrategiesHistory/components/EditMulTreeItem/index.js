@@ -5,7 +5,7 @@ import DialogCustom from "../../../../components/DialogCustom";
 import { Autocomplete, Button, Checkbox, FormControl, FormControlLabel, MenuItem, Radio, RadioGroup, Select, Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../../../store/slices/Toast';
-import { copyMultipleStrategiesToBot, copyMultipleStrategiesToSymbol, deleteStrategiesMultiple, getAllSymbol, updateStrategiesMultiple } from '../../../../services/dataCoinByBitService';
+import { copyMultipleStrategiesToBot, copyMultipleStrategiesToSymbol, getAllSymbol, updateStrategiesMultiple } from '../../../../services/dataCoinByBitService';
 import { verifyTokenVIP } from '../../../../services/authService';
 import { getUserByID } from '../../../../services/userService';
 import { getAllBotActive } from '../../../../services/botService';
@@ -345,45 +345,6 @@ function EditMulTreeItem({
         closeDialog(dataChange)
     }
 
-    const handleDelete = async () => {
-
-        setLoadingSubmit(true)
-
-        let dataChange = false
-
-        try {
-            const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => ({
-                id: dataCheckTreeItem._id,
-                parentID: dataCheckTreeItem.parentID,
-            }))
-
-            const res = await deleteStrategiesMultiple(newData)
-
-            const { status, message } = res.data
-
-            dispatch(addMessageToast({
-                status: status,
-                message: message,
-            }))
-            dataChange = true
-
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Delete All Error",
-            }))
-        }
-        closeDialog(dataChange)
-    }
-
-    const handleExport = () => {
-        dispatch(addMessageToast({
-            status: 1,
-            message: "Export"
-        }))
-    }
-
     const handleCopy = async () => {
 
         if (symbolListSelected.length > 0 || botLisSelected.length > 0) {
@@ -424,102 +385,17 @@ function EditMulTreeItem({
         }
     }
 
-    const handleOnALL = async () => {
-        setLoadingSubmit(true)
-        let dataChange = false
-
-        try {
-            const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => (
-                {
-                    id: dataCheckTreeItem._id,
-                    parentID: dataCheckTreeItem.parentID,
-                    UpdatedFields: {
-                        ...dataCheckTreeItem,
-                        IsActive: true
-                    }
-
-                }
-            ))
-
-            const res = await updateStrategiesMultiple(newData)
-
-            const { status, message } = res.data
-
-            dispatch(addMessageToast({
-                status: status,
-                message: message,
-            }))
-            dataChange = true
-
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Update All Error",
-            }))
-        }
-        closeDialog(dataChange)
-    }
-
-    const handleOffALL = async () => {
-        setLoadingSubmit(true)
-        let dataChange = false
-
-        try {
-            const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => (
-                {
-                    id: dataCheckTreeItem._id,
-                    parentID: dataCheckTreeItem.parentID,
-                    UpdatedFields: {
-                        ...dataCheckTreeItem,
-                        IsActive: false
-                    }
-
-                }
-            ))
-
-            const res = await updateStrategiesMultiple(newData)
-
-            const { status, message } = res.data
-
-            dispatch(addMessageToast({
-                status: status,
-                message: message,
-            }))
-            if (status === 200) {
-                dataChange = true
-            }
-
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Update All Error",
-            }))
-        }
-        closeDialog(dataChange)
-    }
 
     const handleEdit = () => {
         switch (radioValue) {
             case "Update":
                 handleUpdate()
                 break
-            case "Delete":
-                handleDelete()
-                break
-            case "Export":
-                handleExport()
-                break
+          
             case "Copy":
                 handleCopy()
                 break
-            case "ON":
-                handleOnALL()
-                break
-            case "OFF":
-                handleOffALL()
-                break
+           
 
         }
     }
@@ -915,13 +791,9 @@ function EditMulTreeItem({
                 >
                     <div  >
                         <FormControlLabel value="Update" control={<Radio />} label="Update" />
-                        <FormControlLabel value="Delete" control={<Radio />} label="Delete" />
                         <FormControlLabel value="Copy" control={<Radio />} label="Copy" />
                     </div>
-                    <div >
-                        <FormControlLabel value="ON" control={<Radio />} label="ON" />
-                        <FormControlLabel value="OFF" control={<Radio />} label="OFF" />
-                    </div>
+                    
                     {/* <FormControlLabel value="Export" control={<Radio />} label="Export" /> */}
                 </RadioGroup>
             </div>

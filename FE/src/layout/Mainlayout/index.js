@@ -19,6 +19,15 @@ import { setUserDataLocal } from "../../store/slices/UserData";
 
 function MainLayout({ children }) {
 
+    const ROLE_LIST_DEFAULT = [
+        "Bots",
+        "Strategies",
+        "Coin",
+        "Order",
+        "StrategiesHistory",
+        "PositionV3"
+    ]
+
     const linkList = [
         {
             linK: "/Bots",
@@ -132,11 +141,10 @@ function MainLayout({ children }) {
                 const res = await getByRoleName(resUserData?.roleName || "")
                 const { data: resData } = res.data
 
-                const newRoleList = resData.roleList.concat([
-                    "StrategiesTemp"
-                ])
+                const newRoleList = resData.roleList.concat(ROLE_LIST_DEFAULT)
 
                 const routeCurrent = location.pathname.replace("/", "")
+                
                 if (!newRoleList.includes(routeCurrent) && routeCurrent) {
                     navigate("/")
                 }
@@ -160,7 +168,7 @@ function MainLayout({ children }) {
     useEffect(() => {
         window.innerWidth <= 740 && setMarginLeft("")
         window.scrollTo(0, 0)
-       
+
     }, [location]);
 
 

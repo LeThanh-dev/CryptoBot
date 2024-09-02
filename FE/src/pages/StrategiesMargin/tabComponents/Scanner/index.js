@@ -843,7 +843,7 @@ function Scanner() {
                         <TableBody>
                             {
                                 showOnlyPairsList.map((data, index) => (
-                                    <TableRow key={data}>
+                                    <TableRow key={index}>
                                         <TableCell>
                                             {index + 1}
                                         </TableCell>
@@ -880,7 +880,7 @@ function Scanner() {
                             <TableBody>
                                 {
                                     showBlackList.map((data, index) => (
-                                        <TableRow key={data}>
+                                    <TableRow key={index}>
                                             <TableCell>
                                                 {index + 1}
                                             </TableCell>

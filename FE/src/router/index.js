@@ -18,7 +18,7 @@ import Scanner from "../pages/StrategiesMargin/tabComponents/Scanner"
 import PositionAll from "../pages/Position"
 import PositionV3 from "../pages/Position/Position-V3"
 import PositionV1 from "../pages/Position/Position-V1"
-import StrategiesTemp from "../pages/StrategiesTemp"
+import StrategiesHistory from "../pages/StrategiesHistory"
 
 
 const routeList = [
@@ -55,8 +55,8 @@ const routeList = [
                 element: <Strategies />,
             },
             {
-                path: "StrategiesTemp",
-                element: <StrategiesTemp />,
+                path: "StrategiesHistory",
+                element: <StrategiesHistory />,
             },
 
             {

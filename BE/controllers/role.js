@@ -16,16 +16,8 @@ const RoleController = {
     initCreate: async () => {
         try {
 
-            const listRoleDefault = [
-                "Bots",
-                "Strategies",
-                "Coin",
-                "Positions",
-                "Order",
-            ]
-
             const TraderRole = {
-                list: listRoleDefault
+                list: []
             }
             const ManagerTraderRole = {
                 list: [
