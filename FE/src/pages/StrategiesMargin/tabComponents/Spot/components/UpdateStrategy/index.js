@@ -15,7 +15,7 @@ function UpdateStrategy({
     symbolValue,
     handleUpdateDataAfterSuccess
 }) {
-    const formControlMinValue= .1
+    const formControlMinValue = .1
 
     const {
         register,
@@ -44,7 +44,7 @@ function UpdateStrategy({
                     data: {
                         parentID,
                         newData,
-                        symbol:symbolValue
+                        symbol: symbolValue
                     }
                 })
                 const { status, message } = res.data
@@ -87,7 +87,7 @@ function UpdateStrategy({
             maxWidth="sm"
         >
 
-<form className={styles.dialogForm} onChange={e => {
+            <form className={styles.dialogForm} onChange={e => {
                 formDataChangeRef.current = true
             }}>
 

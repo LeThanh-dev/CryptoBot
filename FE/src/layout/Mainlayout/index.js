@@ -22,6 +22,9 @@ function MainLayout({ children }) {
     const ROLE_LIST_DEFAULT = [
         "Bots",
         "Strategies",
+        "Spot",
+        "Margin",
+        "Scanner",
         "Coin",
         "Order",
         "StrategiesHistory",

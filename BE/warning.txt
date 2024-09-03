@@ -40,3 +40,9 @@ Remote Mongo
 
 Find in ubuntu:
     grep -i "eth" filename
+
+
+git add .
+git commit -m 'update'
+git push
+

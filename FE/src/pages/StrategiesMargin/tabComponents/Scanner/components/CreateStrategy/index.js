@@ -341,7 +341,6 @@ function CreateStrategy({
                                             value: "Long",
                                         }
                                     ]
-                                    setValue("PositionSide", "Long")
                                 }
                                 else {
                                     handleGetMarginDataList(!marginDataListRef.current.length)
@@ -364,7 +363,7 @@ function CreateStrategy({
                             select
                             label="Position side"
                             variant="outlined"
-                            defaultValue={positionSideListRef.current[0].value}
+                            // defaultValue={positionSideListRef.current[0].value}
                             size="medium"
                             {...register("PositionSide", { required: true, })}
                         >
@@ -374,6 +373,7 @@ function CreateStrategy({
                                 ))
                             }
                         </TextField>
+                        {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position field is required.</p>}
                     </FormControl>
                 </div>
                 <FormControl className={styles.formControl}>
@@ -619,10 +619,10 @@ function CreateStrategy({
                             //         %
                             //     </InputAdornment>
                             // }}
-                            {...register("Numbs", { required: true, min: formControlMinValue })}
+                            {...register("Numbs", { required: true, min: 1 })}
                         />
                         {errors.Numbs?.type === 'required' && <p className="formControlErrorLabel">The Numbs field is required.</p>}
-                        {errors.Numbs?.type === "min" && <p className="formControlErrorLabel">The Numbs must bigger 0.1.</p>}
+                        {errors.Numbs?.type === "min" && <p className="formControlErrorLabel">The Numbs must bigger 1.</p>}
 
                     </FormControl>
 

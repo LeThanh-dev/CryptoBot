@@ -810,55 +810,12 @@ const dataCoinByBitController = {
         }
     },
 
-    getAllStrategiesActive: async () => {
+    getAllStrategiesActiveScannerBE: async () => {
         try {
             require("../models/bot.model")
 
-            const resultFilter = await ScannerModel.aggregate([
-                {
-                    $match: { "children.IsActive": true }
-                },
-                {
-                    $project: {
-                        label: 1,
-                        value: 1,
-                        volume24h: 1,
-                        children: {
-                            $filter: {
-                                input: "$children",
-                                as: "child",
-                                cond: { $eq: ["$$child.IsActive", true] }
-                            }
-                        }
-                    }
-                }
-            ]);
-            const result = await ScannerModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
-
-
-            const handleResult = result.flatMap((data) => data.children.map(child => {
-                child.symbol = data.value
-                child.value = `${data._id}-${child._id}`
-                return child
-            })) || []
-
-            return handleResult
-
-            // const handleResult = result.reduce((result, child) => {
-            //     if (child.children.length > 0 && child.children.some(childData =>
-            //         dataCoinByBitController.checkConditionStrategies(childData)
-            //     )) {
-            //         result.push({
-            //             ...child,
-            //             children: child.children.filter(item =>
-            //                 dataCoinByBitController.checkConditionStrategies(item)
-            //             )
-            //         })
-            //     }
-            //     return result
-            // }, []) || []
+            const result = await ScannerModel.find({ IsActive: true }).populate("botID")
+            return result || []
 
         } catch (err) {
             return []

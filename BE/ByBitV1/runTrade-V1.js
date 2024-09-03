@@ -10,6 +10,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE } = require('../controllers/margin');
 const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, deleteStrategiesItemSpotBE } = require('../controllers/spot');
 const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../controllers/positionV1');
+const { getAllStrategiesActiveScannerBE } = require('../controllers/scanner');
 
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
@@ -22,12 +23,17 @@ const wsConfig = {
 const wsSymbol = new WebsocketClient(wsConfig);
 
 const LIST_ORDER = ["order", "execution"]
-// const LIST_ORDER = ["order"]
 const MAX_ORDER_LIMIT = 20
 const MAX_AMEND_LIMIT = 10
 const RE_TP_ADAPTIVE = 5
 const TP_ADAPTIVE = 80
 const TP_NOT_ADAPTIVE = 60
+
+const SPOT_MDDEL_DEFAULT = {
+    AmountAutoPercent: 5,
+    AmountExpire: 10,
+    AmountIncreaseOC: 8,
+}
 
 const clientDigit = new RestClientV5({
     testnet: false,
@@ -40,16 +46,10 @@ var listKline = []
 var allSymbol = []
 var updatingAllMain = false
 
-// ------- BTC ------------
-
-var nangOCValue = 0
-var checkOrderOCAll = true
-
-var checkBTC07Price = ""
-var haOCFunc = ""
 
 // -------  ------------
 
+var allScannerDataObject = {}
 var allStrategiesByCandleAndSymbol = {}
 var symbolTradeTypeObject = {}
 var trichMauOCListObject = {}
@@ -68,6 +68,50 @@ var botListTelegram = {}
 
 var listOCByCandleBot = {}
 // ----------------------------------------------------------------------------------
+
+const getWebsocketClientConfig = ({
+    ApiKey,
+    SecretKey,
+}) => {
+    return {
+        testnet: false,
+        key: ApiKey,
+        secret: SecretKey,
+        market: 'v5',
+        recvWindow: 100000,
+        pongTimeout: 5000
+    }
+}
+
+const getRestClientV5Config = ({
+    ApiKey,
+    SecretKey,
+}) => {
+    return {
+        testnet: false,
+        key: ApiKey,
+        secret: SecretKey,
+        syncTimeBeforePrivateRequests: true,
+        recv_window: 10000
+    }
+}
+
+const handleCalcOrderChange = ({ OrderChange, Numbs }) => {
+    const result = [];
+    const step = OrderChange * 0.02; // 2% của OrderChange
+
+    if (Numbs % 2 === 0) { // Nếu numbs là số chẵn
+        for (let i = -(Numbs / 2); i < Numbs / 2; i++) {
+            result.push(OrderChange + i * step);
+        }
+    } else { // Nếu numbs là số lẻ
+        for (let i = -Math.floor((Numbs - 1) / 2); i <= Math.floor((Numbs - 1) / 2); i++) {
+            result.push(OrderChange + i * step);
+        }
+    }
+
+    return result;
+};
 
 const roundPrice = (
     {
@@ -190,12 +234,9 @@ const handleSubmitOrder = async ({
             OC: true
         }
 
-        const client = new RestClientV5({
-            testnet: false,
-            key: ApiKey,
-            secret: SecretKey,
-            syncTimeBeforePrivateRequests: true,
-        });
+        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+
+        const client = new RestClientV5(clientConfig);
 
         await client
             .submitOrder({
@@ -278,14 +319,10 @@ const handleMoveOrderOC = async ({
     );
     if (maxAmendOrderOCData[botID].totalOC < MAX_AMEND_LIMIT) {
 
-        maxAmendOrderOCData[botID].totalOC += 1
-        const client = new RestClientV5({
-            testnet: false,
-            key: ApiKey,
-            secret: SecretKey,
-            syncTimeBeforePrivateRequests: true,
+        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-        });
+        const client = new RestClientV5(clientConfig);
+        maxAmendOrderOCData[botID].totalOC += 1
         await client
             .amendOrder({
                 category: 'spot',
@@ -344,13 +381,9 @@ const handleSubmitOrderTP = async ({
             TP: true
         }
     }
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    });
+    const client = new RestClientV5(clientConfig);
     await client
         .submitOrder({
             category: 'spot',
@@ -430,13 +463,9 @@ const moveOrderTP = async ({
 }) => {
     // console.log(changeColorConsole.greenBright(`Price Move TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    });
+    const client = new RestClientV5(clientConfig);
     await client
         .amendOrder({
             category: 'spot',
@@ -517,13 +546,9 @@ const handleCancelOrderOC = async ({
     botID
 }) => {
 
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    });
+    const client = new RestClientV5(clientConfig);
 
     !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
         await client
@@ -558,13 +583,11 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
 
     if (items.length > 0) {
         await Promise.allSettled(items.map(async item => {
-            const client = new RestClientV5({
-                testnet: false,
-                key: item.ApiKey,
-                secret: item.SecretKey,
-                syncTimeBeforePrivateRequests: true,
 
-            });
+            const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
+
+            const client = new RestClientV5(clientConfig);
+
             const list = Object.values(item.listOC || {})
 
             if (list.length > 0) {
@@ -622,12 +645,103 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                     })
 
-                    await delay(1000)
+                    await delay(1200)
                     index += batchSize
                 }
             }
         }))
         console.log("[V] Cancel All OC Successful");
+
+    }
+
+}
+const handleOrderMultipleOC = async ({
+    scannerData = {},
+    batchSize = 10,
+    symbol = "",
+    coinCurrent
+}) => {
+
+
+    const clientConfig = getRestClientV5Config({ ApiKey: scannerData.botID.ApiKey, SecretKey: scannerData.botID.SecretKey })
+
+    const client = new RestClientV5(clientConfig);
+
+    const listOC = handleCalcOrderChange({ OrderChange: scannerData.OrderChange, Numbs: scannerData.Numbs })
+
+    const orderLinkIdList = {}
+
+    const list = listOC.map(OCData => {
+        const price = coinCurrent + coinCurrent * OCData / 100
+
+        const qty = (scannerData.Amount / +price).toFixed(0)
+        const orderLinkId = uuidv4()
+        orderLinkIdList[orderLinkId] = OCData
+
+        return {
+            symbol,
+            side: scannerData.PositionSide == "Long" ? "Buy" : "Sell",
+            positionIdx: 0,
+            orderType: 'Limit',
+            qty,
+            price: roundPrice({
+                price: price,
+                tickSize: digitAllCoinObject[symbol]?.priceScale
+            }),
+            orderLinkId,
+            isLeverage: scannerData.Market === "Spot" ? 0 : 1
+        }
+    })
+
+    let index = 0;
+
+    while (index < list.length) {
+        const batch = list.slice(index, index + batchSize);
+
+        const res = await client.batchSubmitOrders("spot", batch)
+        const listSuccess = res.result.list || []
+        const listSuccessCode = res.retExtInfo.list || []
+
+
+
+        listSuccess.forEach((item, index) => {
+            const codeData = listSuccessCode[index]
+            const OCSuccess = orderLinkIdList[item.orderLinkId]
+
+            if (codeData.code == 0) {
+                console.log(`[V] Order OC ( ${OCSuccess}% ) successful `);
+
+            }
+            else {
+                console.log(changeColorConsole.yellowBright(`[!] Order OC ( ${OCSuccess}% ) failed:`, codeData.msg))
+            }
+        })
+
+
+        // listSuccess.forEach((item, index) => {
+        //     const data = listCancel[item.orderLinkId]
+        //     const codeData = listSuccessCode[index]
+        //     const botIDTemp = data.botID
+        //     const strategyIDTemp = data.strategyID
+        //     const candleTemp = data.candle
+
+        //     if (codeData.code == 0) {
+        //         console.log(`[V] Order OC  successful `);
+        //         cancelAll({
+        //             botID: botIDTemp,
+        //             strategyID: strategyIDTemp,
+        //         })
+        //     }
+        //     else {
+        //         allStrategiesByBotIDAndStrategiesID[botIDTemp][strategyIDTemp].OC.orderID = ""
+        //         console.log(changeColorConsole.yellowBright(`[!] Cancel order ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed `, codeData.msg));
+        //     }
+        //     delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
+        // })
+
+        await delay(1200)
+        index += batchSize
+        console.log("[V] Order All OC Successful");
 
     }
 
@@ -647,14 +761,9 @@ const handleCancelOrderTP = async ({
 }) => {
 
     const botSymbolMissID = `${botID}-${symbol}`
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
-
-    });
+    const client = new RestClientV5(clientConfig);
     orderId && await client
         .cancelOrder({
             category: 'spot',
@@ -720,7 +829,7 @@ async function handleCancelAllOrderTP({
                 orderId: item.orderId,
                 gongLai: item.gongLai,
             })));
-            await delay(1000)
+            await delay(1200)
             index += batchSize
 
         }
@@ -910,13 +1019,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 //     })
                 // })
 
-                const wsConfigOrder = {
-                    testnet: false,
-                    key: ApiKey,
-                    secret: SecretKey,
-                    market: 'v5',
-                    recvWindow: 100000
-                }
+
+                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey })
 
                 const wsOrder = new WebsocketClient(wsConfigOrder);
 
@@ -1492,6 +1596,132 @@ const checkConditionBot = (botData) => {
     return botData.botID?.Status === "Running" && botData.botID?.ApiKey && botData.botID?.SecretKey
 }
 
+const tinhOC = (symbol, dataAll = []) => {
+
+    // console.log(dataAll, symbol, new Date().toLocaleString());
+
+
+    if (dataAll.length > 0) {
+
+        let OC = 0
+        let TP = 0
+        let OCLong = 0
+        let TPLong = 0
+        let vol = 0
+        let OCNotPercent = 0
+        let OCLongNotPercent = 0
+        dataAll.forEach((data, index) => {
+
+            const Close = +data.close
+            const Open = +data.open
+            const Highest = +data.high
+            const Lowest = +data.low
+
+            vol += (+data.turnover)
+            if (index === 0) {
+                OCNotPercent = Highest - Open
+                OC = OCNotPercent / Open
+                OCLongNotPercent = Lowest - Open
+                OCLong = OCLongNotPercent / Open
+            }
+            else {
+
+                let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
+                let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
+                let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
+                let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
+
+
+                if ([Infinity, -Infinity].includes(TPTemp)) {
+                    TPTemp = 0
+                }
+                if ([Infinity, -Infinity].includes(TPLongTemp)) {
+                    TPLongTemp = 0
+                }
+                if ([Infinity, -Infinity].includes(TPTemp2)) {
+                    TPTemp2 = 0
+                }
+                if ([Infinity, -Infinity].includes(TPLongTemp2)) {
+                    TPLongTemp2 = 0
+                }
+
+
+                if (TPTemp > TP) {
+                    TP = TPTemp
+                }
+                if (TPLongTemp > TPLong) {
+                    TPLong = TPLongTemp
+                }
+                if (TPTemp2 > TP) {
+                    TP = TPTemp2
+                }
+                if (TPLongTemp2 > TPLong) {
+                    TPLong = TPLongTemp2
+                }
+            }
+        })
+
+
+        if ([Infinity, -Infinity].includes(OC)) {
+            OC = 0
+        }
+
+        if ([Infinity, -Infinity].includes(OCLong)) {
+            OCLong = 0
+        }
+
+
+        const OCRound = roundNumber(OC)
+        const TPRound = roundNumber(TP)
+        const OCLongRound = roundNumber(OCLong)
+        const TPLongRound = roundNumber(TPLong)
+
+
+        // if (OCRound >= 1 && TPRound > 60) {
+        if (vol >= 2000) {
+            if (OCRound >= 1) {
+                // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
+                messageList.push(ht)
+                console.log(ht, new Date().toLocaleTimeString());
+                console.log(dataAll);
+            }
+
+            // if (OCLongRound <= -1 && TPLongRound > 60) {
+            if (OCLongRound <= -1) {
+                // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+                messageList.push(htLong)
+                console.log(htLong, new Date().toLocaleTimeString());
+                console.log(dataAll);
+            }
+        }
+
+
+
+        if (messageList.length > 0) {
+            if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
+                sendTeleCount.total += 1
+                sendMessageTinhOC(messageList)
+                messageList = []
+                trichMauTimeMainSendTele.pre = new Date()
+            }
+        }
+
+        // if (sendTeleCount.total < MAX_ORDER_LIMIT) {
+        // }
+        // else {
+        //     if (!sendTeleCount?.logError) {
+        //         console.log(`[!] LIMIT SEND TELEGRAM`);
+        //         sendTeleCount.logError = true
+        //         setTimeout(() => {
+        //             sendTeleCount.logError = false
+        //             sendTeleCount.total = 0
+        //         }, 3000)
+        //     }
+        // }
+    }
+}
 // ----------------------------------------------------------------------------------
 
 
@@ -1502,8 +1732,10 @@ const Main = async () => {
     const getAllSymbolMargin = getAllSymbolMarginBE()
     const getAllConfigSpot = getAllStrategiesActiveSpotBE()
     const getAllConfigMargin = getAllStrategiesActiveMarginBE()
+    const getAllConfigScanner = getAllStrategiesActiveScannerBE()
 
-    const allRes = await Promise.allSettled([getAllSymbolSpot, getAllSymbolMargin, getAllConfigSpot, getAllConfigMargin])
+
+    const allRes = await Promise.allSettled([getAllSymbolSpot, getAllSymbolMargin, getAllConfigSpot, getAllConfigMargin, getAllConfigScanner])
 
     const allSymbolRes = [
         ...allRes[0].value || [],
@@ -1514,7 +1746,13 @@ const Main = async () => {
         ...allRes[3].value || [],
     ]
 
-    listKline = [...new Set(allSymbolRes.map(symbolData => {
+    const getAllConfigScannerRes = allRes[4].value || []
+
+
+
+
+    const allSymbolResNotDuplicate = [...new Set(allSymbolRes)]
+    listKline = allSymbolResNotDuplicate.map(symbolData => {
         const symbol = symbolData.value
         trichMauOCListObject[symbol] = {
             preTime: 0
@@ -1522,8 +1760,19 @@ const Main = async () => {
         symbolTradeTypeObject[symbol] = symbolData.type
 
         return `kline.1.${symbol}`
-    }))]
+    })
 
+
+    allSymbolResNotDuplicate.forEach(symbolData => {
+        const symbol = symbolData.value
+        allScannerDataObject[symbol] = {}
+        getAllConfigScannerRes.forEach(scannerData => {
+            const scannerID = scannerData._id
+            if (scannerData.OnlyPairs.includes(symbol) && !scannerData.Blacklist.includes(symbol)) {
+                allScannerDataObject[symbol][scannerID] = scannerData
+            }
+        })
+    })
 
 
     getAllConfigRes.forEach(strategyItem => {
@@ -1567,9 +1816,14 @@ const Main = async () => {
     );
 
 
-    await handleSocketBotApiList(botApiList)
+    // await handleOrderMultipleOC({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "A8USDT",
+    //     coinCurrent: 0.09985
+    // })
+    // await handleSocketBotApiList(botApiList)
 
-    await handleSocketListKline(listKline)
+    // await handleSocketListKline(listKline)
 
     wsSymbol.on('update', async (dataCoin) => {
 
@@ -2288,13 +2542,7 @@ socketRealtime.on('bot-api', async (data) => {
         const ApiKeyBot = botApiData.ApiKey
         const SecretKeyBot = botApiData.SecretKey
 
-        const wsConfigOrder = {
-            testnet: false,
-            key: ApiKeyBot,
-            secret: SecretKeyBot,
-            market: 'v5',
-            recvWindow: 100000
-        }
+        const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
 
         const wsOrder = new WebsocketClient(wsConfigOrder);
 
@@ -2306,13 +2554,9 @@ socketRealtime.on('bot-api', async (data) => {
             SecretKey: newApiData.SecretKey,
         }
 
-        const wsConfigOrderNew = {
-            testnet: false,
-            key: newApiData.ApiKey,
-            secret: newApiData.SecretKey,
-            market: 'v5',
-            recvWindow: 100000
-        }
+
+
+        const wsConfigOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey })
 
         const wsOrderNew = new WebsocketClient(wsConfigOrderNew);
 
@@ -2410,13 +2654,8 @@ socketRealtime.on('bot-delete', async (data) => {
     const ApiKeyBot = botApiData.ApiKey
     const SecretKeyBot = botApiData.SecretKey
 
-    const wsConfigOrder = {
-        testnet: false,
-        key: ApiKeyBot,
-        secret: SecretKeyBot,
-        market: 'v5',
-        recvWindow: 100000
-    }
+
+    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
 
     const wsOrder = new WebsocketClient(wsConfigOrder);
 

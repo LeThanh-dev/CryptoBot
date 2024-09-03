@@ -442,7 +442,6 @@ const dataCoinByBitController = {
             }));
 
             const bulkResult = await StrategiesModel.bulkWrite(bulkOperations);
-            console.log(bulkResult);
             
 
             if (bulkResult.modifiedCount === dataList.length) {

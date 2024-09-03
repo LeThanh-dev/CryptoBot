@@ -1,5 +1,5 @@
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
-import { FormControl, FormLabel, Autocomplete, TextField, Button, Checkbox, MenuItem, Switch, InputAdornment, CircularProgress } from "@mui/material"
+import { FormControl, FormLabel, Autocomplete, TextField, Button, Checkbox, Switch, InputAdornment, CircularProgress } from "@mui/material"
 import clsx from "clsx"
 import { useState, useRef, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -7,8 +7,9 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { getAllCoin, syncCoin } from "../../../../../../services/coinService"
-import { createConfigScanner, updateConfigByID } from '../../../../../../services/scannerService';
+import { updateConfigByID } from '../../../../../../services/scannerService';
+import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../services/spotService';
+import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../services/marginService';
 
 function UpdateStrategy({
     onClose,
@@ -54,15 +55,18 @@ function UpdateStrategy({
         formState: { errors, isSubmitted }
     } = useForm();
 
-    const [onlyPairsSelected, setOnlyPairsSelected] = useState(dataInput.OnlyPairs || [])
-    const [blackListSelected, setBlackListSelected] = useState(dataInput.Blacklist || [])
-    const [botList, setBotList] = useState([])
+    const onlyPairsSelectedInput = dataInput.OnlyPairs.map(item => ({ name: item, value: item }))
+    const blackListSelectedInput = dataInput.Blacklist.map(item => ({ name: item, value: item }))
+    const [onlyPairsSelected, setOnlyPairsSelected] = useState(onlyPairsSelectedInput || [])
+    const [blackListSelected, setBlackListSelected] = useState(blackListSelectedInput || [])
     const [loadingSyncCoin, setLoadingSyncCoin] = useState(false);
 
     const dataChangeRef = useRef(false)
+    const spotDataListRef = useRef([])
+    const marginDataListRef = useRef([])
 
     const [symbolGroupDataList, setSymbolGroupDataList] = useState({
-        label: "Symbol",
+        label: dataInput.Market,
         list: []
     });
 
@@ -70,35 +74,75 @@ function UpdateStrategy({
 
     const dispatch = useDispatch()
 
-    const handleGetSymbolList = async () => {
+    const handleGetSpotDataList = async (syncNew = true) => {
         try {
-            const res = await getAllCoin()
-            const { status, message, data: symbolListDataRes } = res.data
+            let newData = spotDataListRef.current
+            if (syncNew) {
+                const res = await getAllSymbolSpot()
+                const { data: symbolListDataRes } = res.data
+                newData = symbolListDataRes.map(item => ({ name: item, value: item }))
+            }
 
-            const newSymbolList = symbolListDataRes.map(item => ({ name: item.symbol, value: item.symbol }))
+            setBlackListSelected(blackListSelectedInput)
+            setOnlyPairsSelected(onlyPairsSelectedInput)
+            setSymbolGroupDataList(
+                {
+                    label: "Spot",
+                    list: newData
+                }
+            )
+            spotDataListRef.current = newData
 
-            symbolListRef.current = newSymbolList
-
-            setSymbolGroupDataList({
-                label: "Symbol",
-                list: newSymbolList
-            })
         }
         catch (err) {
             dispatch(addMessageToast({
                 status: 500,
-                message: "Get All Symbol Error",
+                message: err.message,
             }))
         }
     }
 
+    const handleGetMarginDataList = async (syncNew = true) => {
+        try {
 
+            let newData = marginDataListRef.current
+            if (syncNew) {
+                const res = await getAllSymbolMargin()
+                const { data: symbolListDataRes } = res.data
+                newData = symbolListDataRes.map(item => ({ name: item, value: item }))
+            }
+
+            setBlackListSelected(blackListSelectedInput)
+            setOnlyPairsSelected(onlyPairsSelectedInput)
+            setSymbolGroupDataList(
+                {
+                    label: "Margin",
+                    list: newData
+                }
+            )
+            marginDataListRef.current = newData
+        }
+        catch (err) {
+            dispatch(addMessageToast({
+                status: 500,
+                message: err.message,
+            }))
+        }
+    }
 
     const handleSyncSymbol = async () => {
         if (!loadingSyncCoin) {
             try {
                 setLoadingSyncCoin(true)
-                const res = await syncCoin()
+                let res
+                if (symbolGroupDataList.label === "Spot") {
+                    res = await syncSymbolSpot()
+                    handleGetSpotDataList()
+                }
+                else {
+                    res = await syncSymbolMargin()
+                    handleGetMarginDataList()
+                }
                 const { status, message, data: resData } = res.data
 
                 dispatch(addMessageToast({
@@ -106,7 +150,6 @@ function UpdateStrategy({
                     message: message,
                 }))
 
-                handleGetSymbolList()
                 setLoadingSyncCoin(false)
             }
             catch (err) {
@@ -125,8 +168,8 @@ function UpdateStrategy({
         const newData = {
             ...dataInput,
             ...data,
-            Blacklist: blackListSelected.map(item=>item.value),
-            OnlyPairs: onlyPairsSelected.map(item=>item.value)
+            Blacklist: [... new Set(blackListSelected.map(item => item.value))],
+            OnlyPairs: [... new Set(onlyPairsSelected.map(item => item.value))]
         }
         try {
             const res = await updateConfigByID({
@@ -144,7 +187,7 @@ function UpdateStrategy({
                 reset()
                 dataChangeRef.current = true
                 console.log(newData);
-                
+
 
                 setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
                     if (item._id === configID) {
@@ -179,7 +222,12 @@ function UpdateStrategy({
     }
 
     useEffect(() => {
-        handleGetSymbolList()
+        if (symbolGroupDataList.label === "Spot") {
+            handleGetSpotDataList()
+        }
+        else {
+            handleGetMarginDataList()
+        }
     }, []);
 
 
@@ -279,7 +327,7 @@ function UpdateStrategy({
                                 )}
                                 <li {...props}>
                                     <Checkbox
-                                        checked={selected || onlyPairsSelected.findIndex(item => item === option.value) > -1}
+                                        checked={selected || onlyPairsSelected.findIndex(item => item.value === option.value) > -1}
                                     />
                                     {option.name.split("USDT")[0]}
                                 </li>
@@ -337,7 +385,7 @@ function UpdateStrategy({
                                 )}
                                 <li {...props}>
                                     <Checkbox
-                                        checked={selected || blackListSelected.findIndex(item => item === option.value) > -1}
+                                        checked={selected || blackListSelected.findIndex(item => item.value === option.value) > -1}
                                     />
                                     {option.name.split("USDT")[0]}
                                 </li>
@@ -365,7 +413,7 @@ function UpdateStrategy({
                             size="medium"
                             disabled
                         >
-                            
+
                         </TextField>
                     </FormControl>
                     <FormControl
@@ -378,7 +426,7 @@ function UpdateStrategy({
                             size="medium"
                             disabled
                         >
-                            
+
                         </TextField>
                     </FormControl>
 
