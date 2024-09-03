@@ -11,13 +11,12 @@ const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbo
 
 const wsConfig = {
     market: 'v5',
-    recvWindow: 100000
+    // recvWindow: 10000
 }
 
 const wsSymbol = new WebsocketClient(wsConfig);
 
 const LIST_ORDER = ["order", "position"]
-// const LIST_ORDER = ["order"]
 const MAX_ORDER_LIMIT = 10
 
 const clientDigit = new RestClientV5({
@@ -30,6 +29,7 @@ let missTPDataBySymbol = {}
 var listKline = []
 var allSymbol = []
 var updatingAllMain = false
+var connectErrorMain = false
 
 // ------- BTC ------------
 
@@ -69,7 +69,31 @@ const roundPrice = (
     return (Math.floor(price / tickSize) * tickSize).toString()
 }
 
-
+const getWebsocketClientConfig = ({
+    ApiKey,
+    SecretKey,
+}) => {
+    return {
+        testnet: false,
+        key: ApiKey,
+        secret: SecretKey,
+        market: 'v5',
+        recvWindow: 100000,
+        pongTimeout:5000
+    }
+}
+const getRestClientV5Config = ({
+    ApiKey,
+    SecretKey,
+}) => {
+    return {
+        testnet: false,
+        key: ApiKey,
+        secret: SecretKey,
+        syncTimeBeforePrivateRequests: true,
+        recv_window: 10000
+    }
+}
 
 // ----------------------------------------------------------------------------------
 
@@ -178,12 +202,9 @@ const handleSubmitOrder = async ({
             orderLinkId
         }
 
-        const client = new RestClientV5({
-            testnet: false,
-            key: ApiKey,
-            secret: SecretKey,
-            syncTimeBeforePrivateRequests: true,
-        });
+        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+
+        const client = new RestClientV5(clientConfig);
 
         await client
             .submitOrder({
@@ -278,13 +299,10 @@ const handleSubmitOrderTP = async ({
             TP: true
         }
     }
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    });
+    const client = new RestClientV5(clientConfig);
+
     await client
         .submitOrder({
             category: 'linear',
@@ -353,12 +371,9 @@ const moveOrderTP = async ({
 }) => {
     // console.log(changeColorConsole.greenBright(`Price Move TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
-    });
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+
+    const client = new RestClientV5(clientConfig);
     await client
         .amendOrder({
             category: 'linear',
@@ -443,13 +458,9 @@ const handleCancelOrderOC = async ({
     botID
 }) => {
 
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    });
+    const client = new RestClientV5(clientConfig);
 
     !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
         await client
@@ -483,13 +494,11 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
 
     if (items.length > 0) {
         await Promise.allSettled(items.map(async item => {
-            const client = new RestClientV5({
-                testnet: false,
-                key: item.ApiKey,
-                secret: item.SecretKey,
-                syncTimeBeforePrivateRequests: true,
 
-            });
+            const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
+
+            const client = new RestClientV5(clientConfig);
+
             const list = Object.values(item.listOC || {})
 
             if (list.length > 0) {
@@ -548,7 +557,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
                     })
 
-                    await delay(1000)
+                    await delay(1200)
                     index += batchSize
                 }
             }
@@ -576,13 +585,10 @@ const handleCancelOrderTP = async ({
 
     const botSymbolMissID = `${botID}-${symbol}`
 
-    const client = new RestClientV5({
-        testnet: false,
-        key: ApiKey,
-        secret: SecretKey,
-        syncTimeBeforePrivateRequests: true,
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    });
+    const client = new RestClientV5(clientConfig);
+
     orderId && await client
         .cancelOrder({
             category: 'linear',
@@ -648,7 +654,7 @@ async function handleCancelAllOrderTP({
                 orderId: item.orderId,
                 gongLai: item.gongLai,
             })));
-            await delay(1000)
+            await delay(1200)
             index += batchSize
 
         }
@@ -797,9 +803,8 @@ const getMoneyFuture = async (botApiListInput) => {
     }
 }
 
-const sendAllBotTelegram = async (BTCPricePercent) => {
-    const text = `<b>❗ BTC đang biến động ${BTCPricePercent}% [1m] ❗</b>`
-    console.log(text);
+const sendAllBotTelegram = async (text) => {
+
     await Promise.allSettled(Object.values(botApiList).map(botApiData => {
         const telegramID = botApiData.telegramID
         const telegramToken = botApiData.telegramToken
@@ -837,13 +842,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 //     })
                 // })
 
-                const wsConfigOrder = {
-                    testnet: false,
-                    key: ApiKey,
-                    secret: SecretKey,
-                    market: 'v5',
-                    recvWindow: 100000
-                }
+                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey })
 
                 const wsOrder = new WebsocketClient(wsConfigOrder);
 
@@ -1255,6 +1254,12 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     // handleSubmitOrderTP(dataInput)
 
+                                                    sendMessageWithRetry({
+                                                        messageText: teleText,
+                                                        telegramID,
+                                                        telegramToken
+                                                    })
+
                                                     updatePositionBE({
                                                         newDataUpdate: {
                                                             Miss: true
@@ -1265,11 +1270,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     }).catch(err => {
                                                         console.log("ERROR updatePositionBE:", err)
                                                     })
-                                                    sendMessageWithRetry({
-                                                        messageText: teleText,
-                                                        telegramID,
-                                                        telegramToken
-                                                    })
+
+                                                    
                                                 }
                                                 // else {
                                                 //     console.log(`[_ Not Miss _] TP ( ${botName} - ${side} - ${symbol}} )`);
@@ -1384,6 +1386,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                     });
 
                     wsOrder.on('error', (err) => {
+                        !connectErrorMain && sendAllBotTelegram("🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối")
                         console.log('Connection order error');
                         console.log(err);
                     });
@@ -1396,7 +1399,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
             }))
         }
     } catch (error) {
-        console.log("[!] Error BotApi Socket:", e)
+        console.log("[!] Error BotApi Socket:", error)
     }
 }
 
@@ -1537,13 +1540,14 @@ const Main = async () => {
 
             if (BTCPricePercent >= 0.7) {
 
+                const text = `<b>🛑 BTC đang biến động ${BTCPricePercent.toFixed(2)}% [1m]</b>`
                 if (BTCPricePercent >= 1) {
                     const newNangOCValue = Math.round(BTCPricePercent - 0.3) * 5
 
                     if (newNangOCValue !== nangOCValue) {
                         nangOCValue = newNangOCValue
                         checkOrderOCAll = false
-                        sendAllBotTelegram(BTCPricePercent.toFixed(2))
+                        sendAllBotTelegram(text)
 
                     }
                 }
@@ -1553,7 +1557,7 @@ const Main = async () => {
                     if (newNangOCValue !== nangOCValue) {
                         nangOCValue = newNangOCValue
                         checkOrderOCAll = false
-                        sendAllBotTelegram(BTCPricePercent.toFixed(2))
+                        sendAllBotTelegram(text)
 
                     }
                 }
@@ -1754,13 +1758,10 @@ const Main = async () => {
                                 }
                             }
                             if (checkMoveMain && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled) {
-                                const client = new RestClientV5({
-                                    testnet: false,
-                                    key: ApiKey,
-                                    secret: SecretKey,
-                                    syncTimeBeforePrivateRequests: true,
+                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-                                });
+                                const client = new RestClientV5(clientConfig);
+
                                 const newOCTemp = Math.abs((coinCurrent - coinOpen)) / coinOpen * 100
 
                                 const priceMoveOC = roundPrice({
@@ -1865,13 +1866,9 @@ const Main = async () => {
                                     price: coinCurrent,
                                     tickSize: strategy.digit
                                 })
-                                const client = new RestClientV5({
-                                    testnet: false,
-                                    key: ApiKey,
-                                    secret: SecretKey,
-                                    syncTimeBeforePrivateRequests: true,
+                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-                                });
+                                const client = new RestClientV5(clientConfig);
                                 client
                                     .amendOrder({
                                         category: 'linear',
@@ -1987,9 +1984,6 @@ const Main = async () => {
 
             await Promise.allSettled([nangAllOC, cancelAllOC])
 
-
-            console.log("[...] Canceling All OC");
-            console.log("[V] Cancel All OC Successful");
             console.log(changeColorConsole.greenBright("[V] NÂNG OC XONG"));
 
             checkOrderOCAll = true
@@ -2067,6 +2061,7 @@ const Main = async () => {
     });
 
     wsSymbol.on('error', (err) => {
+        !connectErrorMain && sendAllBotTelegram("🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối")
         console.log('[!] Connection listKline error');
         console.log(err);
     });
@@ -2578,13 +2573,8 @@ socketRealtime.on('bot-api', async (data) => {
         const ApiKeyBot = botApiData.ApiKey
         const SecretKeyBot = botApiData.SecretKey
 
-        const wsConfigOrder = {
-            testnet: false,
-            key: ApiKeyBot,
-            secret: SecretKeyBot,
-            market: 'v5',
-            recvWindow: 100000
-        }
+
+        const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
 
         const wsOrder = new WebsocketClient(wsConfigOrder);
 
@@ -2596,13 +2586,7 @@ socketRealtime.on('bot-api', async (data) => {
             SecretKey: newApiData.SecretKey,
         }
 
-        const wsConfigOrderNew = {
-            testnet: false,
-            key: newApiData.ApiKey,
-            secret: newApiData.SecretKey,
-            market: 'v5',
-            recvWindow: 100000
-        }
+        const wsConfigOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey })
 
         const wsOrderNew = new WebsocketClient(wsConfigOrderNew);
 
@@ -2698,13 +2682,7 @@ socketRealtime.on('bot-delete', async (data) => {
     const ApiKeyBot = botApiData.ApiKey
     const SecretKeyBot = botApiData.SecretKey
 
-    const wsConfigOrder = {
-        testnet: false,
-        key: ApiKeyBot,
-        secret: SecretKeyBot,
-        market: 'v5',
-        recvWindow: 100000
-    }
+    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
 
     const wsOrder = new WebsocketClient(wsConfigOrder);
 

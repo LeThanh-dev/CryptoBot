@@ -162,20 +162,20 @@ function Api() {
                                 dataChange: "",
                             })
                         }}
-                        onSubmit={() => {
-                            setOpenEditApi({
-                                dataChange: "",
-                                isOpen:false,
-                                confirm: true,
-                            })
-                        }}
+                        // onSubmit={() => {
+                        //     setOpenEditApi({
+                        //         dataChange: "",
+                        //         isOpen:false,
+                        //         confirm: true,
+                        //     })
+                        // }}
+                        // submitBtnText="update"
                         dialogTitle="The action requires confirmation"
                         submitBtnColor="warning"
-                        submitBtnText="update"
-                        reserveBtn
                         position="center"
+                        hideActionBtn
                     >
-                        <p style={{ textAlign: "center" }}>Bot is running - Do you want to update?</p>
+                        <p style={{ textAlign: "center" }}>Bot is running - You must close the bot first?</p>
                     </DialogCustom >
                 )
             }
