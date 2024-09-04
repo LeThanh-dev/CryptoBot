@@ -200,7 +200,7 @@ const handleSubmitOrder = async ({
             side,
             botName,
             botID,
-            orderLinkId
+            orderLinkId,
         }
 
         const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
@@ -1136,7 +1136,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     //     symbol,
                                                     // })
                                                 }
-
+                                                cancelAll({ botID, strategyID })
                                             }
                                             else if (OCTrue) {
                                                 // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
@@ -1241,13 +1241,11 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     ["1m", "3m", "5m", "15m"].forEach(candle => {
                                                         const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-                                                        listObject && Object.values(listObject).map(item => {
+                                                        listObject && Object.values(listObject).map(strategyData => {
+                                                            const strategyID = strategyData.strategyID
                                                             if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
-                                                                const strategyID = item.strategyID
-                                                                const teleText = `[ MISS ] | ${symbol.replace("USDT", "")} - ${side} - ${item.candle} - ${botName} \n`
-                                                                console.log(changeColorConsole.redBright(teleText));
-                                                                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
-                                                                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
+                                                                console.log(`[ MISS ] | ${symbol.replace("USDT", "")} - ${side} - ${strategyData.candle} - ${botName} \n`);
+                                                                cancelAll({ botID, strategyID })
                                                                 delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
                                                             }
                                                         })
@@ -1291,39 +1289,39 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
 
                                                 }
-                                                // else {
-                                                //     console.log(`[_ Not Miss _] TP ( ${botName} - ${side} - ${symbol}} )`);
-                                                //     updatePositionBE({
-                                                //         newDataUpdate: {
-                                                //             Miss: false,
-                                                //             TimeUpdated: new Date()
-                                                //         },
-                                                //         orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
-                                                //     }).then(message => {
-                                                //         console.log(message);
-                                                //     }).catch(err => {
-                                                //         console.log("ERROR updatePositionBE:", err)
-                                                //     })
-                                                // }
+                                                else {
+                                                    console.log(`[_ Not Miss _] TP ( ${botName} - ${side} - ${symbol}} )`);
+                                                    // updatePositionBE({
+                                                    //     newDataUpdate: {
+                                                    //         Miss: false,
+                                                    //         TimeUpdated: new Date()
+                                                    //     },
+                                                    //     orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
+                                                    // }).then(message => {
+                                                    //     console.log(message);
+                                                    // }).catch(err => {
+                                                    //     console.log("ERROR updatePositionBE:", err)
+                                                    // })
+                                                }
                                             }
                                             else {
                                                 const teleText = `<b>⚠️ [ MISS-GongLai ] | ${symbol.replace("USDT", "")}</b> - ${side} - Bot: ${botName} - PnL: ${dataMain.unrealisedPnl} \n`
                                                 console.log(changeColorConsole.redBright(`\n${teleText.slice(5)}\n`));
 
-                                                console.log("[...] Đang lọc OC MISS\n");
+                                                // console.log("[...] Đang lọc OC MISS\n");
 
-                                                ["1m", "3m", "5m", "15m"].forEach(candle => {
-                                                    const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-                                                    listObject && Object.values(listObject).map(item => {
-                                                        const strategyID = item.strategyID
-                                                        const teleText = `[ MISS ] | ${symbol.replace("USDT", "")} - ${side} - ${item.candle} - ${botName} \n`
-                                                        console.log(changeColorConsole.redBright(teleText));
-                                                        allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
-                                                        allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
-                                                        missTPDataBySymbol[botSymbolMissID].gongLai = false
-                                                        delete listOCByCandleBot[candle][botID].listOC[strategyID]
-                                                    })
-                                                });
+                                                // ["1m", "3m", "5m", "15m"].forEach(candle => {
+                                                //     const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+                                                //     listObject && Object.values(listObject).map(item => {
+                                                //         const strategyID = item.strategyID
+                                                //         const teleText = `[ MISS ] | ${symbol.replace("USDT", "")} - ${side} - ${item.candle} - ${botName} \n`
+                                                //         console.log(changeColorConsole.redBright(teleText));
+                                                //         allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
+                                                //         allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
+                                                //         missTPDataBySymbol[botSymbolMissID].gongLai = false
+                                                //         delete listOCByCandleBot[candle][botID].listOC[strategyID]
+                                                //     })
+                                                // });
                                                 // updatePositionBE({
                                                 //     newDataUpdate: {
                                                 //         Miss: true,
@@ -1379,7 +1377,6 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                     const newSize = Math.abs(dataMain.qty)
 
                                     missTPDataBySymbol[botSymbolMissID].size = newSize
-                                    missTPDataBySymbol[botSymbolMissID].sizeTotal = newSize
 
                                     missTPDataBySymbol[botSymbolMissID].gongLai = false
 
@@ -1399,7 +1396,20 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                         })
                                     }
 
+                                    missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+
                                     resetMissData({ botID, symbol })
+
+                                    ["1m", "3m", "5m", "15m"].forEach(candle => {
+                                        const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+                                        listObject && Object.values(listObject).map(strategyData => {
+                                            const strategyID = strategyData.strategyID
+                                            if (allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
+                                                cancelAll({ botID, strategyID })
+                                                delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
+                                            }
+                                        })
+                                    });
 
                                 }
 
