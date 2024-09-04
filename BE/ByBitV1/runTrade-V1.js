@@ -8,7 +8,7 @@ const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE } = require('../controllers/margin');
-const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, deleteStrategiesItemSpotBE } = require('../controllers/spot');
+const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, deleteStrategiesItemSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE } = require('../controllers/spot');
 const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../controllers/positionV1');
 const { getAllStrategiesActiveScannerBE } = require('../controllers/scanner');
 
@@ -69,6 +69,13 @@ var botListTelegram = {}
 var listOCByCandleBot = {}
 // ----------------------------------------------------------------------------------
 
+// Scanner
+var trichMauData = {}
+var trichMauDataArray = {}
+var trichMau = {}
+var timeExpire = 0
+
+// ----------------------------------------------------------------------------------
 const getWebsocketClientConfig = ({
     ApiKey,
     SecretKey,
@@ -98,7 +105,8 @@ const getRestClientV5Config = ({
 
 const handleCalcOrderChange = ({ OrderChange, Numbs }) => {
     const result = [];
-    const step = OrderChange * 0.02; // 2% của OrderChange
+    // const step = OrderChange * 0.1; // 2% của OrderChange
+    const step = 0.1; // 2% của OrderChange
 
     if (Numbs % 2 === 0) { // Nếu numbs là số chẵn
         for (let i = -(Numbs / 2); i < Numbs / 2; i++) {
@@ -672,7 +680,7 @@ const handleOrderMultipleOC = async ({
     const orderLinkIdList = {}
 
     const list = listOC.map(OCData => {
-        const price = coinCurrent + coinCurrent * OCData / 100
+        const price = coinCurrent - coinCurrent * OCData / 100
 
         const qty = (scannerData.Amount / +price).toFixed(0)
         const orderLinkId = uuidv4()
@@ -709,11 +717,11 @@ const handleOrderMultipleOC = async ({
             const OCSuccess = orderLinkIdList[item.orderLinkId]
 
             if (codeData.code == 0) {
-                console.log(`[V] Order OC ( ${OCSuccess}% ) successful `);
+                console.log(`[V] Order OC ( ${OCSuccess} % ) successful `);
 
             }
             else {
-                console.log(changeColorConsole.yellowBright(`[!] Order OC ( ${OCSuccess}% ) failed:`, codeData.msg))
+                console.log(changeColorConsole.yellowBright(`[!] Order OC ( ${OCSuccess} % ) failed:`, codeData.msg))
             }
         })
 
@@ -744,6 +752,50 @@ const handleOrderMultipleOC = async ({
         console.log("[V] Order All OC Successful");
 
     }
+
+}
+const handleCreateMultipleConfigSpot = async ({
+    scannerData = {},
+    symbol = "",
+}) => {
+
+
+    const Market = scannerData.Market
+
+    const listOC = handleCalcOrderChange({ OrderChange: scannerData.OrderChange, Numbs: scannerData.Numbs })
+
+    const dataInput = listOC.map(OCData => {
+        return {
+            "PositionSide": "Long",
+            "OrderChange": OCData,
+            "Amount": scannerData.Amount,
+            "IsActive": scannerData.IsActive,
+            "Expire": scannerData.Expire,
+            "Limit": scannerData.Limit,
+            "AmountAutoPercent": SPOT_MDDEL_DEFAULT.AmountAutoPercent,
+            "AmountIncreaseOC": SPOT_MDDEL_DEFAULT.AmountIncreaseOC,
+            "AmountExpire": SPOT_MDDEL_DEFAULT.AmountExpire,
+            "Adaptive": true,
+            "Reverse": false,
+            "Remember": false
+        }
+    })
+
+    const res = await createStrategiesMultipleSpotBE({
+        dataInput,
+        userID: scannerData.userID,
+        botID: scannerData.botID._id,
+        botName: scannerData.botID.botName,
+        symbol,
+        scannerID: scannerData._id
+    })
+
+    console.log(res.message);
+
+    const newData = res.data
+
+    newData.length > 0 && await handleSocketAddNew(newData)
+
 
 }
 
@@ -1596,6 +1648,23 @@ const checkConditionBot = (botData) => {
     return botData.botID?.Status === "Running" && botData.botID?.ApiKey && botData.botID?.SecretKey
 }
 
+// ----------------------------------------------------------------------------------
+const roundNumber = (number) => {
+    return Math.round(number * 10000) / 100
+}
+
+const formatNumberString = number => {
+    if (number >= 1000000000) {
+        return (number / 1000000000).toFixed(2) + 'B';
+    } else if (number >= 1000000) {
+        return (number / 1000000).toFixed(2) + 'M';
+    } else if (number >= 1000) {
+        return (number / 1000).toFixed(2) + 'K';
+    } else {
+        return number.toFixed(2);
+    }
+}
+
 const tinhOC = (symbol, dataAll = []) => {
 
     // console.log(dataAll, symbol, new Date().toLocaleString());
@@ -1677,49 +1746,49 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
 
-        // if (OCRound >= 1 && TPRound > 60) {
-        if (vol >= 2000) {
-            if (OCRound >= 1) {
-                // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
-                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
-                messageList.push(ht)
-                console.log(ht, new Date().toLocaleTimeString());
-                console.log(dataAll);
+        const listScannerObject = allScannerDataObject[symbol]
+
+        listScannerObject && Object.values(listScannerObject)?.length > 0 && Promise.allSettled(Object.values(listScannerObject).map(async scannerData => {
+
+            const PositionSide = scannerData.PositionSide
+            const OrderChange = scannerData.OrderChange
+            const Elastic = scannerData.Elastic
+            const Turnover = scannerData.Turnover
+            const Market = scannerData.Market
+            const ScannerID = scannerData._id
+            // Check expire 
+            if (new Date() - scannerData.ExpirePre >= scannerData.Expire) {
+                // Delete all config
+                if (Market === "Spot") {
+
+                }
+                else {
+
+                }
+
             }
 
-            // if (OCLongRound <= -1 && TPLongRound > 60) {
-            if (OCLongRound <= -1) {
-                // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
-                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
-                messageList.push(htLong)
-                console.log(htLong, new Date().toLocaleTimeString());
-                console.log(dataAll);
+            if (vol >= Turnover) {
+                if (PositionSide === "Long") {
+                    if (Math.abs(OCLongRound) >= OrderChange && TPLongRound >= Elastic) {
+                        const htLong = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+                        console.log(changeColorConsole.greenBright(htLong, new Date().toLocaleTimeString()));
+                        !scannerData.OrderConfig && await handleCreateMultipleConfigSpot({
+                            scannerData,
+                            symbol
+                        })
+                        scannerData.OrderConfig = true
+                    }
+                }
+                else {
+                    if (Math.abs(OCRound) >= OrderChange && TPRound >= Elastic) {
+                        const ht = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
+                        console.log(changeColorConsole.greenBright(ht, new Date().toLocaleTimeString()));
+                    }
+                }
             }
-        }
+        }))
 
-
-
-        if (messageList.length > 0) {
-            if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
-                sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
-                messageList = []
-                trichMauTimeMainSendTele.pre = new Date()
-            }
-        }
-
-        // if (sendTeleCount.total < MAX_ORDER_LIMIT) {
-        // }
-        // else {
-        //     if (!sendTeleCount?.logError) {
-        //         console.log(`[!] LIMIT SEND TELEGRAM`);
-        //         sendTeleCount.logError = true
-        //         setTimeout(() => {
-        //             sendTeleCount.logError = false
-        //             sendTeleCount.total = 0
-        //         }, 3000)
-        //     }
-        // }
     }
 }
 // ----------------------------------------------------------------------------------
@@ -1748,9 +1817,6 @@ const Main = async () => {
 
     const getAllConfigScannerRes = allRes[4].value || []
 
-
-
-
     const allSymbolResNotDuplicate = [...new Set(allSymbolRes)]
     listKline = allSymbolResNotDuplicate.map(symbolData => {
         const symbol = symbolData.value
@@ -1759,7 +1825,19 @@ const Main = async () => {
         }
         symbolTradeTypeObject[symbol] = symbolData.type
 
-        return `kline.1.${symbol}`
+        trichMauData[symbol] = {
+            open: 0,
+            close: 0,
+            high: 0,
+            low: 0,
+            turnover: 0
+        }
+        trichMauDataArray[symbol] = []
+        trichMau[symbol] = {
+            cur: 0,
+            pre: 0,
+        }
+        return `kline.D.${symbol}`
     })
 
 
@@ -1769,7 +1847,11 @@ const Main = async () => {
         getAllConfigScannerRes.forEach(scannerData => {
             const scannerID = scannerData._id
             if (scannerData.OnlyPairs.includes(symbol) && !scannerData.Blacklist.includes(symbol)) {
-                allScannerDataObject[symbol][scannerID] = scannerData
+                const newScannerData = scannerData.toObject()
+                newScannerData.ExpirePre = new Date()
+                newScannerData.OrderConfig = false
+                allScannerDataObject[symbol][scannerID] = newScannerData
+                
             }
         })
     })
@@ -1819,11 +1901,12 @@ const Main = async () => {
     // await handleOrderMultipleOC({
     //     scannerData: getAllConfigScannerRes[0],
     //     symbol: "A8USDT",
-    //     coinCurrent: 0.09985
+    //     coinCurrent: 0.0915
     // })
-    // await handleSocketBotApiList(botApiList)
 
-    // await handleSocketListKline(listKline)
+    await handleSocketBotApiList(botApiList)
+
+    await handleSocketListKline(listKline)
 
     wsSymbol.on('update', async (dataCoin) => {
 
@@ -1986,12 +2069,54 @@ const Main = async () => {
                     })
                 }
 
-
-
             }
         }))
 
         trichMauOCListObject[symbol].preTime = new Date()
+
+        // Realtime Scanner
+
+        const turnover = +dataMain.turnover
+
+
+        if (!trichMauData[symbol].open) {
+            trichMauData[symbol] = {
+                open: coinCurrent,
+                close: coinCurrent,
+                high: coinCurrent,
+                low: coinCurrent,
+                turnover
+            }
+            trichMauDataArray[symbol].push(trichMauData[symbol])
+        }
+
+        if (coinCurrent > trichMauData[symbol].high) {
+            trichMauData[symbol].high = coinCurrent
+
+        }
+        if (coinCurrent < trichMauData[symbol].low) {
+            trichMauData[symbol].low = coinCurrent
+        }
+
+
+        trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
+        trichMauData[symbol].turnoverD = turnover
+        trichMauData[symbol].close = coinCurrent
+
+        if (new Date(dataMain.timestamp) - trichMau[symbol].pre >= 1000) {
+            trichMauDataArray[symbol].push(trichMauData[symbol])
+            trichMau[symbol].pre = new Date(dataMain.timestamp)
+        }
+
+        trichMauData[symbol] = {
+            open: coinCurrent,
+            close: coinCurrent,
+            high: coinCurrent,
+            low: coinCurrent,
+            turnover
+        }
+
+
 
     })
 
@@ -2009,17 +2134,43 @@ const Main = async () => {
         console.log(err);
     });
 
+    // setTimeout(() => {
+    //     handleCreateMultipleConfigSpot({
+    //         scannerData: getAllConfigScannerRes[0],
+    //         symbol: "A8USDT",
+    //     })
+    // }, 0)
+
+    // setTimeout(async () => {
+    //     const res = await deleteStrategiesMultipleSpotBE({
+    //         scannerID: getAllConfigScannerRes[0]._id,
+    //         symbol: "A8USDT",
+    //         botName: "test",
+    //     })
+    //     console.log(res.message);
+    // }, 2000)
+
 }
 
 try {
     Main()
 
-    // setTimeout(() => {
-    //     cron.schedule('*/1 * * * *', () => {
-    //         getMoneyFuture(botApiList)
-    //     });
-    // }, 1000)
+    setInterval(() => {
 
+        listKline.forEach(item => {
+            const [_, candle, symbol] = item.split(".");
+            tinhOC(symbol, trichMauDataArray[symbol])
+            const coinCurrent = trichMauData[symbol].close
+            trichMauData[symbol] = {
+                open: coinCurrent,
+                close: coinCurrent,
+                high: coinCurrent,
+                low: coinCurrent,
+                turnover: trichMauData[symbol].turnover,
+            }
+            trichMauDataArray[symbol] = []
+        })
+    }, 3000)
 
 }
 
@@ -2028,17 +2179,9 @@ catch (e) {
 }
 
 
-// REALTIME
-const socket = require('socket.io-client');
+// ----------------------------------------------------------------
 
-
-const socketRealtime = socket(process.env.SOCKET_IP);
-
-socketRealtime.on('connect', () => {
-    console.log('[V] Connected Socket Realtime');
-});
-
-socketRealtime.on('add', async (newData = []) => {
+const handleSocketAddNew = async (newData = []) => {
     console.log("[...] Add New Strategies From Realtime", newData.length);
 
     const newBotApiList = {}
@@ -2098,7 +2241,22 @@ socketRealtime.on('add', async (newData = []) => {
 
     }))
 
-    // handleSocketBotApiList(newBotApiList)
+    await handleSocketBotApiList(newBotApiList)
+}
+
+// REALTIME
+const socket = require('socket.io-client');
+
+
+const socketRealtime = socket(process.env.SOCKET_IP);
+
+socketRealtime.on('connect', () => {
+    console.log('[V] Connected Socket Realtime');
+});
+
+socketRealtime.on('add', async (newData = []) => {
+
+    await handleSocketAddNew(newData)
 
 });
 
@@ -2691,7 +2849,7 @@ socketRealtime.on('sync-symbol', async (newData) => {
         trichMauOCListObject[symbol.value] = {
             preTime: 0,
         }
-        return `kline.1.${symbol}`
+        return `kline.D.${symbol}`
     })
 
     const resultDigitAll = await Digit()

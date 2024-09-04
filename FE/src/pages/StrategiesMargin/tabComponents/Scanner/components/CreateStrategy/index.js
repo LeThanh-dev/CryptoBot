@@ -580,10 +580,10 @@ function CreateStrategy({
                                     %
                                 </InputAdornment>
                             }}
-                            {...register("Elastic", { required: true, min: formControlMinValue })}
+                            {...register("Elastic", { required: true })}
                         />
                         {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic field is required.</p>}
-                        {errors.Elastic?.type === "min" && <p className="formControlErrorLabel">The Elastic must bigger 0.1.</p>}
+                        {/* {errors.Elastic?.type === "min" && <p className="formControlErrorLabel">The Elastic must bigger 0.1.</p>} */}
 
                     </FormControl>
 

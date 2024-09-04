@@ -16,7 +16,7 @@ function CreateStrategy({
     dataCheckTreeDefaultRef
 }) {
 
-    const formControlMinValue= .1
+    const formControlMinValue = .1
     const groupList = [
         {
             name: "Group 1",
@@ -73,7 +73,7 @@ function CreateStrategy({
         formState: { errors, isSubmitted }
     } = useForm();
 
-    const [symbolGroupData, setSymbolGroupData] = useState(symbolValueInput  ||  [])
+    const [symbolGroupData, setSymbolGroupData] = useState(symbolValueInput || [])
     const [botList, setBotList] = useState([])
 
     const dataChangeRef = useRef(false)
@@ -119,10 +119,10 @@ function CreateStrategy({
     }
 
     const handleSubmitCreate = async data => {
-        
+
         if (symbolGroupData.length > 0 && botList.length > 0) {
             try {
-                
+
                 dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
                 const res = await createStrategies({
                     data: data,
@@ -135,7 +135,7 @@ function CreateStrategy({
                     status: status,
                     message: message
                 }))
-                
+
                 if (status === 200) {
                     reset()
                     dataChangeRef.current = true
@@ -152,7 +152,7 @@ function CreateStrategy({
     }
 
     const handleSubmitCreateWithAddMore = async data => {
-        
+
         if (symbolGroupData.length > 0 && botList.length > 0) {
             try {
                 const res = await createStrategies({
@@ -166,7 +166,7 @@ function CreateStrategy({
                     status: status,
                     message: message
                 }))
-                
+
                 if (status === 200) {
                     dataChangeRef.current = true
                 }
@@ -183,7 +183,7 @@ function CreateStrategy({
     const closeDialog = () => {
         onClose({
             isOpen: false,
-            dataChange:dataChangeRef.current
+            dataChange: dataChangeRef.current
         })
         reset()
     }
@@ -289,6 +289,7 @@ function CreateStrategy({
                         disableCloseOnSelect
                         options={symbolGroupDataList.list}
                         size="small"
+                        isOptionEqualToValue={(option, value) => option.value === value.value}
                         getOptionLabel={(option) => option.name}
                         onChange={(e, value) => {
                             setSymbolGroupData(value)
@@ -322,7 +323,7 @@ function CreateStrategy({
                                 )}
                                 <li {...props}>
                                     <Checkbox
-                                        checked={selected || symbolGroupData.findIndex(item => item.value === option.value) > -1}
+                                        checked={selected}
                                     />
                                     {option.name.split("USDT")[0]}
                                 </li>
@@ -349,7 +350,7 @@ function CreateStrategy({
                             variant="outlined"
                             defaultValue={positionSideList[0].value}
                             size="medium"
-                            {...register("PositionSide", { required: true,  })}
+                            {...register("PositionSide", { required: true, })}
                         >
                             {
 

@@ -186,8 +186,6 @@ function UpdateStrategy({
             if (status === 200) {
                 reset()
                 dataChangeRef.current = true
-                console.log(newData);
-
 
                 setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
                     if (item._id === configID) {
@@ -298,6 +296,7 @@ function UpdateStrategy({
                         onChange={(e, value) => {
                             setOnlyPairsSelected(value)
                         }}
+                        isOptionEqualToValue={(option, value) => option.value === value.value}
                         renderInput={(params) => (
                             <TextField {...params} placeholder="Select..." />
                         )}
@@ -327,7 +326,7 @@ function UpdateStrategy({
                                 )}
                                 <li {...props}>
                                     <Checkbox
-                                        checked={selected || onlyPairsSelected.findIndex(item => item.value === option.value) > -1}
+                                        checked={selected}
                                     />
                                     {option.name.split("USDT")[0]}
                                 </li>
@@ -352,6 +351,7 @@ function UpdateStrategy({
                         disableCloseOnSelect
                         options={symbolGroupDataList.list}
                         size="small"
+                        isOptionEqualToValue={(option, value) => option.value === value.value}
                         getOptionLabel={(option) => option.name}
                         onChange={(e, value) => {
                             setBlackListSelected(value)
@@ -385,7 +385,7 @@ function UpdateStrategy({
                                 )}
                                 <li {...props}>
                                     <Checkbox
-                                        checked={selected || blackListSelected.findIndex(item => item.value === option.value) > -1}
+                                        checked={selected}
                                     />
                                     {option.name.split("USDT")[0]}
                                 </li>
@@ -461,10 +461,9 @@ function UpdateStrategy({
                                     %
                                 </InputAdornment>
                             }}
-                            {...register("Elastic", { required: true, min: formControlMinValue })}
+                            {...register("Elastic", { required: true })}
                         />
                         {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic field is required.</p>}
-                        {errors.Elastic?.type === "min" && <p className="formControlErrorLabel">The Elastic must bigger 0.1.</p>}
 
                     </FormControl>
 
