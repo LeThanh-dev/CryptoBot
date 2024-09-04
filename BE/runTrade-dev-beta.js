@@ -1775,7 +1775,7 @@ const Main = async () => {
                         } catch (error) {
                             console.log("ORDER OC:", error);
                             sendMessageWithRetry({
-                                messageText: "ORDER OC: " + error,
+                                messageText: "ORDER OC ERROR: " + error,
                                 telegramID,
                                 telegramToken
                             })
