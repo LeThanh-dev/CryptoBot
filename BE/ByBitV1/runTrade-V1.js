@@ -67,6 +67,7 @@ var botListTelegram = {}
 // -------  ------------
 
 var listOCByCandleBot = {}
+var listOCByScanner = {}
 // ----------------------------------------------------------------------------------
 
 // Scanner
