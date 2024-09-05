@@ -61,6 +61,90 @@ const BotController = {
 
         return newDataSocketWithBotData;
     },
+    getAllStrategiesSpotByBotID: async ({
+        botID,
+        IsActive
+    }) => {
+        const resultFilter = await SpotModel.aggregate([
+            {
+                $match: {
+                    "children.botID": new mongoose.Types.ObjectId(botID)
+                }
+            },
+            {
+                $project: {
+                    label: 1,
+                    value: 1,
+                    volume24h: 1,
+                    children: {
+                        $filter: {
+                            input: "$children",
+                            as: "child",
+                            cond: {
+                                $and: [
+                                    { $eq: ["$$child.botID", new mongoose.Types.ObjectId(botID)] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+        const result = await SpotModel.populate(resultFilter, {
+            path: 'children.botID',
+        })
+
+        const newDataSocketWithBotData = result.flatMap((data) => data.children.map(child => {
+            child.symbol = data.value
+            child.value = `${data._id}-${child._id}`
+            child.IsActive = IsActive !== "not-modified" ? IsActive : child.IsActive
+            return child
+        })) || []
+
+        return newDataSocketWithBotData;
+    },
+    getAllStrategiesMarginByBotID: async ({
+        botID,
+        IsActive
+    }) => {
+        const resultFilter = await MarginMModel.aggregate([
+            {
+                $match: {
+                    "children.botID": new mongoose.Types.ObjectId(botID)
+                }
+            },
+            {
+                $project: {
+                    label: 1,
+                    value: 1,
+                    volume24h: 1,
+                    children: {
+                        $filter: {
+                            input: "$children",
+                            as: "child",
+                            cond: {
+                                $and: [
+                                    { $eq: ["$$child.botID", new mongoose.Types.ObjectId(botID)] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+        const result = await MarginMModel.populate(resultFilter, {
+            path: 'children.botID',
+        })
+
+        const newDataSocketWithBotData = result.flatMap((data) => data.children.map(child => {
+            child.symbol = data.value
+            child.value = `${data._id}-${child._id}`
+            child.IsActive = IsActive !== "not-modified" ? IsActive : child.IsActive
+            return child
+        })) || []
+
+        return newDataSocketWithBotData;
+    },
     // 
     getAllBot: async (req, res) => {
         try {
@@ -221,6 +305,8 @@ const BotController = {
                                         IsActive
                                     })
 
+                                    console.log("newDataSocketWithBotData", newDataSocketWithBotData.length);
+
                                     newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
                                         type: "bot-update",
                                         data: {
@@ -274,6 +360,7 @@ const BotController = {
                         default:
                             break;
                     }
+
 
                     res.customResponse(200, "Update Bot Successful", "");
                 }

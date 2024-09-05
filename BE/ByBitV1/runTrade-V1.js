@@ -67,7 +67,7 @@ var botListTelegram = {}
 // -------  ------------
 
 var listOCByCandleBot = {}
-var listOCByScanner = {}
+var listConfigIDOrderOCByScanner = {}
 // ----------------------------------------------------------------------------------
 
 // Scanner
@@ -569,9 +569,10 @@ const handleCancelOrderOC = async ({
             .then((response) => {
                 if (response.retCode == 0) {
                     console.log(`[V] Cancel order ( ${botName} - ${side} -  ${symbol} ) successful `);
-                    cancelAll({ strategyID, botID })
 
+                    delete listOCByCandleBot[botID].listOC[strategyID]
                     allStrategiesByCandleAndSymbol[symbol][strategyID].ExpirePre = new Date()
+                    cancelAll({ strategyID, botID })
 
                 }
                 else {
@@ -782,20 +783,32 @@ const handleCreateMultipleConfigSpot = async ({
         }
     })
 
+    const scannerID = scannerData._id
+    const botData = scannerData.botID
+
     const res = await createStrategiesMultipleSpotBE({
         dataInput,
         userID: scannerData.userID,
-        botID: scannerData.botID._id,
-        botName: scannerData.botID.botName,
+        botID: botData._id,
+        botName: botData.botName,
         symbol,
-        scannerID: scannerData._id
+        scannerID
     })
 
     console.log(res.message);
 
     const newData = res.data
 
-    newData.length > 0 && await handleSocketAddNew(newData)
+    if (newData.length > 0) {
+
+        listConfigIDOrderOCByScanner[scannerID] = {
+            listConFigID: newData.map(item => item._id),
+            botData,
+        }
+
+        await handleSocketAddNew(newData)
+    }
+
 
 
 }
@@ -1756,11 +1769,32 @@ const tinhOC = (symbol, dataAll = []) => {
             const Elastic = scannerData.Elastic
             const Turnover = scannerData.Turnover
             const Market = scannerData.Market
-            const ScannerID = scannerData._id
+            const scannerID = scannerData._id
+
             // Check expire 
             if (new Date() - scannerData.ExpirePre >= scannerData.Expire) {
                 // Delete all config
                 if (Market === "Spot") {
+                    const listConFigID = listConfigIDOrderOCByScanner[scannerID].listConFigID
+                    const botData = listConfigIDOrderOCByScanner[scannerID].botData
+
+                    const listOC = {
+                        ApiKey: botData.ApiKey,
+                        SecretKey: botData.SecretKey,
+                        listOC: listConFigID.map(item => listOCByCandleBot[botData._id].listOC[item])
+                    }
+
+                    const cancelAllOCSpotByScanner = handleCancelAllOrderOC(listOC)
+
+                    const deleteAllConfigSpotByScanner = deleteStrategiesMultipleSpotBE({
+                        scannerID,
+                        symbol,
+                        botName: botData.botName,
+                    })
+
+                    const resultAll = await Promise.allSettled([deleteAllConfigSpotByScanner, cancelAllOCSpotByScanner])
+
+                    console.log(resultAll);
 
                 }
                 else {
@@ -1852,7 +1886,7 @@ const Main = async () => {
                 newScannerData.ExpirePre = new Date()
                 newScannerData.OrderConfig = false
                 allScannerDataObject[symbol][scannerID] = newScannerData
-                
+
             }
         })
     })
@@ -1898,12 +1932,6 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
-
-    // await handleOrderMultipleOC({
-    //     scannerData: getAllConfigScannerRes[0],
-    //     symbol: "A8USDT",
-    //     coinCurrent: 0.0915
-    // })
 
     await handleSocketBotApiList(botApiList)
 
@@ -2135,21 +2163,12 @@ const Main = async () => {
         console.log(err);
     });
 
-    // setTimeout(() => {
-    //     handleCreateMultipleConfigSpot({
-    //         scannerData: getAllConfigScannerRes[0],
-    //         symbol: "A8USDT",
-    //     })
-    // }, 0)
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "AGLAUSDT",
+    // })
 
-    // setTimeout(async () => {
-    //     const res = await deleteStrategiesMultipleSpotBE({
-    //         scannerID: getAllConfigScannerRes[0]._id,
-    //         symbol: "A8USDT",
-    //         botName: "test",
-    //     })
-    //     console.log(res.message);
-    // }, 2000)
+
 
 }
 

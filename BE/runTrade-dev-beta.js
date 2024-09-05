@@ -525,7 +525,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             console.log(`[V] Cancel order ( ${cur.botName} - ${cur.side} -  ${cur.symbol} - ${candleTemp} ) has been filled `);
-                            // delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
+                            delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
                         }
                         return pre
                     }, [])
