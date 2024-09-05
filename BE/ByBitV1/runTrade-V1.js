@@ -232,7 +232,8 @@ const handleSubmitOrder = async ({
             side,
             botName,
             botID,
-            orderLinkId
+            orderLinkId,
+            OrderChange: strategy.OrderChange
         }
 
         allStrategiesByBotIDOrderOC[botID].totalOC += 1
@@ -269,7 +270,7 @@ const handleSubmitOrder = async ({
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderLinkId = newOrderLinkID
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen = coinOpen
 
-                    const text = `\n[+OC] Order OC ( ${strategy.OrderChange}% ) ( ${botName} - ${side} - ${symbol} ) successful`
+                    const text = `\n[+OC] Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful`
                     console.log(text)
                     console.log(changeColorConsole.greenBright(`[_OC orderID_] ( ${botName} - ${side} - ${symbol} ): ${newOrderLinkID}`));
 
@@ -281,7 +282,7 @@ const handleSubmitOrder = async ({
 
                 }
                 else {
-                    console.log(changeColorConsole.yellowBright(`\n[!] Ordered OC ( ${botName} - ${side} - ${symbol} ) failed: `, response.retMsg, price, qty))
+                    console.log(changeColorConsole.yellowBright(`\n[!] Ordered OC ( ${strategy.OrderChange} % )  ( ${botName} - ${side} - ${symbol} ) failed: `, response.retMsg, price, qty))
                     delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                     delete listOCByCandleBot[botID].listOC[strategyID]
 
@@ -289,7 +290,7 @@ const handleSubmitOrder = async ({
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
             })
             .catch((error) => {
-                console.log(`\n[!] Ordered OC ( ${botName} - ${side} - ${symbol} ) error `, error)
+                console.log(`\n[!] Ordered OC ( ${strategy.OrderChange} % )  ( ${botName} - ${side} - ${symbol} ) error `, error)
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
                 delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                 delete listOCByCandleBot[botID].listOC[strategyID]
@@ -309,7 +310,7 @@ const handleSubmitOrder = async ({
 }
 
 const handleMoveOrderOC = async ({
-    strategyID,
+    strategy,
     symbol,
     price,
     orderId,
@@ -341,14 +342,14 @@ const handleMoveOrderOC = async ({
             })
             .then((response) => {
                 if (response.retCode == 0) {
-                    console.log(`[->] Move Order OC ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
+                    console.log(`[->] Move Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
                 }
                 else {
-                    console.log(changeColorConsole.yellowBright(`[!] Move Order OC ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg, price))
+                    console.log(changeColorConsole.yellowBright(`[!] Move Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg, price))
                 }
             })
             .catch((error) => {
-                console.log(`[!] Move Order OC ( ${botName} - ${side} - ${symbol} ) error `, error)
+                console.log(`[!] Move Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) error `, error)
             });
 
     }
@@ -552,14 +553,15 @@ const handleCancelOrderOC = async ({
     ApiKey,
     SecretKey,
     botName,
-    botID
+    botID,
+    OrderChange
 }) => {
 
     const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
     const client = new RestClientV5(clientConfig);
 
-    !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
+    if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled) {
         await client
             .cancelOrder({
                 category: 'spot',
@@ -568,23 +570,23 @@ const handleCancelOrderOC = async ({
             })
             .then((response) => {
                 if (response.retCode == 0) {
-                    console.log(`[V] Cancel order ( ${botName} - ${side} -  ${symbol} ) successful `);
+                    console.log(`[V] Cancel order OC ( ${OrderChange} % ) ( ${botName} - ${side} -  ${symbol} ) successful `);
 
-                    delete listOCByCandleBot[botID].listOC[strategyID]
-                    allStrategiesByCandleAndSymbol[symbol][strategyID].ExpirePre = new Date()
                     cancelAll({ strategyID, botID })
 
                 }
                 else {
-                    console.log(changeColorConsole.yellowBright(`[!] Cancel order ( ${botName} - ${side} -  ${symbol} ) failed `, response.retMsg))
+                    console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${OrderChange} % ) ( ${botName} - ${side} -  ${symbol} ) failed `, response.retMsg))
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
                 }
             })
             .catch((error) => {
-                console.log(`[!] Cancel order ( ${botName} - ${side} -  ${symbol} ) error `, error)
+                console.log(`[!] Cancel order OC ( ${OrderChange} % ) ( ${botName} - ${side} -  ${symbol} ) error `, error)
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
 
             });
+        delete listOCByCandleBot[botID].listOC[strategyID]
+    }
 
 }
 
@@ -621,7 +623,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                             listCancel[curOrderLinkId] = cur
                         }
                         else {
-                            console.log(`[V] Cancel order ( ${cur.botName} - ${cur.side} -  ${cur.symbol} ) has been filled `);
+                            console.log(`[V] Cancel order OC ( ${cur.OrderChange} % ) ( ${cur.botName} - ${cur.side} -  ${cur.symbol} ) has been filled `);
                             delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                         }
                         return pre
@@ -639,10 +641,9 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         const codeData = listSuccessCode[index]
                         const botIDTemp = data.botID
                         const strategyIDTemp = data.strategyID
-                        const candleTemp = data.candle
 
                         if (codeData.code == 0) {
-                            console.log(`[V] Cancel order ( ${data.botName} - ${data.side} -  ${data.symbol} ) successful `);
+                            console.log(`[V] Cancel order OC ( ${data.OrderChange} % )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) successful `);
                             cancelAll({
                                 botID: botIDTemp,
                                 strategyID: strategyIDTemp,
@@ -650,7 +651,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             allStrategiesByBotIDAndStrategiesID[botIDTemp][strategyIDTemp].OC.orderID = ""
-                            console.log(changeColorConsole.yellowBright(`[!] Cancel order ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed `, codeData.msg));
+                            console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${data.OrderChange} % )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed `, codeData.msg));
                         }
                         delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                     })
@@ -802,7 +803,7 @@ const handleCreateMultipleConfigSpot = async ({
     if (newData.length > 0) {
 
         listConfigIDOrderOCByScanner[scannerID] = {
-            listConFigID: newData.map(item => item._id),
+            listConFigID: newData.map(item => item.value),
             botData,
         }
 
@@ -1686,83 +1687,89 @@ const tinhOC = (symbol, dataAll = []) => {
 
     if (dataAll.length > 0) {
 
-        let OC = 0
-        let TP = 0
-        let OCLong = 0
-        let TPLong = 0
-        let vol = 0
-        let OCNotPercent = 0
-        let OCLongNotPercent = 0
-        dataAll.forEach((data, index) => {
-
-            const Close = +data.close
-            const Open = +data.open
-            const Highest = +data.high
-            const Lowest = +data.low
-
-            vol += (+data.turnover)
-            if (index === 0) {
-                OCNotPercent = Highest - Open
-                OC = OCNotPercent / Open
-                OCLongNotPercent = Lowest - Open
-                OCLong = OCLongNotPercent / Open
-            }
-            else {
-
-                let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
-                let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
-                let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
-                let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
-
-
-                if ([Infinity, -Infinity].includes(TPTemp)) {
-                    TPTemp = 0
-                }
-                if ([Infinity, -Infinity].includes(TPLongTemp)) {
-                    TPLongTemp = 0
-                }
-                if ([Infinity, -Infinity].includes(TPTemp2)) {
-                    TPTemp2 = 0
-                }
-                if ([Infinity, -Infinity].includes(TPLongTemp2)) {
-                    TPLongTemp2 = 0
-                }
-
-
-                if (TPTemp > TP) {
-                    TP = TPTemp
-                }
-                if (TPLongTemp > TPLong) {
-                    TPLong = TPLongTemp
-                }
-                if (TPTemp2 > TP) {
-                    TP = TPTemp2
-                }
-                if (TPLongTemp2 > TPLong) {
-                    TPLong = TPLongTemp2
-                }
-            }
-        })
-
-
-        if ([Infinity, -Infinity].includes(OC)) {
-            OC = 0
-        }
-
-        if ([Infinity, -Infinity].includes(OCLong)) {
-            OCLong = 0
-        }
-
-
-        const OCRound = roundNumber(OC)
-        const TPRound = roundNumber(TP)
-        const OCLongRound = roundNumber(OCLong)
-        const TPLongRound = roundNumber(TPLong)
-
-
         const listScannerObject = allScannerDataObject[symbol]
 
         listScannerObject && Object.values(listScannerObject)?.length > 0 && Promise.allSettled(Object.values(listScannerObject).map(async scannerData => {
+
+            console.log("scannerData", scannerData);
+
+
+            let OC = 0
+            let TP = 0
+            let OCLong = 0
+            let TPLong = 0
+            let vol = 0
+            let OCNotPercent = 0
+            let OCLongNotPercent = 0
+
+            dataAll.forEach((data, index) => {
+
+                const Close = +data.close
+                const Open = +data.open
+                const Highest = +data.high
+                const Lowest = +data.low
+
+                vol += (+data.turnover)
+                if (index === 0) {
+                    OCNotPercent = Highest - Open
+                    OC = OCNotPercent / Open
+                    OCLongNotPercent = Lowest - Open
+                    OCLong = OCLongNotPercent / Open
+                }
+                else {
+
+                    let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
+                    let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
+                    let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
+                    let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
+
+
+                    if ([Infinity, -Infinity].includes(TPTemp)) {
+                        TPTemp = 0
+                    }
+                    if ([Infinity, -Infinity].includes(TPLongTemp)) {
+                        TPLongTemp = 0
+                    }
+                    if ([Infinity, -Infinity].includes(TPTemp2)) {
+                        TPTemp2 = 0
+                    }
+                    if ([Infinity, -Infinity].includes(TPLongTemp2)) {
+                        TPLongTemp2 = 0
+                    }
+
+
+                    if (TPTemp > TP) {
+                        TP = TPTemp
+                    }
+                    if (TPLongTemp > TPLong) {
+                        TPLong = TPLongTemp
+                    }
+                    if (TPTemp2 > TP) {
+                        TP = TPTemp2
+                    }
+                    if (TPLongTemp2 > TPLong) {
+                        TPLong = TPLongTemp2
+                    }
+                }
+            })
+
+
+            if ([Infinity, -Infinity].includes(OC)) {
+                OC = 0
+            }
+
+            if ([Infinity, -Infinity].includes(OCLong)) {
+                OCLong = 0
+            }
+
+
+            const OCRound = roundNumber(OC)
+            const TPRound = roundNumber(TP)
+            const OCLongRound = roundNumber(OCLong)
+            const TPLongRound = roundNumber(TPLong)
+
+
+
 
             const PositionSide = scannerData.PositionSide
             const OrderChange = scannerData.OrderChange
@@ -1772,34 +1779,62 @@ const tinhOC = (symbol, dataAll = []) => {
             const scannerID = scannerData._id
 
             // Check expire 
-            if (new Date() - scannerData.ExpirePre >= scannerData.Expire) {
-                // Delete all config
-                if (Market === "Spot") {
-                    const listConFigID = listConfigIDOrderOCByScanner[scannerID].listConFigID
-                    const botData = listConfigIDOrderOCByScanner[scannerID].botData
+            try {
+                if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
+                    // Delete all config
+                    const listConfigIDOrderOCByScannerID = listConfigIDOrderOCByScanner[scannerID]
 
-                    const listOC = {
-                        ApiKey: botData.ApiKey,
-                        SecretKey: botData.SecretKey,
-                        listOC: listConFigID.map(item => listOCByCandleBot[botData._id].listOC[item])
+                    if (listConfigIDOrderOCByScannerID) {
+                        const listConFigID = listConfigIDOrderOCByScannerID.listConFigID || []
+                        const botData = listConfigIDOrderOCByScannerID.botData
+
+                        if (listConFigID.length > 0) {
+
+                            const listOC = {
+                                ApiKey: botData.ApiKey,
+                                SecretKey: botData.SecretKey,
+                                listOC: listConFigID.reduce((pre, item) => {
+                                    const data = listOCByCandleBot[botData._id].listOC[item]
+                                    if (data) {
+                                        return [
+                                            ...pre,
+                                            data
+                                        ]
+                                    }
+                                    return pre
+                                }, [])
+                            }
+                            if (Market === "Spot") {
+
+                                const cancelAllOCSpotByScanner = handleCancelAllOrderOC(listOC)
+
+                                const deleteAllConfigSpotByScanner = deleteStrategiesMultipleSpotBE({
+                                    scannerID,
+                                    symbol,
+                                    botName: botData.botName,
+                                })
+
+                                const resultAll = await Promise.allSettled([deleteAllConfigSpotByScanner, cancelAllOCSpotByScanner])
+
+                                const deleteConfigDataRes = resultAll[0].value
+
+                                const message = deleteConfigDataRes?.message
+                                console.log(message);
+
+                                deleteConfigDataRes.data.length > 0 && await handleSocketDelete(deleteConfigDataRes.data)
+
+                            }
+                            else {
+
+                            }
+                        }
                     }
 
-                    const cancelAllOCSpotByScanner = handleCancelAllOrderOC(listOC)
-
-                    const deleteAllConfigSpotByScanner = deleteStrategiesMultipleSpotBE({
-                        scannerID,
-                        symbol,
-                        botName: botData.botName,
-                    })
-
-                    const resultAll = await Promise.allSettled([deleteAllConfigSpotByScanner, cancelAllOCSpotByScanner])
-
-                    console.log(resultAll);
+                    allScannerDataObject[symbol][scannerID].ExpirePre = new Date()
 
                 }
-                else {
-
-                }
+            } catch (error) {
+                console.log(error);
 
             }
 
@@ -1822,6 +1857,7 @@ const tinhOC = (symbol, dataAll = []) => {
                     }
                 }
             }
+
         }))
 
     }
@@ -1881,12 +1917,11 @@ const Main = async () => {
         allScannerDataObject[symbol] = {}
         getAllConfigScannerRes.forEach(scannerData => {
             const scannerID = scannerData._id
-            if (scannerData.OnlyPairs.includes(symbol) && !scannerData.Blacklist.includes(symbol)) {
+            if (checkConditionBot(scannerData) && scannerData.OnlyPairs.includes(symbol) && !scannerData.Blacklist.includes(symbol)) {
                 const newScannerData = scannerData.toObject()
                 newScannerData.ExpirePre = new Date()
                 newScannerData.OrderConfig = false
                 allScannerDataObject[symbol][scannerID] = newScannerData
-
             }
         })
     })
@@ -1975,29 +2010,7 @@ const Main = async () => {
                 !strategy.AmountOld && (strategy.AmountOld = strategy.Amount);
                 !strategy.AmountExpirePre && (strategy.AmountExpirePre = new Date());
 
-                //Check expire config - OK
-                if (strategy.Expire && new Date() - strategy.ExpirePre >= strategy.Expire * 60 * 1000) {
-                    // const [parentID, id] = strategy.value.split("-")
-                    // deleteStrategiesItemSpotBE({ id, parentID }).then(message => {
-                    //     console.log(message);
-                    // }).catch(err => {
-                    //     console.log(err.message);
-                    // })
-                    // strategy.IsActive = false
-                    // delete allStrategiesByCandleAndSymbol?.[symbol]?.[strategyID]
 
-                    // cancel OC
-                    handleCancelOrderOC({
-                        strategyID,
-                        symbol,
-                        side,
-                        ApiKey,
-                        SecretKey,
-                        botName,
-                        botID
-                    })
-
-                }
 
                 //Check expire Increase-Amount - OK
                 if (strategy.AmountExpire && new Date() - strategy.AmountExpirePre >= strategy.AmountExpire * 60 * 1000) {
@@ -2041,8 +2054,6 @@ const Main = async () => {
                     isLeverage: symbolTradeTypeObject[symbol] === "Spot" ? 0 : 1
                 }
 
-                console.log(dataInput.qty);
-
 
                 if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.ordering) {
 
@@ -2082,12 +2093,33 @@ const Main = async () => {
                     }
                 }
                 else if (allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID &&
-                    !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
-                    new Date() - trichMauOCListObject[symbol].preTime >= 1000) {
-                    handleMoveOrderOC({
-                        ...dataInput,
-                        orderId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID
-                    })
+                    !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled
+                ) {
+
+                    //Check expire config - OK
+                    if (strategy.Expire && new Date() - strategy.ExpirePre >= strategy.Expire * 60 * 1000) {
+
+                        handleCancelOrderOC({
+                            strategyID,
+                            symbol,
+                            side,
+                            ApiKey,
+                            SecretKey,
+                            botName,
+                            botID,
+                            OrderChange: strategy.OrderChange
+                        })
+                        strategy.ExpirePre = new Date()
+                    }
+
+                    if (new Date() - trichMauOCListObject[symbol].preTime >= 1000) {
+                        handleMoveOrderOC({
+                            ...dataInput,
+                            orderId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID
+                        })
+                    }
+
+
                 }
                 else if (allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID &&
                     strategy.Adaptive &&
@@ -2103,10 +2135,9 @@ const Main = async () => {
 
         trichMauOCListObject[symbol].preTime = new Date()
 
+
         // Realtime Scanner
-
         const turnover = +dataMain.turnover
-
 
         if (!trichMauData[symbol].open) {
             trichMauData[symbol] = {
@@ -2263,6 +2294,84 @@ const handleSocketAddNew = async (newData = []) => {
 
     await handleSocketBotApiList(newBotApiList)
 }
+const handleSocketDelete = async (newData = []) => {
+    console.log("[...] Deleted Strategies From Realtime", newData.length);
+    updatingAllMain = true
+
+    const listOrderOC = {}
+    const listOrderTP = []
+
+    await Promise.allSettled(newData.map((strategiesData, index) => {
+        if (checkConditionBot(strategiesData)) {
+
+            const ApiKey = strategiesData.botID.ApiKey
+            const SecretKey = strategiesData.botID.SecretKey
+
+            const symbol = strategiesData.symbol
+            const strategyID = strategiesData.value
+            const botID = strategiesData.botID._id
+            const botName = strategiesData.botID.botName
+
+            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+
+            const botSymbolMissID = `${botID}-${symbol}`
+
+            const cancelDataObject = {
+                ApiKey,
+                SecretKey,
+                strategyID,
+                symbol: symbol,
+                candle: strategiesData.Candlestick,
+                side,
+                botName,
+                botID
+            }
+
+            allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
+                ...cancelDataObject,
+                orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
+                gongLai: true
+            })
+
+            !listOrderOC[botID] && (listOrderOC[botID] = {});
+            !listOrderOC[botID].listOC && (listOrderOC[botID] = {
+                listOC: {},
+                ApiKey,
+                SecretKey,
+            });
+
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
+                strategyID,
+                symbol,
+                side,
+                botName,
+                botID,
+                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
+            });
+
+            // handleCancelOrderTP({
+            //     ...cancelDataObject,
+            //     orderId: missTPDataBySymbol[botSymbolMissID]?.orderID,
+            //     gongLai: true
+            // })
+
+
+            delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
+            delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+        }
+    }))
+
+    const cancelAllOC = cancelAllListOrderOC(listOrderOC)
+
+    const cancelAllTP = handleCancelAllOrderTP({
+        items: listOrderTP
+    })
+
+    await Promise.allSettled([cancelAllOC, cancelAllTP])
+    updatingAllMain = false
+}
+
+
 
 // REALTIME
 const socket = require('socket.io-client');
@@ -2406,27 +2515,71 @@ socketRealtime.on('update', async (newData = []) => {
     updatingAllMain = false
 });
 
-socketRealtime.on('delete', async (newData) => {
-    console.log("[...] Deleted Strategies From Realtime", newData.length);
+socketRealtime.on('scanner-update', async (newData = []) => {
+    console.log("[...] Update Scanner From Realtime", newData.length);
+
     updatingAllMain = true
+
+    const newBotApiList = {}
 
     const listOrderOC = {}
     const listOrderTP = []
 
-    await Promise.allSettled(newData.map((strategiesData, index) => {
+    await Promise.allSettled(newData.map((strategiesData) => {
+
         if (checkConditionBot(strategiesData)) {
 
             const ApiKey = strategiesData.botID.ApiKey
             const SecretKey = strategiesData.botID.SecretKey
+            const botID = strategiesData.botID._id
+            const botName = strategiesData.botID.botName
 
             const symbol = strategiesData.symbol
             const strategyID = strategiesData.value
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
+            const IsActive = strategiesData.IsActive
+
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
             const botSymbolMissID = `${botID}-${symbol}`
+
+            !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
+            allStrategiesByCandleAndSymbol[symbol][strategyID] = strategiesData
+
+            !allStrategiesByBotIDAndOrderID[botID] && (allStrategiesByBotIDAndOrderID[botID] = {});
+            !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
+
+
+            if (IsActive) {
+                if (!botApiList[botID]) {
+                    botApiList[botID] = {
+                        id: botID,
+                        botName,
+                        ApiKey,
+                        SecretKey,
+                        telegramID: strategiesData.botID.telegramID,
+                        telegramToken: strategiesData.botID.telegramToken,
+                    }
+
+                    newBotApiList[botID] = {
+                        id: botID,
+                        botName,
+                        ApiKey,
+                        SecretKey,
+                        telegramID: strategiesData.botID.telegramID,
+                        telegramToken: strategiesData.botID.telegramToken,
+                    }
+
+                    // !allStrategiesByBotIDOrderOC[botID] && (allStrategiesByBotIDOrderOC[botID] = {})
+                    // !allStrategiesByBotIDOrderOC[botID][symbol] && (
+                    //     allStrategiesByBotIDOrderOC[botID][symbol] = {
+                    //         totalOC: 0,
+                    //         logError: false
+                    //     }
+                    // )
+                }
+            }
+
 
             const cancelDataObject = {
                 ApiKey,
@@ -2439,39 +2592,42 @@ socketRealtime.on('delete', async (newData) => {
                 botID
             }
 
-            allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
-                ...cancelDataObject,
-                orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
-                gongLai: true
-            })
 
-            !listOrderOC[botID] && (listOrderOC[botID] = {});
-            !listOrderOC[botID].listOC && (listOrderOC[botID] = {
-                listOC: {},
-                ApiKey,
-                SecretKey,
-            });
+            if (!strategiesData.IsActive) {
 
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
-                strategyID,
-                symbol,
-                side,
-                botName,
-                botID,
-                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
-            });
+                allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
+                    ...cancelDataObject,
+                    orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
+                    gongLai: true
+                })
 
-            // handleCancelOrderTP({
-            //     ...cancelDataObject,
-            //     orderId: missTPDataBySymbol[botSymbolMissID]?.orderID,
-            //     gongLai: true
-            // })
+                !listOrderOC[botID] && (listOrderOC[botID] = {});
+                !listOrderOC[botID].listOC && (listOrderOC[botID] = {
+                    listOC: {},
+                    ApiKey,
+                    SecretKey,
+                });
 
+                allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
+                    strategyID,
+                    symbol,
+                    side,
+                    botName,
+                    botID,
+                    orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
+                });
 
-            delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
-            delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+                // handleCancelOrderTP({
+                //     ...cancelDataObject,
+                //     orderId: missTPDataBySymbol[botSymbolMissID]?.orderID,
+                //     gongLai: true
+                // })
+            }
+
         }
+
     }))
+
 
     const cancelAllOC = cancelAllListOrderOC(listOrderOC)
 
@@ -2480,7 +2636,13 @@ socketRealtime.on('delete', async (newData) => {
     })
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
+    await handleSocketBotApiList(newBotApiList)
+
     updatingAllMain = false
+});
+
+socketRealtime.on('delete', async (newData) => {
+    await handleSocketDelete(newData)
 
 });
 
@@ -2648,7 +2810,6 @@ socketRealtime.on('bot-api', async (data) => {
 
     await Promise.allSettled(newData.map((strategiesData, index) => {
 
-        if (checkConditionBot(strategiesData)) {
             const strategyID = strategiesData.value
             const symbol = strategiesData.symbol
             const ApiKey = strategiesData.botID.ApiKey
@@ -2703,7 +2864,6 @@ socketRealtime.on('bot-api', async (data) => {
             //     gongLai: true
             // })
 
-        }
     }))
 
     const cancelAllOC = cancelAllListOrderOC(listOrderOC)
@@ -2762,62 +2922,60 @@ socketRealtime.on('bot-delete', async (data) => {
     const botApiData = botApiList[botIDMain]
 
     await Promise.allSettled(newData.map(async (strategiesData, index) => {
-        if (checkConditionBot(strategiesData)) {
 
-            const ApiKey = strategiesData.botID.ApiKey
-            const SecretKey = strategiesData.botID.SecretKey
+        const ApiKey = strategiesData.botID.ApiKey
+        const SecretKey = strategiesData.botID.SecretKey
 
-            const symbol = strategiesData.symbol
-            const strategyID = strategiesData.value
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
+        const symbol = strategiesData.symbol
+        const strategyID = strategiesData.value
+        const botID = strategiesData.botID._id
+        const botName = strategiesData.botID.botName
 
-            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+        const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
-            const botSymbolMissID = `${botID}-${symbol}`
+        const botSymbolMissID = `${botID}-${symbol}`
 
 
-            const cancelDataObject = {
-                ApiKey,
-                SecretKey,
-                strategyID,
-                symbol: symbol,
-                candle: strategiesData.Candlestick,
-                side,
-                botName,
-                botID
-            }
-
-            !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
-                ...cancelDataObject,
-                orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
-                gongLai: true
-            })
-
-            !listOrderOC[botID] && (listOrderOC[botID] = {});
-            !listOrderOC[botID].listOC && (listOrderOC[botID] = {
-                listOC: {},
-                ApiKey,
-                SecretKey,
-            });
-
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
-                strategyID,
-                symbol,
-                side,
-                botName,
-                botID,
-                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
-            });
-            // handleCancelOrderTP({
-            //     ...cancelDataObject,
-            //     orderId: missTPDataBySymbol[botSymbolMissID]?.orderID,
-            //     gongLai: true
-            // })
-
-            delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
-            delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+        const cancelDataObject = {
+            ApiKey,
+            SecretKey,
+            strategyID,
+            symbol: symbol,
+            candle: strategiesData.Candlestick,
+            side,
+            botName,
+            botID
         }
+
+        !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
+            ...cancelDataObject,
+            orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
+            gongLai: true
+        })
+
+        !listOrderOC[botID] && (listOrderOC[botID] = {});
+        !listOrderOC[botID].listOC && (listOrderOC[botID] = {
+            listOC: {},
+            ApiKey,
+            SecretKey,
+        });
+
+        allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
+            strategyID,
+            symbol,
+            side,
+            botName,
+            botID,
+            orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
+        });
+        // handleCancelOrderTP({
+        //     ...cancelDataObject,
+        //     orderId: missTPDataBySymbol[botSymbolMissID]?.orderID,
+        //     gongLai: true
+        // })
+
+        delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
+        delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
     }))
 
     const cancelAllOC = cancelAllListOrderOC(listOrderOC)

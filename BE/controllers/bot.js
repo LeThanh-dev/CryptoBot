@@ -21,7 +21,6 @@ const BotController = {
     },
     getAllStrategiesByBotID: async ({
         botID,
-        IsActive
     }) => {
         const resultFilter = await StrategiesModel.aggregate([
             {
@@ -55,7 +54,7 @@ const BotController = {
         const newDataSocketWithBotData = result.flatMap((data) => data.children.map(child => {
             child.symbol = data.value
             child.value = `${data._id}-${child._id}`
-            child.IsActive = IsActive !== "not-modified" ? IsActive : child.IsActive
+            // child.IsActive = IsActive !== "not-modified" ? IsActive : child.IsActive
             return child
         })) || []
 
@@ -302,7 +301,6 @@ const BotController = {
 
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                                         botID,
-                                        IsActive
                                     })
 
                                     console.log("newDataSocketWithBotData", newDataSocketWithBotData.length);
@@ -320,7 +318,6 @@ const BotController = {
                                 else if (type === "Api") {
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                                         botID,
-                                        IsActive: "not-modified"
                                     })
 
                                     newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
@@ -338,7 +335,6 @@ const BotController = {
                                 else if (type === "telegram") {
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                                         botID,
-                                        IsActive: "not-modified"
                                     })
 
                                     newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
@@ -385,7 +381,6 @@ const BotController = {
 
             const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                 botID,
-                IsActive: true
             })
 
             newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
@@ -450,7 +445,6 @@ const BotController = {
                 case "ByBitV3":
                     newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                         botID,
-                        IsActive: true
                     })
                     break
             }

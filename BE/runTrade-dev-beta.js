@@ -858,6 +858,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                         const ApiKey = botApiList[botID]?.ApiKey
                         const SecretKey = botApiList[botID]?.SecretKey
+                        const IsActive = botApiList[botID]?.IsActive
                         const botName = botApiList[botID]?.botName
 
                         const telegramID = botApiList[botID]?.telegramID
@@ -866,7 +867,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                         const topicMain = dataCoin.topic
                         const dataMainAll = dataCoin.data
 
-                        ApiKey && SecretKey && await Promise.allSettled(dataMainAll.map(async dataMain => {
+                        IsActive && ApiKey && SecretKey && await Promise.allSettled(dataMainAll.map(async dataMain => {
 
                             if (dataMain.category == "linear") {
 
@@ -1493,6 +1494,7 @@ const Main = async () => {
                 SecretKey: strategyItem.botID.SecretKey,
                 telegramID: strategyItem.botID.telegramID,
                 telegramToken: strategyItem.botID.telegramToken,
+                IsActive: true
             }
 
             !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
@@ -1612,14 +1614,14 @@ const Main = async () => {
 
             listDataObject && Object.values(listDataObject)?.length > 0 && await Promise.allSettled(Object.values(listDataObject).map(async strategy => {
 
-                if (checkConditionBot(strategy)) {
+                const botID = strategy.botID._id
+
+                if (checkConditionBot(strategy) && botApiList[botID]?.IsActive) {
 
                     const strategyID = strategy.value
 
                     strategy.digit = digitAllCoinObject[strategy.symbol]
 
-
-                    const botID = strategy.botID._id
                     const botName = strategy.botID.botName
 
                     const ApiKey = strategy.botID.ApiKey
@@ -1689,6 +1691,7 @@ const Main = async () => {
                                     // Check pre coin type 
 
                                     let coinPreCoin = ""
+                                    let coinCurCoin = ""
                                     let conditionPre = true
 
                                     const pricePreData = listPricePreOne[symbolCandleID]
@@ -1699,14 +1702,20 @@ const Main = async () => {
                                     else {
                                         coinPreCoin = "Red"
                                     }
+                                    if (coinCurrent > coinOpen) {
+                                        coinCurCoin = "Blue"
+                                    }
+                                    else {
+                                        coinCurCoin = "Red"
+                                    }
                                     // }
+                                    const currentValue = coinOpen - coinCurrent
                                     // BUY
                                     if (side === "Buy") {
 
-                                        if (coinPreCoin === "Blue") {
+                                        if (coinPreCoin === "Blue" && coinCurCoin === "Red") {
                                             const preValue = pricePreData.high - pricePreData.open
-                                            const currentValue = coinOpen - coinCurrent
-                                            conditionPre = currentValue >= (strategy.Ignore / 100) * preValue
+                                            conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
                                         }
                                         conditionOrder = roundPrice({
                                             price: coinOpen - coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
@@ -1717,10 +1726,9 @@ const Main = async () => {
                                     }
                                     else {
                                         // SELL
-                                        if (coinPreCoin === "Red") {
+                                        if (coinPreCoin === "Red" && coinCurCoin === "Blue") {
                                             const preValue = pricePreData.open - pricePreData.low
-                                            const currentValue = coinCurrent - coinOpen
-                                            conditionPre = currentValue >= (strategy.Ignore / 100) * preValue
+                                            conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
                                         }
                                         conditionOrder = roundPrice({
                                             price: coinOpen + coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
@@ -2175,6 +2183,7 @@ socketRealtime.on('add', async (newData = []) => {
                     SecretKey,
                     telegramID: newStrategiesData.botID.telegramID,
                     telegramToken: newStrategiesData.botID.telegramToken,
+                    IsActive: true
                 }
                 newBotApiList[botID] = {
                     id: botID,
@@ -2183,6 +2192,7 @@ socketRealtime.on('add', async (newData = []) => {
                     SecretKey,
                     telegramID: newStrategiesData.botID.telegramID,
                     telegramToken: newStrategiesData.botID.telegramToken,
+                    IsActive: true
                 }
 
 
@@ -2251,6 +2261,7 @@ socketRealtime.on('update', async (newData = []) => {
                         SecretKey,
                         telegramID: strategiesData.botID.telegramID,
                         telegramToken: strategiesData.botID.telegramToken,
+                        IsActive: true
                     }
 
                     newBotApiList[botID] = {
@@ -2260,6 +2271,7 @@ socketRealtime.on('update', async (newData = []) => {
                         SecretKey,
                         telegramID: strategiesData.botID.telegramID,
                         telegramToken: strategiesData.botID.telegramToken,
+                        IsActive: true
                     }
 
 
@@ -2455,6 +2467,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
                     botName,
                     telegramID: strategiesData.botID.telegramID,
                     telegramToken: strategiesData.botID.telegramToken,
+                    IsActive: true
                 }
 
                 newBotApiList[botID] = {
@@ -2464,6 +2477,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
                     botName,
                     telegramID: strategiesData.botID.telegramID,
                     telegramToken: strategiesData.botID.telegramToken,
+                    IsActive: true
                 }
 
                 // !allStrategiesByBotIDOrderOC[botID] && (allStrategiesByBotIDOrderOC[botID] = {})
@@ -2533,7 +2547,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    !botApiData && await handleSocketBotApiList(newBotApiList);
+    !botApiData ? await handleSocketBotApiList(newBotApiList) : (botApiList[botIDMain].IsActive = true);
 
     updatingAllMain = false
 

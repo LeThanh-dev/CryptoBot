@@ -1460,13 +1460,10 @@ const dataCoinByBitController = {
 
             if (result.acknowledged && result.matchedCount !== 0) {
 
-                handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
-                    type: "delete",
-                    data: handleResult
-                })
+              
                 return {
                     message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
-                    data: []
+                    data: handleResult || []
                 }
             }
             else {
