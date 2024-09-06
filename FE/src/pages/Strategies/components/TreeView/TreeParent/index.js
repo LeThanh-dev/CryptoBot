@@ -359,7 +359,7 @@ function TreeParent({
                                     <TableCell className={styles.tableHeadCell}>Extended</TableCell>
                                     <TableCell className={styles.tableHeadCell}>Ignore</TableCell>
                                     <TableCell className={styles.tableHeadCell}>EntryTrailing</TableCell>
-                                    <TableCell className={styles.tableHeadCell}>StopLose</TableCell>
+                                    <TableCell className={styles.tableHeadCell}>Max OC</TableCell>
                                     <TableCell className={styles.tableHeadCell}>Volume24h</TableCell>
                                 </TableRow>
                             </TableHead>

@@ -561,7 +561,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                     })
 
                     await delay(1200)
-                    index += batchSize
+                    index += batchSize;
                 }
             }
         }))
@@ -658,7 +658,7 @@ async function handleCancelAllOrderTP({
                 gongLai: item.gongLai,
             })));
             await delay(1200)
-            index += batchSize
+            index += batchSize;
 
         }
     }
@@ -799,7 +799,7 @@ const getMoneyFuture = async (botApiListInput) => {
         if (resultGetFuture.length > 0) {
             resultGetFuture.forEach(({ value: data }) => {
                 if (data?.botID) {
-                    botAmountListObject[data.botID] = +data?.totalWalletBalance || 0
+                    botAmountListObject[data.botID] = +data?.totalWalletBalance || 0;
                 }
             })
         }
@@ -924,7 +924,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilled = true
 
                                                 // Send telegram
-                                                const openTrade = +dataMain.avgPrice  //Gia khop lenh
+                                                const openTrade = +dataMain.avgPrice;  //Gia khop lenh
 
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.openTrade = openTrade
 
@@ -1033,13 +1033,13 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderFilled = true
 
-                                                const closePrice = +dataMain.avgPrice
+                                                const closePrice = +dataMain.avgPrice;
 
                                                 const side = strategy.PositionSide === "Long" ? "Buy" : "Sell"
 
                                                 const openTradeOCFilled = allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.OC.openTrade
 
-                                                const qty = +dataMain.qty
+                                                const qty = +dataMain.qty;
                                                 const priceOldOrder = (botAmountListObject[botID] * strategy.Amount / 100).toFixed(2)
 
                                                 const newOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.newOC
@@ -1074,13 +1074,15 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     }
                                                 }
 
+                                                missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
+
 
                                                 // Fill toàn bộ
                                                 if (missTPDataBySymbol[botSymbolMissID]?.sizeTotal == qty || missTPDataBySymbol[botSymbolMissID]?.size == 0) {
                                                     console.log(`\n[_FULL Filled_] Filled TP ( ${botName} - ${side} - ${symbol} - ${strategy.Candlestick} )\n`);
 
-                                                    missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
                                                     if (missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
                                                         deletePositionBE({
@@ -1129,7 +1131,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
 
-                                                const qty = +dataMain.qty
+                                                const qty = +dataMain.qty;
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
 
                                                 if (allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID) {
@@ -1184,7 +1186,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                             const symbol = dataMain.symbol
                                             const side = dataMain.side
-                                            const openTrade = +dataMain.entryPrice  //Gia khop lenh
+                                            const openTrade = +dataMain.entryPrice;  //Gia khop lenh
 
                                             const size = Math.abs(dataMain.size)
 
@@ -1401,6 +1403,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                     const side = dataMain.side
                                     console.log(`[...] User ( ${botName} ) Clicked Close Vị Thế (Market) - ( ${symbol} )`)
 
+                                    missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+
                                     if (missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
                                         await deletePositionBE({
                                             orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
@@ -1411,7 +1415,6 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                         })
                                     }
 
-                                    missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
                                     resetMissData({ botID, symbol })
 
@@ -1581,9 +1584,11 @@ const Main = async () => {
         const symbolCandleID = `${symbol}-${candle}`
 
         const dataMain = dataCoin.data[0]
-        const coinOpen = +dataMain.open
-        const coinCurrent = +dataMain.close
+        const coinOpen = +dataMain.open;
+        const coinCurrent = +dataMain.close;
         const dataConfirm = dataMain.confirm
+
+
 
         if (symbol === "BTCUSDT" && candle == 1) {
             const BTCPricePercent = Math.abs(coinCurrent - coinOpen) / coinOpen * 100
@@ -1698,7 +1703,7 @@ const Main = async () => {
                             }
                             if (true) {
 
-                            // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
 
                                 let conditionOrder = 0
                                 let priceOrder = 0
@@ -1747,38 +1752,55 @@ const Main = async () => {
 
                                 }
 
-                                const qty = (botAmountListObject[botID] * strategy.Amount / 100 / +priceOrder).toFixed(0)
+                                const qty = (botAmountListObject[botID] * strategy.Amount / 100 / +priceOrder).toFixed(0);
 
-                                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrder = +priceOrder
-
-                                const dataInput = {
-                                    strategy,
-                                    strategyID,
-                                    ApiKey,
-                                    SecretKey,
-                                    symbol,
-                                    qty,
-                                    side,
-                                    price: roundPrice({
-                                        price: priceOrder,
-                                        tickSize: strategy.digit
-                                    }),
-                                    candle: strategy.Candlestick,
-                                    botName,
-                                    botID,
-                                    telegramID,
-                                    telegramToken,
-                                    coinOpen
-                                }
+                                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrder = +priceOrder;
 
                                 if (conditionPre) {
 
+                                    const dataInput = {
+                                        strategy,
+                                        strategyID,
+                                        ApiKey,
+                                        SecretKey,
+                                        symbol,
+                                        qty,
+                                        side,
+                                        price: roundPrice({
+                                            price: priceOrder,
+                                            tickSize: strategy.digit
+                                        }),
+                                        candle: strategy.Candlestick,
+                                        botName,
+                                        botID,
+                                        telegramID,
+                                        telegramToken,
+                                        coinOpen
+                                    }
+
+                                    const newOC = Math.abs((priceOrder - coinOpen)) / coinOpen * 100
+
+                                    const MaxOC = strategy.OrderChange + strategy.OrderChange * strategy.StopLose / 100
+
                                     if (side === "Buy") {
-                                        +conditionOrder >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput)
+                                        // const lowPrice1m = +dataMain.low;
+
+                                        // const price2Percent = lowPrice1m + lowPrice1m * 30 / 100;
+
+                                        // const price2P = (price2Percent - lowPrice1m) / lowPrice1m;
+
+                                        (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
                                     }
                                     else {
-                                        +conditionOrder <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
+                                        // const highPrice1m = +dataMain.high;
+
+                                        // const price2Percent = highPrice1m - highPrice1m * 30 / 100;
+
+                                        // const price2P = (highPrice1m - price2Percent) / highPrice1m;
+
+                                        (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
                                     }
+                                    // price2P <= newOC && newOC <= MaxOC && + conditionOrder <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
                                 }
 
                             }
@@ -2555,6 +2577,16 @@ socketRealtime.on('bot-update', async (data = {}) => {
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
     !botApiData ? await handleSocketBotApiList(newBotApiList) : (botApiList[botIDMain].IsActive = botActive);
+
+    ["1m", "3m", "5m", "15m"].forEach(candle => {
+        const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+        listObject && Object.values(listObject).map(strategyData => {
+            const strategyID = strategyData.strategyID
+            console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName}`);
+            cancelAll({ botID, strategyID })
+            delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
+        })
+    });
 
     updatingAllMain = false
 
