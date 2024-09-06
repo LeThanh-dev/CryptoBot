@@ -261,8 +261,8 @@ const handleSubmitOrder = async ({
 
             });
 
-        allStrategiesByBotIDOrderOC.timeout && clearTimeout(allStrategiesByBotIDOrderOC.timeout)
-        allStrategiesByBotIDOrderOC.timeout = setTimeout(() => {
+        allStrategiesByBotIDOrderOC[botID].timeout && clearTimeout(allStrategiesByBotIDOrderOC[botID].timeout)
+        allStrategiesByBotIDOrderOC[botID].timeout = setTimeout(() => {
             allStrategiesByBotIDOrderOC[botID].logError = false
             allStrategiesByBotIDOrderOC[botID].totalOC = 0
         }, 1000)
@@ -1698,7 +1698,7 @@ const Main = async () => {
                             }
                             if (true) {
 
-                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+                            // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
 
                                 let conditionOrder = 0
                                 let priceOrder = 0

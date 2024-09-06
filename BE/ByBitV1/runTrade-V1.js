@@ -209,7 +209,8 @@ const handleSubmitOrder = async ({
     !allStrategiesByBotIDOrderOC[botID] && (
         allStrategiesByBotIDOrderOC[botID] = {
             totalOC: 0,
-            logError: false
+            logError: false,
+            timeout: ""
         }
     );
 
@@ -295,16 +296,18 @@ const handleSubmitOrder = async ({
                 delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                 delete listOCByCandleBot[botID].listOC[strategyID]
             });
+
+        allStrategiesByBotIDOrderOC[botID].timeout && clearTimeout(allStrategiesByBotIDOrderOC[botID].timeout)
+        allStrategiesByBotIDOrderOC[botID].timeout = setTimeout(() => {
+
+            allStrategiesByBotIDOrderOC[botID].logError = false
+            allStrategiesByBotIDOrderOC[botID].totalOC = 0
+        }, 1000)
     }
     else {
         if (!allStrategiesByBotIDOrderOC[botID]?.logError) {
             console.log(changeColorConsole.redBright(`[!] LIMIT ORDER OC ( ${botName} )`));
             allStrategiesByBotIDOrderOC[botID].logError = true
-            setTimeout(() => {
-
-                allStrategiesByBotIDOrderOC[botID].logError = false
-                allStrategiesByBotIDOrderOC[botID].totalOC = 0
-            }, 1000)
         }
     }
 }
@@ -324,7 +327,8 @@ const handleMoveOrderOC = async ({
     !maxAmendOrderOCData[botID] && (
         maxAmendOrderOCData[botID] = {
             totalOC: 0,
-            logError: false
+            logError: false,
+            timeout: ""
         }
     );
     if (maxAmendOrderOCData[botID].totalOC < MAX_AMEND_LIMIT) {
@@ -351,16 +355,16 @@ const handleMoveOrderOC = async ({
             .catch((error) => {
                 console.log(`[!] Move Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) error `, error)
             });
-
+        maxAmendOrderOCData[botID].timeout && clearTimeout(maxAmendOrderOCData[botID].timeout)
+        maxAmendOrderOCData[botID].timeout = setTimeout(() => {
+            maxAmendOrderOCData[botID].logError = false
+            maxAmendOrderOCData[botID].totalOC = 0
+        }, 1000)
     }
     else {
         if (!maxAmendOrderOCData[botID]?.logError) {
             console.log(changeColorConsole.redBright(`[!] LIMIT AMEND OC ( ${botName} )`));
             maxAmendOrderOCData[botID].logError = true
-            setTimeout(() => {
-                maxAmendOrderOCData[botID].logError = false
-                maxAmendOrderOCData[botID].totalOC = 0
-            }, 1000)
         }
     }
 }
