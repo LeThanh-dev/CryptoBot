@@ -168,7 +168,8 @@ const handleSubmitOrder = async ({
     !allStrategiesByBotIDOrderOC[botID] && (
         allStrategiesByBotIDOrderOC[botID] = {
             totalOC: 0,
-            logError: false
+            logError: false,
+            timeout: ""
         }
     );
 
@@ -259,16 +260,18 @@ const handleSubmitOrder = async ({
                 delete listOCByCandleBot[candle][botID].listOC[strategyID]
 
             });
+
+        allStrategiesByBotIDOrderOC.timeout && clearTimeout(allStrategiesByBotIDOrderOC.timeout)
+        allStrategiesByBotIDOrderOC.timeout = setTimeout(() => {
+            allStrategiesByBotIDOrderOC[botID].logError = false
+            allStrategiesByBotIDOrderOC[botID].totalOC = 0
+        }, 1000)
     }
     else {
         if (!allStrategiesByBotIDOrderOC[botID]?.logError) {
             console.log(changeColorConsole.redBright(`[!] LIMIT ORDER OC ( ${botName} )`));
             allStrategiesByBotIDOrderOC[botID].logError = true
-            setTimeout(() => {
 
-                allStrategiesByBotIDOrderOC[botID].logError = false
-                allStrategiesByBotIDOrderOC[botID].totalOC = 0
-            }, 1000)
         }
     }
 }
