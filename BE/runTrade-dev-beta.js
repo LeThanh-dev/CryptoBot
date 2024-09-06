@@ -525,7 +525,6 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             console.log(`[V] Cancel order ( ${cur.botName} - ${cur.side} -  ${cur.symbol} - ${candleTemp} ) has been filled `);
-                            delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
                         }
                         return pre
                     }, [])
@@ -550,12 +549,12 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 botID: botIDTemp,
                                 strategyID: strategyIDTemp,
                             })
+                            delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
                         }
                         else {
                             allStrategiesByBotIDAndStrategiesID[botIDTemp][strategyIDTemp].OC.orderID = ""
                             console.log(changeColorConsole.yellowBright(`[!] Cancel order ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) failed `, codeData.msg));
                         }
-                        delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
                     })
 
                     await delay(1200)
@@ -880,6 +879,21 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                 if (orderStatus === "Filled") {
                                     console.log(changeColorConsole.greenBright(`[V] Filled OrderID ( ${botName} - ${dataMain.side} - ${symbol} ):`, orderID));
+
+                                    if (!orderID) {
+
+                                        ["1m", "3m", "5m", "15m"].forEach(candle => {
+                                            const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+                                            listObject && Object.values(listObject).map(strategyData => {
+                                                const strategyID = strategyData.strategyID
+                                                if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
+                                                    console.log(`\n[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName} \n`);
+                                                    cancelAll({ botID, strategyID })
+                                                    delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
+                                                }
+                                            })
+                                        });
+                                    }
                                 }
                                 if (orderStatus === "PartiallyFilled") {
                                     console.log(changeColorConsole.blueBright(`[V] PartiallyFilled OrderID( ${botName} - ${dataMain.side} - ${symbol} - ${strategy.Candlestick} ):`, dataMain.qty));
@@ -1115,6 +1129,10 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 const qty = +dataMain.qty
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
 
+                                                if (allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID) {
+                                                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+                                                }
+
                                                 if (missTPDataBySymbol[botSymbolMissID]?.sizeTotal - missTPDataBySymbol[botSymbolMissID].size > 0) {
                                                     missTPDataBySymbol[botSymbolMissID].gongLai = true
                                                     updatePositionBE({
@@ -1133,7 +1151,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     //     symbol,
                                                     // })
                                                 }
-                                                cancelAll({ botID, strategyID })
+
                                             }
                                             else if (OCTrue) {
                                                 // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
@@ -1285,7 +1303,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 }
                                                 else {
-                                                    console.log(`[_ Not Miss _] TP ( ${botName} - ${side} - ${symbol}} )`);
+                                                    console.log(`[ NOT-MISS ] | ${symbol.replace("USDT", "")} - ${side} - Bot: ${botName}\n`);
                                                     // updatePositionBE({
                                                     //     newDataUpdate: {
                                                     //         Miss: false,
@@ -1300,8 +1318,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 }
                                             }
                                             else {
-                                                const teleText = `<b>⚠️ [ MISS-GongLai ] | ${symbol.replace("USDT", "")}</b> - ${side} - Bot: ${botName} - PnL: ${dataMain.unrealisedPnl} \n`
-                                                console.log(changeColorConsole.redBright(`\n${teleText.slice(5)}\n`));
+                                                console.log(changeColorConsole.redBright(`[ GongLai ] | ${symbol.replace("USDT", "")} - ${side} - Bot: ${botName} - PnL: ${dataMain.unrealisedPnl} \n`));
 
                                                 // console.log("[...] Đang lọc OC MISS\n");
 
@@ -1395,16 +1412,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                     resetMissData({ botID, symbol })
 
-                                    ["1m", "3m", "5m", "15m"].forEach(candle => {
-                                        const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-                                        listObject && Object.values(listObject).map(strategyData => {
-                                            const strategyID = strategyData.strategyID
-                                            if (allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
-                                                cancelAll({ botID, strategyID })
-                                                delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
-                                            }
-                                        })
-                                    });
+
 
                                 }
 
@@ -1702,14 +1710,14 @@ const Main = async () => {
                                     else {
                                         coinPreCoin = "Red"
                                     }
-                                    if (coinCurrent > coinOpen) {
+                                    const currentValue = coinCurrent - coinOpen
+                                    if (currentValue > 0) {
                                         coinCurCoin = "Blue"
                                     }
                                     else {
                                         coinCurCoin = "Red"
                                     }
                                     // }
-                                    const currentValue = coinOpen - coinCurrent
                                     // BUY
                                     if (side === "Buy") {
 
@@ -2547,7 +2555,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    !botApiData ? await handleSocketBotApiList(newBotApiList) : (botApiList[botIDMain].IsActive = true);
+    !botApiData ? await handleSocketBotApiList(newBotApiList) : (botApiList[botIDMain].IsActive = botActive);
 
     updatingAllMain = false
 
