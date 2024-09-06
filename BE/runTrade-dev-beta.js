@@ -1794,7 +1794,7 @@ const Main = async () => {
                                         const price2P = (price2Percent - lowPrice1m) / lowPrice1m;
 
                                         // (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
-                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
+                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
                                     }
                                     else {
                                         const highPrice1m = +dataMain.high;
@@ -1804,7 +1804,7 @@ const Main = async () => {
                                         const price2P = (highPrice1m - price2Percent) / highPrice1m;
 
                                         // (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
-                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
+                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
                                     }
                                 }
 
