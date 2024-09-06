@@ -1690,101 +1690,102 @@ const Main = async () => {
 
                                 trichMauOCListObject[symbolCandleID].prePrice = coinCurrent
 
-
-                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
-                                if (true) {
-
-                                    let conditionOrder = 0
-                                    let priceOrder = 0
-
-                                    // Check pre coin type 
-
-                                    let coinPreCoin = ""
-                                    let coinCurCoin = ""
-                                    let conditionPre = true
-
-                                    const pricePreData = listPricePreOne[symbolCandleID]
-                                    // if (pricePreData.close) {
-                                    if (pricePreData.close > pricePreData.open) {
-                                        coinPreCoin = "Blue"
-                                    }
-                                    else {
-                                        coinPreCoin = "Red"
-                                    }
-                                    const currentValue = coinCurrent - coinOpen
-                                    if (currentValue > 0) {
-                                        coinCurCoin = "Blue"
-                                    }
-                                    else {
-                                        coinCurCoin = "Red"
-                                    }
-                                    // }
-                                    // BUY
-                                    if (side === "Buy") {
-
-                                        if (coinPreCoin === "Blue" && coinCurCoin === "Red") {
-                                            const preValue = pricePreData.high - pricePreData.open
-                                            conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
-                                        }
-                                        conditionOrder = roundPrice({
-                                            price: coinOpen - coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
-                                            tickSize: strategy.digit
-                                        })
-                                        priceOrder = (coinOpen - coinOpen * strategy.OrderChange / 100)
-
-                                    }
-                                    else {
-                                        // SELL
-                                        if (coinPreCoin === "Red" && coinCurCoin === "Blue") {
-                                            const preValue = pricePreData.open - pricePreData.low
-                                            conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
-                                        }
-                                        conditionOrder = roundPrice({
-                                            price: coinOpen + coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
-                                            tickSize: strategy.digit
-                                        })
-                                        priceOrder = (coinOpen + coinOpen * strategy.OrderChange / 100)
-
-                                    }
-
-                                    const qty = (botAmountListObject[botID] * strategy.Amount / 100 / +priceOrder).toFixed(0)
-
-                                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrder = +priceOrder
-
-                                    const dataInput = {
-                                        strategy,
-                                        strategyID,
-                                        ApiKey,
-                                        SecretKey,
-                                        symbol,
-                                        qty,
-                                        side,
-                                        price: roundPrice({
-                                            price: priceOrder,
-                                            tickSize: strategy.digit
-                                        }),
-                                        candle: strategy.Candlestick,
-                                        botName,
-                                        botID,
-                                        telegramID,
-                                        telegramToken,
-                                        coinOpen
-                                    }
-
-                                    if (conditionPre) {
-
-                                        if (side === "Buy") {
-                                            +conditionOrder >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput)
-                                        }
-                                        else {
-                                            +conditionOrder <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
-                                        }
-                                    }
-
-                                }
                                 trichMauTimePre[strategyID] = new Date()
 
                             }
+                            if (true) {
+                            
+                            // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+
+                                let conditionOrder = 0
+                                let priceOrder = 0
+
+                                // Check pre coin type 
+
+                                let coinPreCoin = ""
+                                let coinCurCoin = ""
+                                let conditionPre = true
+
+                                const pricePreData = listPricePreOne[symbolCandleID]
+                                // if (pricePreData.close) {
+                                if (pricePreData.close > pricePreData.open) {
+                                    coinPreCoin = "Blue"
+                                }
+                                else {
+                                    coinPreCoin = "Red"
+                                }
+                                const currentValue = coinCurrent - coinOpen
+                                if (currentValue > 0) {
+                                    coinCurCoin = "Blue"
+                                }
+                                else {
+                                    coinCurCoin = "Red"
+                                }
+                                // }
+                                // BUY
+                                if (side === "Buy") {
+
+                                    if (coinPreCoin === "Blue" && coinCurCoin === "Red") {
+                                        const preValue = pricePreData.high - pricePreData.open
+                                        conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
+                                    }
+                                    conditionOrder = roundPrice({
+                                        price: coinOpen - coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
+                                        tickSize: strategy.digit
+                                    })
+                                    priceOrder = (coinOpen - coinOpen * strategy.OrderChange / 100)
+
+                                }
+                                else {
+                                    // SELL
+                                    if (coinPreCoin === "Red" && coinCurCoin === "Blue") {
+                                        const preValue = pricePreData.open - pricePreData.low
+                                        conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
+                                    }
+                                    conditionOrder = roundPrice({
+                                        price: coinOpen + coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
+                                        tickSize: strategy.digit
+                                    })
+                                    priceOrder = (coinOpen + coinOpen * strategy.OrderChange / 100)
+
+                                }
+
+                                const qty = (botAmountListObject[botID] * strategy.Amount / 100 / +priceOrder).toFixed(0)
+
+                                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrder = +priceOrder
+
+                                const dataInput = {
+                                    strategy,
+                                    strategyID,
+                                    ApiKey,
+                                    SecretKey,
+                                    symbol,
+                                    qty,
+                                    side,
+                                    price: roundPrice({
+                                        price: priceOrder,
+                                        tickSize: strategy.digit
+                                    }),
+                                    candle: strategy.Candlestick,
+                                    botName,
+                                    botID,
+                                    telegramID,
+                                    telegramToken,
+                                    coinOpen
+                                }
+
+                                if (conditionPre) {
+
+                                    if (side === "Buy") {
+                                        +conditionOrder >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput)
+                                    }
+                                    else {
+                                        +conditionOrder <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
+                                    }
+                                }
+
+                            }
+
 
 
                         }
