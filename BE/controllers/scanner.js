@@ -236,7 +236,6 @@ const dataCoinByBitController = {
     updateConfigByID: async (req, res) => {
         try {
 
-
             const { newData, configID } = req.body
 
             const result = await ScannerModel.updateOne(
@@ -245,16 +244,12 @@ const dataCoinByBitController = {
             )
 
             if (result.acknowledged && result.matchedCount !== 0) {
-                // if (dataCoinByBitController.checkConditionStrategies(newData)) {
-                //     dataCoinByBitController.sendDataRealtime({
-                //         type: "update",
-                //         data: [{
-                //             ...newData,
-                //             value: `${parentID}-${strategiesID}`,
-                //             symbol
-                //         }]
-                //     })
-                // }
+                if (newData.IsActive) {
+                    dataCoinByBitController.sendDataRealtime({
+                        type: "scanner-update",
+                        data: [newData]
+                    })
+                }
                 res.customResponse(200, "Update Config Successful", "");
             }
             else {

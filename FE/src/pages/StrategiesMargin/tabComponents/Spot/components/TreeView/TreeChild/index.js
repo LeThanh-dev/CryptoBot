@@ -10,7 +10,7 @@ import DialogCustom from '../../../../../../../components/DialogCustom';
 import { handleCheckAllCheckBox, formatNumberString } from '../../../../../../../functions';
 import { addMessageToast } from '../../../../../../../store/slices/Toast';
 import UpdateStrategy from '../../UpdateStrategy';
-import { updateStrategiesSpotByID,deleteStrategiesItemSpot } from '../../../../../../../services/spotService';
+import { updateStrategiesSpotByID, deleteStrategiesItemSpot } from '../../../../../../../services/spotService';
 
 
 function TreeChild({
@@ -164,9 +164,13 @@ function TreeChild({
         }
     }
 
+    console.log(treeNode.scannerID);
+    
     return (
         <>
-            <TableRow className={styles.treeChild} key={treeNode.value} >
+            <TableRow className={styles.treeChild} key={treeNode.value} style={{
+                backgroundColor: treeNode.scannerID ? "#b3ccfb3b" : undefined
+            }} >
                 <TableCell
                     style={{
                         lineHeight: "100%"
@@ -278,8 +282,8 @@ function TreeChild({
                 <TableCell className={styles.tableBodyCell}>{formatNumberString(treeNode.Limit)}</TableCell>
                 <TableCell className={styles.tableBodyCell}>{treeNode.AmountIncreaseOC}</TableCell>
                 <TableCell className={styles.tableBodyCell}>{treeNode.AmountExpire}</TableCell>
-                <TableCell className={styles.tableBodyCell}>{treeNode.Adaptive && <CheckIcon/>}</TableCell>
-                <TableCell className={styles.tableBodyCell}>{treeNode.Reverse && <CheckIcon/>}</TableCell>
+                <TableCell className={styles.tableBodyCell}>{treeNode.Adaptive && <CheckIcon />}</TableCell>
+                <TableCell className={styles.tableBodyCell}>{treeNode.Reverse && <CheckIcon />}</TableCell>
                 <TableCell className={styles.tableBodyCell}>{formatNumberString(treeNode.volume24h)}</TableCell>
             </TableRow >
             {

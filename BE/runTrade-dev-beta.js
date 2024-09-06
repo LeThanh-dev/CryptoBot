@@ -524,7 +524,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                             listCancel[curOrderLinkId] = cur
                         }
                         else {
-                            console.log(`[V] Cancel order ( ${cur.botName} - ${cur.side} -  ${cur.symbol} - ${candleTemp} ) has been filled `);
+                            console.log(`[V] Cancel order OC ( ${cur.botName} - ${cur.side} -  ${cur.symbol} - ${candleTemp} ) has been filled `);
                         }
                         return pre
                     }, [])
@@ -544,7 +544,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         const candleTemp = data.candle
 
                         if (codeData.code == 0) {
-                            console.log(`[V] Cancel order ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) successful `);
+                            console.log(`[V] Cancel order OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) successful `);
                             cancelAll({
                                 botID: botIDTemp,
                                 strategyID: strategyIDTemp,
@@ -553,7 +553,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             allStrategiesByBotIDAndStrategiesID[botIDTemp][strategyIDTemp].OC.orderID = ""
-                            console.log(changeColorConsole.yellowBright(`[!] Cancel order ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) failed `, codeData.msg));
+                            console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) failed `, codeData.msg));
                         }
                     })
 
@@ -887,7 +887,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                             listObject && Object.values(listObject).map(strategyData => {
                                                 const strategyID = strategyData.strategyID
                                                 if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
-                                                    console.log(`\n[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName} \n`);
+                                                    console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName}`);
                                                     cancelAll({ botID, strategyID })
                                                     delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
                                                 }
@@ -1303,7 +1303,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 }
                                                 else {
-                                                    console.log(`[ NOT-MISS ] | ${symbol.replace("USDT", "")} - ${side} - Bot: ${botName}\n`);
+                                                    // console.log(`[ NOT-MISS ] | ${symbol.replace("USDT", "")} - ${side} - Bot: ${botName}`);
                                                     // updatePositionBE({
                                                     //     newDataUpdate: {
                                                     //         Miss: false,
@@ -1691,7 +1691,8 @@ const Main = async () => {
                                 trichMauOCListObject[symbolCandleID].prePrice = coinCurrent
 
 
-                                if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+                                if (true) {
 
                                     let conditionOrder = 0
                                     let priceOrder = 0
