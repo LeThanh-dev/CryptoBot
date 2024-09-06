@@ -68,6 +68,7 @@ const roundPrice = (
     }
 ) => {
     return (Math.floor(price / tickSize) * tickSize).toString()
+    // return price.toFixed(tickSize)
 }
 
 const getWebsocketClientConfig = ({
@@ -137,6 +138,7 @@ const Digit = async () => {// proScale
             PScale = PScale.concat(response.result.list.map(item => ({
                 symbol: item.symbol,
                 priceScale: item.priceFilter.tickSize
+                // priceScale: item.priceScale
             })))
         })
         .catch((error) => {
@@ -293,6 +295,9 @@ const handleSubmitOrderTP = async ({
 
     // console.log(changeColorConsole.greenBright(`Price order TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
+    missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+
+
     const botSymbolMissID = `${botID}-${symbol}`
 
     const orderLinkId = uuidv4()
@@ -328,7 +333,6 @@ const handleSubmitOrderTP = async ({
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderLinkId = newOrderLinkID
 
 
-                missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
 
                 missTPDataBySymbol[botSymbolMissID] = {
@@ -1703,7 +1707,7 @@ const Main = async () => {
                             }
                             if (true) {
 
-                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+                            // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
 
                                 let conditionOrder = 0
                                 let priceOrder = 0
@@ -1790,6 +1794,7 @@ const Main = async () => {
                                         // const price2P = (price2Percent - lowPrice1m) / lowPrice1m;
 
                                         (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
+                                        // price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
                                     }
                                     else {
                                         // const highPrice1m = +dataMain.high;
@@ -1799,8 +1804,8 @@ const Main = async () => {
                                         // const price2P = (highPrice1m - price2Percent) / highPrice1m;
 
                                         (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
+                                        // price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
                                     }
-                                    // price2P <= newOC && newOC <= MaxOC && + conditionOrder <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
                                 }
 
                             }
@@ -2576,17 +2581,23 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    !botApiData ? await handleSocketBotApiList(newBotApiList) : (botApiList[botIDMain].IsActive = botActive);
+    if (!botApiData) {
+        await handleSocketBotApiList(newBotApiList)
+    }
+    else {
 
-    ["1m", "3m", "5m", "15m"].forEach(candle => {
-        const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-        listObject && Object.values(listObject).map(strategyData => {
-            const strategyID = strategyData.strategyID
-            console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName}`);
-            cancelAll({ botID, strategyID })
-            delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
-        })
-    });
+        botApiList[botIDMain].IsActive = botActive;
+
+        ["1m", "3m", "5m", "15m"].forEach(candle => {
+            const listObject = listOCByCandleBot?.[candle]?.[botIDMain]?.listOC
+            listObject && Object.values(listObject).map(strategyData => {
+                const strategyID = strategyData.strategyID
+                console.log(`[V] RESET | Bot: ${botApiData.botName}`);
+                cancelAll({ botIDMain, strategyID })
+                delete listOCByCandleBot?.[candle]?.[botIDMain]?.listOC[strategyID]
+            })
+        });
+    }
 
     updatingAllMain = false
 
