@@ -295,10 +295,11 @@ const handleSubmitOrderTP = async ({
 
     // console.log(changeColorConsole.greenBright(`Price order TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
+    const botSymbolMissID = `${botID}-${symbol}`
+    
     missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
 
-    const botSymbolMissID = `${botID}-${symbol}`
 
     const orderLinkId = uuidv4()
 
