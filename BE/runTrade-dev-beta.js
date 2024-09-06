@@ -1694,8 +1694,8 @@ const Main = async () => {
 
                             }
                             if (true) {
-                            
-                            // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+
+                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
 
                                 let conditionOrder = 0
                                 let priceOrder = 0
@@ -1729,10 +1729,7 @@ const Main = async () => {
                                         const preValue = pricePreData.high - pricePreData.open
                                         conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
                                     }
-                                    conditionOrder = roundPrice({
-                                        price: coinOpen - coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
-                                        tickSize: strategy.digit
-                                    })
+                                    conditionOrder = coinOpen - coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100)
                                     priceOrder = (coinOpen - coinOpen * strategy.OrderChange / 100)
 
                                 }
@@ -1742,10 +1739,7 @@ const Main = async () => {
                                         const preValue = pricePreData.open - pricePreData.low
                                         conditionPre = Math.abs(currentValue) >= Math.abs((strategy.Ignore / 100) * preValue)
                                     }
-                                    conditionOrder = roundPrice({
-                                        price: coinOpen + coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100),
-                                        tickSize: strategy.digit
-                                    })
+                                    conditionOrder = coinOpen + coinOpen * (strategy.OrderChange / 100) * (strategy.ExtendedOCPercent / 100)
                                     priceOrder = (coinOpen + coinOpen * strategy.OrderChange / 100)
 
                                 }
