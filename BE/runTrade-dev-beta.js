@@ -1787,24 +1787,24 @@ const Main = async () => {
                                     const MaxOC = strategy.OrderChange + strategy.OrderChange * strategy.StopLose / 100
 
                                     if (side === "Buy") {
-                                        // const lowPrice1m = +dataMain.low;
+                                        const lowPrice1m = +dataMain.low;
 
-                                        // const price2Percent = lowPrice1m + lowPrice1m * 30 / 100;
+                                        const price2Percent = lowPrice1m + lowPrice1m * 30 / 100;
 
-                                        // const price2P = (price2Percent - lowPrice1m) / lowPrice1m;
+                                        const price2P = (price2Percent - lowPrice1m) / lowPrice1m;
 
-                                        (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
-                                        // price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
+                                        // (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
+                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
                                     }
                                     else {
-                                        // const highPrice1m = +dataMain.high;
+                                        const highPrice1m = +dataMain.high;
 
-                                        // const price2Percent = highPrice1m - highPrice1m * 30 / 100;
+                                        const price2Percent = highPrice1m - highPrice1m * 30 / 100;
 
-                                        // const price2P = (highPrice1m - price2Percent) / highPrice1m;
+                                        const price2P = (highPrice1m - price2Percent) / highPrice1m;
 
-                                        (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
-                                        // price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
+                                        // (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
+                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput)
                                     }
                                 }
 
