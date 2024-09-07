@@ -155,7 +155,7 @@ function FilterDialog({
                 compare: "=",
                 value: ""
             },
-            name: "StopLose",
+            name: "Max OC",
             value: "StopLose",
             compareFilterList: compareFilterListDefault,
         },

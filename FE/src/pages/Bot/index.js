@@ -384,7 +384,7 @@ function Bot() {
             const res = await getTotalFutureSpot(userData._id)
             const { data: resData } = res.data
 
-            setTotalFutureSpot(resData)
+            setTotalFutureSpot(resData || 0)
             totalFutureSpotOfMeDefault.current = resData
 
 
@@ -405,7 +405,7 @@ function Bot() {
                 const res = await getTotalFutureSpotByBot(botListData)
                 const { data: resData } = res.data
 
-                setTotalFutureSpot(resData)
+                setTotalFutureSpot(resData || 0)
 
             }
             catch (err) {

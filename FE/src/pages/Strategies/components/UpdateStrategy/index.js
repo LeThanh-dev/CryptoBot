@@ -238,14 +238,14 @@ function UpdateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Stop Lose"
+                            label="Max OC"
                             variant="outlined"
                             defaultValue={treeNodeValue.StopLose}
                             size="medium"
                             {...register("StopLose", { required: true, min: formControlMinValue })}
                         />
-                        {errors.StopLose?.type === 'required' && <p className="formControlErrorLabel">The Stop Lose field is required.</p>}
-                        {errors.StopLose?.type === "min" && <p className="formControlErrorLabel">The StopLose must bigger 0.1.</p>}
+                        {errors.StopLose?.type === 'required' && <p className="formControlErrorLabel">The Max OC field is required.</p>}
+                        {errors.StopLose?.type === "min" && <p className="formControlErrorLabel">The Max OC must bigger 0.1.</p>}
 
                     </FormControl>
 

@@ -299,7 +299,6 @@ function EditMulTreeItem({
     const handleUpdate = async () => {
 
         let checkValueMin = true
-        let dataChange = false
 
         try {
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => (
@@ -337,7 +336,7 @@ function EditMulTreeItem({
                     message: message,
                 }))
                 if (status === 200) {
-                    dataChange = true
+                    closeDialog(true)
                 }
             }
             else {
@@ -354,7 +353,6 @@ function EditMulTreeItem({
             }))
 
         }
-        closeDialog(dataChange)
     }
 
     const handleDelete = async () => {

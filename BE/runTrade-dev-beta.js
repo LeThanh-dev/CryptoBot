@@ -11,8 +11,8 @@ const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbo
 
 const wsConfig = {
     market: 'v5',
-    recvWindow: 100000,
-    pongTimeout: 5000
+    // recvWindow: 100000,
+    // pongTimeout: 5000
 }
 
 const wsSymbol = new WebsocketClient(wsConfig);
@@ -67,8 +67,8 @@ const roundPrice = (
         tickSize
     }
 ) => {
-    return (Math.floor(price / tickSize) * tickSize).toString()
-    // return price.toFixed(tickSize)
+    // return (Math.floor(price / tickSize) * tickSize).toString()
+    return price.toFixed(tickSize)
 }
 
 const getWebsocketClientConfig = ({
@@ -137,8 +137,8 @@ const Digit = async () => {// proScale
         .then((response) => {
             PScale = PScale.concat(response.result.list.map(item => ({
                 symbol: item.symbol,
-                priceScale: item.priceFilter.tickSize
-                // priceScale: item.priceScale
+                // priceScale: item.priceFilter.tickSize
+                priceScale: item.priceScale
             })))
         })
         .catch((error) => {
@@ -210,6 +210,9 @@ const handleSubmitOrder = async ({
 
         const client = new RestClientV5(clientConfig);
 
+        const newOC = Math.abs((price - coinOpen)) / coinOpen * 100
+
+     
         await client
             .submitOrder({
                 category: 'linear',
@@ -296,7 +299,7 @@ const handleSubmitOrderTP = async ({
     // console.log(changeColorConsole.greenBright(`Price order TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
     const botSymbolMissID = `${botID}-${symbol}`
-    
+
     missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
 
@@ -824,6 +827,18 @@ const sendAllBotTelegram = async (text) => {
     }))
 }
 
+const resetAllStrategies = () => {
+    ["1m", "3m", "5m", "15m"].forEach(candle => {
+        const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+        listObject && Object.values(listObject).map(strategyData => {
+            const strategyID = strategyData.strategyID
+            console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName}`);
+            cancelAll({ botID, strategyID })
+            delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
+        })
+    });
+}
+
 const handleSocketBotApiList = async (botApiListInput = {}) => {
 
     try {
@@ -890,17 +905,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                     if (!orderID) {
 
-                                        ["1m", "3m", "5m", "15m"].forEach(candle => {
-                                            const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-                                            listObject && Object.values(listObject).map(strategyData => {
-                                                const strategyID = strategyData.strategyID
-                                                if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
-                                                    console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName}`);
-                                                    cancelAll({ botID, strategyID })
-                                                    delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
-                                                }
-                                            })
-                                        });
+                                        resetAllStrategies()
+
                                     }
                                 }
                                 if (orderStatus === "PartiallyFilled") {
@@ -1112,10 +1118,9 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     console.log(`\n[_Part Filled_] Filled TP ( ${botName} - ${side} - ${symbol} - ${strategy.Candlestick} )\n`);
                                                 }
 
-                                                cancelAll({ strategyID, botID })
-
                                                 delete listOCByCandleBot[strategy.Candlestick][botID].listOC[strategyID]
 
+                                                cancelAll({ strategyID, botID })
 
                                                 sendMessageWithRetry({
                                                     messageText: `${teleText} \n${textWinLose}`,
@@ -1440,12 +1445,14 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                     wsOrder.on('reconnected', () => {
                         console.log('Reconnected order successful')
+                        connectErrorMain = false
                     });
 
                     wsOrder.on('error', (err) => {
                         !connectErrorMain && sendAllBotTelegram("🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối")
                         console.log('Connection order error');
                         console.log(err);
+                        connectErrorMain = true
                     });
                 }).catch(err => {
                     console.log(`[V] Subscribe order ( ${botName} ) error:`, err)
@@ -1708,7 +1715,7 @@ const Main = async () => {
                             }
                             if (true) {
 
-                            // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
+                                // if (trichMauOCListObject[symbolCandleID].minPrice.length === 3) {
 
                                 let conditionOrder = 0
                                 let priceOrder = 0
@@ -1761,7 +1768,29 @@ const Main = async () => {
 
                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrder = +priceOrder;
 
-                                if (conditionPre) {
+                                const priceOC = roundPrice({
+                                    price: priceOrder,
+                                    tickSize: strategy.digit
+                                })
+
+                                const newOC = Math.abs((priceOC - coinOpen)) / coinOpen * 100
+
+                                const MaxOC = strategy.OrderChange + strategy.OrderChange * strategy.StopLose / 100
+
+                                let price2P = 0
+
+                                if (side === "Buy") {
+                                    const lowPrice1m = +dataMain.low;
+                                    const price2Percent = lowPrice1m + lowPrice1m * 30 / 100;
+                                    price2P = (price2Percent - lowPrice1m) / lowPrice1m;
+                                }
+                                else {
+                                    const highPrice1m = +dataMain.high;
+                                    const price2Percent = highPrice1m - highPrice1m * 30 / 100;
+                                    price2P = (highPrice1m - price2Percent) / highPrice1m;
+
+                                }
+                                if (conditionPre && price2P <= newOC && newOC <= MaxOC) {
 
                                     const dataInput = {
                                         strategy,
@@ -1771,10 +1800,7 @@ const Main = async () => {
                                         symbol,
                                         qty,
                                         side,
-                                        price: roundPrice({
-                                            price: priceOrder,
-                                            tickSize: strategy.digit
-                                        }),
+                                        price: priceOC,
                                         candle: strategy.Candlestick,
                                         botName,
                                         botID,
@@ -1783,29 +1809,12 @@ const Main = async () => {
                                         coinOpen
                                     }
 
-                                    const newOC = Math.abs((priceOrder - coinOpen)) / coinOpen * 100
-
-                                    const MaxOC = strategy.OrderChange + strategy.OrderChange * strategy.StopLose / 100
 
                                     if (side === "Buy") {
-                                        const lowPrice1m = +dataMain.low;
-
-                                        const price2Percent = lowPrice1m + lowPrice1m * 30 / 100;
-
-                                        const price2P = (price2Percent - lowPrice1m) / lowPrice1m;
-
-                                        // (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
-                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
+                                        (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
                                     }
                                     else {
-                                        const highPrice1m = +dataMain.high;
-
-                                        const price2Percent = highPrice1m - highPrice1m * 30 / 100;
-
-                                        const price2P = (highPrice1m - price2Percent) / highPrice1m;
-
-                                        // (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
-                                        price2P <= newOC && newOC <= MaxOC && (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
+                                        (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
                                     }
                                 }
 
@@ -2151,12 +2160,14 @@ const Main = async () => {
 
     wsSymbol.on('reconnected', () => {
         console.log('[V] Reconnected listKline successful')
+        connectErrorMain = false
     });
 
     wsSymbol.on('error', (err) => {
         !connectErrorMain && sendAllBotTelegram("🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối")
         console.log('[!] Connection listKline error');
         console.log(err);
+        connectErrorMain = true
     });
 
 }
@@ -2589,15 +2600,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
         botApiList[botIDMain].IsActive = botActive;
 
-        ["1m", "3m", "5m", "15m"].forEach(candle => {
-            const listObject = listOCByCandleBot?.[candle]?.[botIDMain]?.listOC
-            listObject && Object.values(listObject).map(strategyData => {
-                const strategyID = strategyData.strategyID
-                console.log(`[V] RESET | Bot: ${botApiData.botName}`);
-                cancelAll({ botIDMain, strategyID })
-                delete listOCByCandleBot?.[candle]?.[botIDMain]?.listOC[strategyID]
-            })
-        });
+        !botActive && resetAllStrategies()
     }
 
     updatingAllMain = false
