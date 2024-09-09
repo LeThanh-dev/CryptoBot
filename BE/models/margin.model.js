@@ -25,6 +25,10 @@ const childrenStrategiesSchema = new mongoose.Schema({
   // Other
   symbol: String,
   value: String,
+  scannerID: {
+    type: mongoose.Types.ObjectId,
+    ref: 'Scanner',
+  },
 });
 
 const strategiesSchema = new mongoose.Schema({

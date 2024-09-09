@@ -280,20 +280,100 @@ const dataCoinByBitController = {
                     }
                 })
                 if (!data.UpdatedFields.IsActive) {
-                    data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(data.id) : marginDeleteID.push(data.id)
+                    const id = new mongoose.Types.ObjectId(data.id)
+                    data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
                 }
             });
 
             const bulkOperationsRes = ScannerModel.bulkWrite(bulkOperations);
+
             const bulkOperationsDelSpotRes = SpotModel.updateMany(
                 { "children.scannerID": { $in: spotDeleteID } },
                 { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
             );
 
+
             const bulkOperationsDelMarginRes = SpotModel.updateMany(
                 { "children.scannerID": { $in: marginDeleteID } },
                 { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
             );
+
+
+
+            // handle get all config by scannerID
+
+            const resultFilterSpot = await SpotModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: spotDeleteID }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", spotDeleteID]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetSpot = await SpotModel.populate(resultFilterSpot, {
+                path: 'children.botID',
+            }) || []
+
+
+            const handleResultSpot = resultGetSpot.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `SPOT-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const resultFilterMargin = await MarginModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: marginDeleteID }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", marginDeleteID]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetMargin = await MarginModel.populate(resultFilterMargin, {
+                path: 'children.botID',
+            }) || []
+
+            const handleResultMargin = resultGetMargin.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `MARGIN-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const handleResultDelete = handleResultMargin.concat(handleResultSpot)
 
             await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
 
@@ -301,6 +381,11 @@ const dataCoinByBitController = {
                 TimeTemp
             }).populate('botID')
 
+            handleResultDelete.length > 0 && dataCoinByBitController.sendDataRealtime({
+                type: "delete",
+                data: handleResultDelete
+            })
+            
             handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
                 type: "scanner-update",
                 data: handleResult
@@ -310,7 +395,7 @@ const dataCoinByBitController = {
 
         } catch (error) {
             // Xử lý lỗi nếu có
-            res.status(500).json({ message: "Update Config Error" });
+            res.status(500).json({ message: "Update Config Error" + error.message });
         }
     },
 

@@ -2176,10 +2176,10 @@ const Main = async () => {
         console.log(err);
     });
 
-    handleCreateMultipleConfigSpot({
-        scannerData: getAllConfigScannerRes[0],
-        symbol: "AGLAUSDT",
-    })
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "AGLAUSDT",
+    // })
 
 
 }
@@ -2349,6 +2349,7 @@ const handleSocketDelete = async (newData = []) => {
     })
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
+    
     updatingAllMain = false
 }
 
