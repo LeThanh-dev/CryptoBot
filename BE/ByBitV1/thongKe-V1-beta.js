@@ -153,8 +153,8 @@ const tinhOC = (symbol, dataAll = []) => {
         let OCNotPercent = 0
         let OCLongNotPercent = 0
 
-        vol = data[dataAll.length - 1].turnoverD - data[0].turnoverD
-        
+        vol = dataAll[dataAll.length - 1].turnoverD - dataAll[0].turnoverD
+
         dataAll.forEach((data, index) => {
 
             const Close = +data.close
