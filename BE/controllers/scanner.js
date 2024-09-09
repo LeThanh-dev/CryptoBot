@@ -1,5 +1,7 @@
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 const ScannerModel = require('../models/scanner.model')
+const SpotModel = require('../models/spot.model');
+const MarginModel = require('../models/margin.model');
 const BotModel = require('../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
@@ -198,24 +200,16 @@ const dataCoinByBitController = {
                 );
             }
 
-            const resultFilter = await ScannerModel.aggregate([
-                {
-                    $match: {
-                        IsActive: true,
-                        userID: new mongoose.Types.ObjectId(userID),
-                        TimeTemp: TimeTemp
-                    }
-                },
-            ]);
-
-            const handleResult = await ScannerModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
+            const handleResult = await ScannerModel.find({
+                IsActive: true,
+                userID,
+                TimeTemp
+            }).populate('botID')
 
             if (result) {
 
                 handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
-                    type: "add",
+                    type: "scanner-add",
                     data: handleResult
                 })
                 res.customResponse(200, "Add New Config Successful", []);
@@ -269,19 +263,48 @@ const dataCoinByBitController = {
 
             const TimeTemp = new Date().toString()
 
-            const bulkOperations = dataList.map((data) => ({
-                updateOne: {
-                    filter: { _id: data.id },
-                    update: {
-                        $set: {
-                            ...data.UpdatedFields,
-                            TimeTemp
+            const bulkOperations = []
+            const spotDeleteID = []
+            const marginDeleteID = []
+
+            dataList.forEach((data) => {
+                bulkOperations.push({
+                    updateOne: {
+                        filter: { _id: data.id },
+                        update: {
+                            $set: {
+                                ...data.UpdatedFields,
+                                TimeTemp
+                            }
                         }
                     }
+                })
+                if (!data.UpdatedFields.IsActive) {
+                    data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(data.id) : marginDeleteID.push(data.id)
                 }
-            }));
+            });
 
-            await ScannerModel.bulkWrite(bulkOperations);
+            const bulkOperationsRes = ScannerModel.bulkWrite(bulkOperations);
+            const bulkOperationsDelSpotRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: spotDeleteID } },
+                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
+            );
+
+            const bulkOperationsDelMarginRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: marginDeleteID } },
+                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
+            );
+
+            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
+
+            const handleResult = await ScannerModel.find({
+                TimeTemp
+            }).populate('botID')
+
+            handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
+                type: "scanner-update",
+                data: handleResult
+            })
 
             res.customResponse(200, "Update Config Successful", "");
 
@@ -322,13 +345,19 @@ const dataCoinByBitController = {
 
             const { configID } = req.body
 
-            const result = await ScannerModel.deleteOne(
+            const result = await ScannerModel.findOneAndDelete(
                 {
                     "_id": configID
                 }
             )
 
-            if (result.deletedCount !== 0) {
+            if (result) {
+
+                dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-delete",
+                    data: [result]
+                })
+
                 res.customResponse(200, "Delete Config Successful");
             }
             else {
@@ -344,14 +373,25 @@ const dataCoinByBitController = {
 
             const strategiesIDList = req.body
 
+            const list = strategiesIDList.map(item => item.id)
+            const resultBeforeDelete = await ScannerModel.find(
+                {
+                    "_id": { $in: list }
+                }
+            )
             const result = await ScannerModel.deleteMany(
                 {
-                    "_id": { $in: strategiesIDList.map(item => item.id) }
+                    "_id": { $in: list }
                 }
             )
 
             // if (result.acknowledged && result.deletedCount !== 0) {
             if (result.deletedCount !== 0) {
+
+                dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-delete",
+                    data: resultBeforeDelete
+                })
                 res.customResponse(200, "Delete Config Successful");
             }
             else {
@@ -459,12 +499,15 @@ const dataCoinByBitController = {
 
 
             if (result) {
-                // const newDataSocketWithBotData = await dataCoinByBitController.getAllStrategiesNewUpdate(TimeTemp)
+                const handleResult = await ScannerModel.find({
+                    TimeTemp
+                }).populate('botID')
 
-                // newDataSocketWithBotData.length > 0 && dataCoinByBitController.sendDataRealtime({
-                //     type: "update",
-                //     data: newDataSocketWithBotData
-                // })
+                handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-add",
+                    data: handleResult
+                })
+
                 res.customResponse(200, "Copy Config To Bot Successful", "");
 
             }

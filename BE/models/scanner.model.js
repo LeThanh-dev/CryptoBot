@@ -4,6 +4,7 @@ const strategiesSchema = new mongoose.Schema({
   Label: String,
   Market: String,
   PositionSide: String,
+  TimeTemp: String,
   OrderChange: Number,
   Elastic: Number,
   Turnover: Number,
