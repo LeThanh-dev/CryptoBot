@@ -468,9 +468,9 @@ function CreateStrategy({
                                     min
                                 </InputAdornment>
                             }}
-                            {...register("Expire", { required: true,  })}
+                            {...register("Expire", )}
                         />
-                        {errors.Expire?.type === 'required' && <p className="formControlErrorLabel">The Expire field is required.</p>}
+                        {/* {errors.Expire?.type === 'required' && <p className="formControlErrorLabel">The Expire field is required.</p>} */}
 
                     </FormControl>
 
@@ -524,9 +524,9 @@ function CreateStrategy({
                                     min
                                 </InputAdornment>
                             }}
-                            {...register("AmountExpire", { required: true,  })}
+                            {...register("AmountExpire")}
                         />
-                        {errors.AmountExpire?.type === 'required' && <p className="formControlErrorLabel">The Amount expire field is required.</p>}
+                        {/* {errors.AmountExpire?.type === 'required' && <p className="formControlErrorLabel">The Amount expire field is required.</p>} */}
 
                     </FormControl>
 

@@ -1343,7 +1343,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 // })
                                             }
 
-                                        }, 2000)
+                                        }, 3000)
                                     }
                                     else {
                                         missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)

@@ -222,9 +222,8 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
 
-        // if (OCRound >= 1 && TPRound > 60) {
-        if (vol >= 2000) {
-            if (OCRound >= 1) {
+        if (vol >= 0) {
+            if (OCRound >= .5 && TPRound > 20) {
                 // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
                 messageList.push(ht)
@@ -233,7 +232,7 @@ const tinhOC = (symbol, dataAll = []) => {
             }
 
             // if (OCLongRound <= -1 && TPLongRound > 60) {
-            if (OCLongRound <= -1) {
+            if (OCLongRound <= -.5 && TPLongRound > 20) {
                 // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
                 messageList.push(htLong)
@@ -247,7 +246,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }

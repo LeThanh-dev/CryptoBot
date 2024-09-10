@@ -7,7 +7,7 @@ require('dotenv').config({
 const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
-const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE,createStrategiesMultipleMarginBE,deleteStrategiesMultipleMarginBE } = require('../controllers/margin');
+const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE, createStrategiesMultipleMarginBE, deleteStrategiesMultipleMarginBE } = require('../controllers/margin');
 const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE } = require('../controllers/spot');
 const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../controllers/positionV1');
 const { getAllStrategiesActiveScannerBE } = require('../controllers/scanner');
@@ -17,7 +17,6 @@ const { RestClientV5, WebsocketClient } = require('bybit-api');
 
 const wsConfig = {
     market: 'v5',
-    recvWindow: 100000
 }
 
 const wsSymbol = new WebsocketClient(wsConfig);
@@ -71,6 +70,7 @@ var listConfigIDOrderOCByScanner = {}
 // ----------------------------------------------------------------------------------
 
 // Scanner
+var preTurnover = {}
 var trichMauData = {}
 var trichMauDataArray = {}
 var trichMau = {}
@@ -766,10 +766,9 @@ const handleCreateMultipleConfigSpot = async ({
     symbol = "",
 }) => {
 
+    console.log("[...] Create Multiple Config Spot");
 
-    const Market = scannerData.Market
-
-    const listOC = handleCalcOrderChange({ OrderChange: scannerData.OrderChange, Numbs: scannerData.Numbs })
+    const listOC = handleCalcOrderChange({ OrderChange: +scannerData.OrderChange, Numbs: +scannerData.Numbs })
 
     const dataInput = listOC.map(OCData => {
         return {
@@ -820,6 +819,7 @@ const handleCreateMultipleConfigMargin = async ({
     symbol = "",
 }) => {
 
+    console.log("[...] Create Multiple Config Margin");
 
     const Market = scannerData.Market
 
@@ -1287,10 +1287,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 strategyID,
                                                 symbol,
                                                 // qty,
-                                                qty: roundPrice({
-                                                    price: qty - strategy.minOrderQty,
-                                                    tickSize: strategy.minOrderQty
-                                                }),
+                                                qty,
                                                 price: roundPrice({
                                                     price: TPNew,
                                                     tickSize: digitAllCoinObject[symbol]?.priceScale
@@ -1745,82 +1742,87 @@ const tinhOC = (symbol, dataAll = []) => {
 
         const listScannerObject = allScannerDataObject[symbol]
 
+        let OC = 0
+        let TP = 0
+        let OCLong = 0
+        let TPLong = 0
+        let OCNotPercent = 0
+        let OCLongNotPercent = 0
+
+        const vol = dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol]
+
+        dataAll.forEach((data, index) => {
+
+            const Close = +data.close
+            const Open = +data.open
+            const Highest = +data.high
+            const Lowest = +data.low
+
+            if (index === 0) {
+                OCNotPercent = Highest - Open
+                OC = OCNotPercent / Open
+                OCLongNotPercent = Lowest - Open
+                OCLong = OCLongNotPercent / Open
+            }
+            else {
+
+                let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
+                let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
+                let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
+                let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
+
+
+                if ([Infinity, -Infinity].includes(TPTemp)) {
+                    TPTemp = 0
+                }
+                if ([Infinity, -Infinity].includes(TPLongTemp)) {
+                    TPLongTemp = 0
+                }
+                if ([Infinity, -Infinity].includes(TPTemp2)) {
+                    TPTemp2 = 0
+                }
+                if ([Infinity, -Infinity].includes(TPLongTemp2)) {
+                    TPLongTemp2 = 0
+                }
+
+
+                if (TPTemp > TP) {
+                    TP = TPTemp
+                }
+                if (TPLongTemp > TPLong) {
+                    TPLong = TPLongTemp
+                }
+                if (TPTemp2 > TP) {
+                    TP = TPTemp2
+                }
+                if (TPLongTemp2 > TPLong) {
+                    TPLong = TPLongTemp2
+                }
+            }
+        })
+
+
+        if ([Infinity, -Infinity].includes(OC)) {
+            OC = 0
+        }
+
+        if ([Infinity, -Infinity].includes(OCLong)) {
+            OCLong = 0
+        }
+
+
+        const OCRound = roundNumber(OC)
+        const TPRound = roundNumber(TP)
+        const OCLongRound = roundNumber(OCLong)
+        const TPLongRound = roundNumber(TPLong)
+
+
+        const htLong = (`LONG:  <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+        console.log(htLong, new Date().toLocaleTimeString());
+
+        console.log(dataAll);
+
         listScannerObject && Object.values(listScannerObject)?.length > 0 && Promise.allSettled(Object.values(listScannerObject).map(async scannerData => {
-
-
-            let OC = 0
-            let TP = 0
-            let OCLong = 0
-            let TPLong = 0
-            let vol = 0
-            let OCNotPercent = 0
-            let OCLongNotPercent = 0
-
-            dataAll.forEach((data, index) => {
-
-                const Close = +data.close
-                const Open = +data.open
-                const Highest = +data.high
-                const Lowest = +data.low
-
-                vol += (+data.turnover)
-                if (index === 0) {
-                    OCNotPercent = Highest - Open
-                    OC = OCNotPercent / Open
-                    OCLongNotPercent = Lowest - Open
-                    OCLong = OCLongNotPercent / Open
-                }
-                else {
-
-                    let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
-                    let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
-                    let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
-                    let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
-
-
-                    if ([Infinity, -Infinity].includes(TPTemp)) {
-                        TPTemp = 0
-                    }
-                    if ([Infinity, -Infinity].includes(TPLongTemp)) {
-                        TPLongTemp = 0
-                    }
-                    if ([Infinity, -Infinity].includes(TPTemp2)) {
-                        TPTemp2 = 0
-                    }
-                    if ([Infinity, -Infinity].includes(TPLongTemp2)) {
-                        TPLongTemp2 = 0
-                    }
-
-
-                    if (TPTemp > TP) {
-                        TP = TPTemp
-                    }
-                    if (TPLongTemp > TPLong) {
-                        TPLong = TPLongTemp
-                    }
-                    if (TPTemp2 > TP) {
-                        TP = TPTemp2
-                    }
-                    if (TPLongTemp2 > TPLong) {
-                        TPLong = TPLongTemp2
-                    }
-                }
-            })
-
-
-            if ([Infinity, -Infinity].includes(OC)) {
-                OC = 0
-            }
-
-            if ([Infinity, -Infinity].includes(OCLong)) {
-                OCLong = 0
-            }
-
-
-            const OCRound = roundNumber(OC)
-            const TPRound = roundNumber(TP)
-            const OCLongRound = roundNumber(OCLong)
-            const TPLongRound = roundNumber(TPLong)
 
             const PositionSide = scannerData.PositionSide
             const OrderChange = scannerData.OrderChange
@@ -1883,6 +1885,8 @@ const tinhOC = (symbol, dataAll = []) => {
             if (scannerData.IsActive) {
                 if (vol >= Turnover) {
                     if (PositionSide === "Long") {
+
+
                         if (Math.abs(OCLongRound) >= OrderChange && TPLongRound >= Elastic) {
                             const htLong = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
                             console.log(changeColorConsole.greenBright(htLong, new Date().toLocaleTimeString()));
@@ -1897,6 +1901,11 @@ const tinhOC = (symbol, dataAll = []) => {
                         if (Math.abs(OCRound) >= OrderChange && TPRound >= Elastic) {
                             const ht = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
                             console.log(changeColorConsole.greenBright(ht, new Date().toLocaleTimeString()));
+                            !scannerData.OrderConfig && await handleCreateMultipleConfigMargin({
+                                scannerData,
+                                symbol
+                            })
+                            scannerData.OrderConfig = true
                         }
                     }
                 }
@@ -1947,6 +1956,7 @@ const Main = async () => {
             low: 0,
             turnover: 0
         }
+        preTurnover[symbol] = 0
         trichMauDataArray[symbol] = []
         trichMau[symbol] = {
             cur: 0,
@@ -2010,9 +2020,9 @@ const Main = async () => {
     );
 
 
-    // await handleSocketBotApiList(botApiList)
+    await handleSocketBotApiList(botApiList)
 
-    // await handleSocketListKline(Object.values(listKline))
+    await handleSocketListKline(Object.values(listKline))
 
 
     wsSymbol.on('update', async (dataCoin) => {
@@ -2188,8 +2198,10 @@ const Main = async () => {
                 close: coinCurrent,
                 high: coinCurrent,
                 low: coinCurrent,
-                turnover
+                turnover,
+                turnoverD: turnover
             }
+            preTurnover[symbol] = turnover
             trichMauDataArray[symbol].push(trichMauData[symbol])
         }
 
@@ -2202,7 +2214,7 @@ const Main = async () => {
         }
 
 
-        trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
+        // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
         trichMauData[symbol].turnoverD = turnover
         trichMauData[symbol].close = coinCurrent
 
@@ -2237,15 +2249,15 @@ const Main = async () => {
         console.log(err);
     });
 
-    handleCreateMultipleConfigSpot({
-        scannerData: getAllConfigScannerRes[0],
-        symbol: "AGLAUSDT",
-    })
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "AGLAUSDT",
+    // })
 
-    handleCreateMultipleConfigMargin({
-        scannerData: getAllConfigScannerRes[1],
-        symbol: "AAVEUSDT",
-    })
+    // handleCreateMultipleConfigMargin({
+    //     scannerData: getAllConfigScannerRes[1],
+    //     symbol: "AAVEUSDT",
+    // })
 
 
 }
@@ -2253,22 +2265,26 @@ const Main = async () => {
 try {
     Main()
 
-    // setInterval(() => {
+    setInterval(() => {
 
-    //     listKline.forEach(item => {
-    //         const [_, candle, symbol] = item.split(".");
-    //         tinhOC(symbol, trichMauDataArray[symbol])
-    //         const coinCurrent = trichMauData[symbol].close
-    //         trichMauData[symbol] = {
-    //             open: coinCurrent,
-    //             close: coinCurrent,
-    //             high: coinCurrent,
-    //             low: coinCurrent,
-    //             turnover: trichMauData[symbol].turnover,
-    //         }
-    //         trichMauDataArray[symbol] = []
-    //     })
-    // }, 3000)
+        Object.values(listKline).forEach(item => {
+            const [_, candle, symbol] = item.split(".");
+            tinhOC(symbol, trichMauDataArray[symbol])
+            const coinCurrent = trichMauData[symbol].close
+            const turnover = trichMauData[symbol].turnover
+
+            trichMauData[symbol] = {
+                open: coinCurrent,
+                close: coinCurrent,
+                high: coinCurrent,
+                low: coinCurrent,
+                turnover,
+                turnoverD: turnover
+            }
+            preTurnover[symbol] = trichMauData[symbol].turnover
+            trichMauDataArray[symbol] = []
+        })
+    }, 3000)
 
 }
 
@@ -2415,7 +2431,7 @@ const handleSocketDelete = async (newData = []) => {
     })
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
-    
+
     updatingAllMain = false
 }
 
@@ -2590,7 +2606,7 @@ socketRealtime.on('scanner-add', async (newData = []) => {
     })
 
     console.log(allScannerDataObject);
-    
+
     await handleSocketListKline(Object.values(newListKline))
 
 

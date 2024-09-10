@@ -293,7 +293,7 @@ const dataCoinByBitController = {
             );
 
 
-            const bulkOperationsDelMarginRes = SpotModel.updateMany(
+            const bulkOperationsDelMarginRes = MarginModel.updateMany(
                 { "children.scannerID": { $in: marginDeleteID } },
                 { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
             );
@@ -385,7 +385,7 @@ const dataCoinByBitController = {
                 type: "delete",
                 data: handleResultDelete
             })
-            
+
             handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
                 type: "scanner-update",
                 data: handleResult
@@ -453,44 +453,135 @@ const dataCoinByBitController = {
             res.status(500).json({ message: "Delete Config Error" });
         }
     },
+
     deleteStrategiesMultipleScanner: async (req, res) => {
         try {
 
             const strategiesIDList = req.body
 
             const listScanner = []
-            const listSpot = []
-            const listMargin = []
-            
-             strategiesIDList.forEach(item => {
-                const id = item.id
+            const spotDeleteID = []
+            const marginDeleteID = []
+
+            strategiesIDList.forEach(item => {
+                const id = new mongoose.Types.ObjectId(item.id)
                 listScanner.push(id)
-                item.Market == "Spot"? listSpot.push(id) : listMargin.push(id)
+                item.Market == "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
             })
+
 
             const resultBeforeDelete = await ScannerModel.find(
                 {
                     "_id": { $in: listScanner }
                 }
             )
-            const result = await ScannerModel.deleteMany(
+
+            const resultFilterSpot = await SpotModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: spotDeleteID }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", spotDeleteID]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetSpot = await SpotModel.populate(resultFilterSpot, {
+                path: 'children.botID',
+            }) || []
+
+
+            const handleResultSpot = resultGetSpot.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `SPOT-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const resultFilterMargin = await MarginModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: marginDeleteID }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", marginDeleteID]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetMargin = await MarginModel.populate(resultFilterMargin, {
+                path: 'children.botID',
+            }) || []
+
+            const handleResultMargin = resultGetMargin.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `MARGIN-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const handleResultDelete = handleResultMargin.concat(handleResultSpot)
+
+
+            const bulkOperationsRes = ScannerModel.deleteMany(
                 {
                     "_id": { $in: listScanner }
                 }
             )
 
-            // if (result.acknowledged && result.deletedCount !== 0) {
-            if (result.deletedCount !== 0) {
+            const bulkOperationsDelSpotRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: spotDeleteID } },
+                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
+            );
 
-                dataCoinByBitController.sendDataRealtime({
-                    type: "scanner-delete",
-                    data: resultBeforeDelete
-                })
-                res.customResponse(200, "Delete Config Successful");
-            }
-            else {
-                res.customResponse(400, `Delete Config Failed `);
-            }
+
+            const bulkOperationsDelMarginRes = MarginModel.updateMany(
+                { "children.scannerID": { $in: marginDeleteID } },
+                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
+            );
+
+            // if (result.acknowledged && result.deletedCount !== 0) {
+
+            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
+
+            handleResultDelete.length > 0 && dataCoinByBitController.sendDataRealtime({
+                type: "delete",
+                data: handleResultDelete
+            })
+
+            dataCoinByBitController.sendDataRealtime({
+                type: "scanner-delete",
+                data: resultBeforeDelete
+            })
+            res.customResponse(200, "Delete Config Successful");
+
 
         } catch (error) {
             res.status(500).json({ message: "Delete Config Error" });
