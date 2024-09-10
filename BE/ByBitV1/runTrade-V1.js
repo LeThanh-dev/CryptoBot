@@ -7,8 +7,8 @@ require('dotenv').config({
 const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
-const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE } = require('../controllers/margin');
-const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, deleteStrategiesItemSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE } = require('../controllers/spot');
+const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE,createStrategiesMultipleMarginBE,deleteStrategiesMultipleMarginBE } = require('../controllers/margin');
+const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE } = require('../controllers/spot');
 const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../controllers/positionV1');
 const { getAllStrategiesActiveScannerBE } = require('../controllers/scanner');
 
@@ -814,7 +814,59 @@ const handleCreateMultipleConfigSpot = async ({
         await handleSocketAddNew(newData)
     }
 
+}
+const handleCreateMultipleConfigMargin = async ({
+    scannerData = {},
+    symbol = "",
+}) => {
 
+
+    const Market = scannerData.Market
+
+    const listOC = handleCalcOrderChange({ OrderChange: scannerData.OrderChange, Numbs: scannerData.Numbs })
+
+    const dataInput = listOC.map(OCData => {
+        return {
+            "PositionSide": "Long",
+            "OrderChange": OCData,
+            "Amount": scannerData.Amount,
+            "IsActive": scannerData.IsActive,
+            "Expire": scannerData.Expire,
+            "Limit": scannerData.Limit,
+            "AmountAutoPercent": SPOT_MDDEL_DEFAULT.AmountAutoPercent,
+            "AmountIncreaseOC": SPOT_MDDEL_DEFAULT.AmountIncreaseOC,
+            "AmountExpire": SPOT_MDDEL_DEFAULT.AmountExpire,
+            "Adaptive": true,
+            "Reverse": false,
+            "Remember": false
+        }
+    })
+
+    const scannerID = scannerData._id
+    const botData = scannerData.botID
+
+    const res = await createStrategiesMultipleMarginBE({
+        dataInput,
+        userID: scannerData.userID,
+        botID: botData._id,
+        botName: botData.botName,
+        symbol,
+        scannerID
+    })
+
+    console.log(res.message);
+
+    const newData = res.data
+
+    if (newData.length > 0) {
+
+        listConfigIDOrderOCByScanner[scannerID] = {
+            listConFigID: newData.map(item => item.value),
+            botData,
+        }
+
+        await handleSocketAddNew(newData)
+    }
 
 }
 
@@ -1806,7 +1858,16 @@ const tinhOC = (symbol, dataAll = []) => {
 
                             }
                             else {
+                                const res = await deleteStrategiesMultipleMarginBE({
+                                    scannerID,
+                                    symbol,
+                                    botName: botData.botName,
+                                })
 
+                                const message = res?.message
+                                console.log(message);
+
+                                res.data.length > 0 && await handleSocketDelete(res.data)
                             }
                         }
                     }
@@ -1949,9 +2010,9 @@ const Main = async () => {
     );
 
 
-    await handleSocketBotApiList(botApiList)
+    // await handleSocketBotApiList(botApiList)
 
-    await handleSocketListKline(Object.values(listKline))
+    // await handleSocketListKline(Object.values(listKline))
 
 
     wsSymbol.on('update', async (dataCoin) => {
@@ -2176,10 +2237,15 @@ const Main = async () => {
         console.log(err);
     });
 
-    // handleCreateMultipleConfigSpot({
-    //     scannerData: getAllConfigScannerRes[0],
-    //     symbol: "AGLAUSDT",
-    // })
+    handleCreateMultipleConfigSpot({
+        scannerData: getAllConfigScannerRes[0],
+        symbol: "AGLAUSDT",
+    })
+
+    handleCreateMultipleConfigMargin({
+        scannerData: getAllConfigScannerRes[1],
+        symbol: "AAVEUSDT",
+    })
 
 
 }

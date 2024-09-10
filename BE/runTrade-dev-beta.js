@@ -1421,12 +1421,12 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                     })
 
                     wsOrder.on('close', () => {
-                        console.log('Connection order closed');
+                        console.log('ơV] Connection order closed');
                         wsOrder.connectPrivate(LIST_ORDER, "linear")
                     });
 
                     wsOrder.on('reconnected', () => {
-                        console.log('Reconnected order successful')
+                        console.log('[V] Reconnected order successful')
                         connectErrorMain = false
                     });
 
@@ -1438,7 +1438,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                             console.log('Connection order error');
                             console.log(err);
                             connectErrorMain = true
-                            // wsOrder.connectAll()
+                            wsOrder.connectAll()
                         }
                     });
                 }).catch(err => {
@@ -2160,7 +2160,7 @@ const Main = async () => {
             console.log('[!] Connection listKline error');
             console.log(err);
             connectErrorMain = true
-            // wsSymbol.connectAll()
+            wsSymbol.connectAll()
         }
     });
 

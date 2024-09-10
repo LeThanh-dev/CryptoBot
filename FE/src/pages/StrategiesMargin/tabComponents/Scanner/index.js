@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import { MenuItem, Select, TextField, Avatar, FormLabel, FormControl, Tooltip, Switch, Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from "./Strategies.module.scss"
 import { useDispatch, useSelector } from 'react-redux';
 import CreateStrategy from './components/CreateStrategy';
@@ -19,7 +19,7 @@ import { getAllBotActiveByUserID } from '../../../../services/botService';
 import { getTotalFutureByBot } from '../../../../services/dataCoinByBitService';
 import { addMessageToast } from '../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../store/slices/TotalFuture';
-import { deleteStrategiesByIDScanner, getAllConfigScanner, handleBookmarkScanner, updateStrategiesMultipleScanner } from '../../../../services/scannerService';
+import { deleteStrategiesMultipleScanner, getAllConfigScanner, handleBookmarkScanner, updateStrategiesMultipleScanner } from '../../../../services/scannerService';
 import DataGridCustom from '../../../../components/DataGridCustom';
 import DialogCustom from '../../../../components/DialogCustom';
 import UpdateStrategy from './components/UpdateStrategy';
@@ -159,6 +159,7 @@ function Scanner() {
             renderCell: params => {
                 const data = params.row
                 const configID = data['_id']
+                const Market = data['Market']
                 return (
                     <div style={{
                         display: "flex",
@@ -213,7 +214,7 @@ function Scanner() {
                             className={styles.icon}
                             style={{ margin: "0 4px", }}
                             onClick={async () => {
-                                setOpenConfirmDeleteConfig(configID)
+                                setOpenConfirmDeleteConfig({configID,Market})
                             }}
                         />
                         <EditIcon className={styles.icon}
@@ -911,9 +912,9 @@ function Scanner() {
                         submitBtnColor='error'
                         backdrop
                         onSubmit={async () => {
-                            const configID = openConfirmDeleteConfig
+                            const configID = openConfirmDeleteConfig.configID
                             try {
-                                const res = await deleteStrategiesByIDScanner({ configID })
+                                const res = await deleteStrategiesMultipleScanner([{id:configID,Market:openConfirmDeleteConfig.Market}])
                                 const { data: resData, status, message } = res.data
 
                                 dispatch(addMessageToast({

@@ -458,15 +458,24 @@ const dataCoinByBitController = {
 
             const strategiesIDList = req.body
 
-            const list = strategiesIDList.map(item => item.id)
+            const listScanner = []
+            const listSpot = []
+            const listMargin = []
+            
+             strategiesIDList.forEach(item => {
+                const id = item.id
+                listScanner.push(id)
+                item.Market == "Spot"? listSpot.push(id) : listMargin.push(id)
+            })
+
             const resultBeforeDelete = await ScannerModel.find(
                 {
-                    "_id": { $in: list }
+                    "_id": { $in: listScanner }
                 }
             )
             const result = await ScannerModel.deleteMany(
                 {
-                    "_id": { $in: list }
+                    "_id": { $in: listScanner }
                 }
             )
 

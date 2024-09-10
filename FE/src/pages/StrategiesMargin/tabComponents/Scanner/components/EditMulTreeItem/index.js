@@ -381,6 +381,7 @@ function EditMulTreeItem({
         try {
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => ({
                 id: dataCheckTreeItem._id,
+                Market:dataCheckTreeItem.Market
             }))
 
             const res = await deleteStrategiesMultipleScanner(newData)

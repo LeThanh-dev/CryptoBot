@@ -1290,6 +1290,165 @@ const dataCoinByBitController = {
         }
     },
 
+    createStrategiesMultipleMarginBE: async ({
+        dataInput,
+        userID,
+        botID,
+        botName,
+        symbol,
+        scannerID
+    }) => {
+
+        try {
+
+            const TimeTemp = new Date().toString()
+
+            const result = await MarginModel.updateMany(
+                { "value": symbol },
+                { "$push": { "children": dataInput.map(newData => ({ ...newData, botID, userID, TimeTemp, scannerID })) } },
+            );
+
+            const resultFilter = await MarginModel.aggregate([
+                {
+                    $match: {
+                        children: {
+                            $elemMatch: {
+                                IsActive: true,
+                                userID: new mongoose.Types.ObjectId(userID),
+                                TimeTemp: TimeTemp
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $and: [
+                                        { $eq: ["$$child.IsActive", true] },
+                                        { $eq: ["$$child.userID", new mongoose.Types.ObjectId(userID)] },
+                                        { $eq: ["$$child.TimeTemp", TimeTemp] }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGet = await MarginModel.populate(resultFilter, {
+                path: 'children.botID',
+            })
+
+            const handleResult = resultGet.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `MARGIN-${data._id}-${child._id}`
+                return child
+            })) || []
+
+            if (result.acknowledged && result.matchedCount !== 0) {
+
+                // handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
+                //     type: "add",
+                //     data: handleResult
+                // })
+                return {
+                    message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
+                    data: handleResult || []
+                }
+            }
+            else {
+                return {
+                    message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Failed`,
+                    data: []
+                }
+            }
+
+        }
+
+        catch (error) {
+            return {
+                message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message}`,
+                data: []
+            }
+        }
+
+    },
+    deleteStrategiesMultipleMarginBE: async ({
+        symbol,
+        scannerID,
+        botName
+    }) => {
+        try {
+
+            const resultFilter = await MarginModel.aggregate([
+                {
+                    $match: {
+                        "value": symbol
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $eq: ["$$child.scannerID", scannerID]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGet = await MarginModel.populate(resultFilter, {
+                path: 'children.botID',
+            })
+
+            const handleResult = resultGet.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `MARGIN-${data._id}-${child._id}`
+                return child
+            })) || []
+
+            const result = await MarginModel.updateMany(
+                { "children.scannerID": scannerID },
+                { $pull: { "children": { scannerID } } }
+            );
+
+            if (result.acknowledged && result.matchedCount !== 0) {
+
+              
+                return {
+                    message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
+                    data: handleResult || []
+                }
+            }
+            else {
+                return {
+                    message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Failed `,
+                    data: []
+                }
+            }
+
+
+        } catch (error) {
+            return {
+                message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message} `,
+                data: []
+            }
+        }
+    },
 }
 
 module.exports = dataCoinByBitController 
