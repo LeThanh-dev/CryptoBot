@@ -42,7 +42,7 @@ const clientDigit = new RestClientV5({
 // ----------------------------------------------------------------------------------
 let missTPDataBySymbol = {}
 
-var listKline = []
+var listKline = {}
 var allSymbol = []
 var updatingAllMain = false
 
@@ -1695,8 +1695,6 @@ const tinhOC = (symbol, dataAll = []) => {
 
         listScannerObject && Object.values(listScannerObject)?.length > 0 && Promise.allSettled(Object.values(listScannerObject).map(async scannerData => {
 
-            console.log("scannerData", scannerData);
-
 
             let OC = 0
             let TP = 0
@@ -1772,9 +1770,6 @@ const tinhOC = (symbol, dataAll = []) => {
             const OCLongRound = roundNumber(OCLong)
             const TPLongRound = roundNumber(TPLong)
 
-
-
-
             const PositionSide = scannerData.PositionSide
             const OrderChange = scannerData.OrderChange
             const Elastic = scannerData.Elastic
@@ -1824,22 +1819,24 @@ const tinhOC = (symbol, dataAll = []) => {
 
             }
 
-            if (vol >= Turnover) {
-                if (PositionSide === "Long") {
-                    if (Math.abs(OCLongRound) >= OrderChange && TPLongRound >= Elastic) {
-                        const htLong = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
-                        console.log(changeColorConsole.greenBright(htLong, new Date().toLocaleTimeString()));
-                        !scannerData.OrderConfig && await handleCreateMultipleConfigSpot({
-                            scannerData,
-                            symbol
-                        })
-                        scannerData.OrderConfig = true
+            if (scannerData.IsActive) {
+                if (vol >= Turnover) {
+                    if (PositionSide === "Long") {
+                        if (Math.abs(OCLongRound) >= OrderChange && TPLongRound >= Elastic) {
+                            const htLong = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+                            console.log(changeColorConsole.greenBright(htLong, new Date().toLocaleTimeString()));
+                            !scannerData.OrderConfig && await handleCreateMultipleConfigSpot({
+                                scannerData,
+                                symbol
+                            })
+                            scannerData.OrderConfig = true
+                        }
                     }
-                }
-                else {
-                    if (Math.abs(OCRound) >= OrderChange && TPRound >= Elastic) {
-                        const ht = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
-                        console.log(changeColorConsole.greenBright(ht, new Date().toLocaleTimeString()));
+                    else {
+                        if (Math.abs(OCRound) >= OrderChange && TPRound >= Elastic) {
+                            const ht = (`[${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
+                            console.log(changeColorConsole.greenBright(ht, new Date().toLocaleTimeString()));
+                        }
                     }
                 }
             }
@@ -1875,7 +1872,7 @@ const Main = async () => {
     const getAllConfigScannerRes = allRes[4].value || []
 
     const allSymbolResNotDuplicate = [...new Set(allSymbolRes)]
-    listKline = allSymbolResNotDuplicate.map(symbolData => {
+    allSymbolResNotDuplicate.forEach(symbolData => {
         const symbol = symbolData.value
         trichMauOCListObject[symbol] = {
             preTime: 0
@@ -1894,22 +1891,20 @@ const Main = async () => {
             cur: 0,
             pre: 0,
         }
-        return `kline.D.${symbol}`
-    })
-
-
-    allSymbolResNotDuplicate.forEach(symbolData => {
-        const symbol = symbolData.value
-        allScannerDataObject[symbol] = {}
         getAllConfigScannerRes.forEach(scannerData => {
             const scannerID = scannerData._id
-            if (checkConditionBot(scannerData) && scannerData.OnlyPairs.includes(symbol) && !scannerData.Blacklist.includes(symbol)) {
+            const setBlacklist = new Set(scannerData.Blacklist)
+            const setOnlyPairs = new Set(scannerData.OnlyPairs)
+            if (checkConditionBot(scannerData) && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
+                !allScannerDataObject[symbol] && (allScannerDataObject[symbol] = {})
                 const newScannerData = scannerData.toObject()
                 newScannerData.ExpirePre = new Date()
                 newScannerData.OrderConfig = false
                 allScannerDataObject[symbol][scannerID] = newScannerData
+                listKline[symbol] = `kline.D.${symbol}`
             }
         })
+
     })
 
 
@@ -1956,7 +1951,8 @@ const Main = async () => {
 
     await handleSocketBotApiList(botApiList)
 
-    await handleSocketListKline(listKline)
+    await handleSocketListKline(Object.values(listKline))
+
 
     wsSymbol.on('update', async (dataCoin) => {
 
@@ -2353,6 +2349,7 @@ const handleSocketDelete = async (newData = []) => {
     })
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
+    
     updatingAllMain = false
 }
 
@@ -2498,10 +2495,93 @@ socketRealtime.on('update', async (newData = []) => {
     updatingAllMain = false
 });
 
+socketRealtime.on('scanner-add', async (newData = []) => {
+    console.log("[...] Add Scanner From Realtime", newData.length);
+
+    updatingAllMain = true
+
+    const newListKline = {}
+
+    newData.forEach(scannerData => {
+
+        const scannerID = scannerData._id
+        const setBlacklist = new Set(scannerData.Blacklist)
+        if (checkConditionBot(scannerData)) {
+            scannerData.OnlyPairs.forEach(symbol => {
+                if (!setBlacklist.has(symbol)) {
+                    !allScannerDataObject[symbol] && (allScannerDataObject[symbol] = {})
+                    const newScannerData = scannerData
+                    newScannerData.ExpirePre = new Date()
+                    newScannerData.OrderConfig = false
+                    allScannerDataObject[symbol][scannerID] = newScannerData
+                    if (!listKline[symbol]) {
+                        listKline[symbol] = `kline.D.${symbol}`
+                        newListKline[symbol] = `kline.D.${symbol}`
+                    }
+                }
+            })
+        }
+    })
+
+    console.log(allScannerDataObject);
+    
+    await handleSocketListKline(Object.values(newListKline))
+
+
+    updatingAllMain = false
+});
+
 socketRealtime.on('scanner-update', async (newData = []) => {
     console.log("[...] Update Scanner From Realtime", newData.length);
 
     updatingAllMain = true
+
+    const newListKline = {}
+
+    newData.forEach(scannerData => {
+
+        const scannerID = scannerData._id
+        const setBlacklist = new Set(scannerData.Blacklist)
+        if (checkConditionBot(scannerData)) {
+            scannerData.OnlyPairs.forEach(symbol => {
+                if (!setBlacklist.has(symbol)) {
+                    !allScannerDataObject[symbol] && (allScannerDataObject[symbol] = {})
+                    const newScannerData = scannerData
+                    newScannerData.ExpirePre = new Date()
+                    newScannerData.OrderConfig = false
+                    allScannerDataObject[symbol][scannerID] = newScannerData
+
+                    if (!listKline[symbol]) {
+                        listKline[symbol] = `kline.D.${symbol}`
+                        newListKline[symbol] = `kline.D.${symbol}`
+                    }
+                }
+                else {
+                    allScannerDataObject[symbol]?.[scannerID] && (allScannerDataObject[symbol][scannerID].IsActive = false);
+                }
+            })
+        }
+    })
+
+
+
+
+    await handleSocketListKline(Object.values(newListKline))
+
+    updatingAllMain = false
+});
+
+socketRealtime.on('scanner-delete', async (newData = []) => {
+    console.log("[...] Delete Scanner From Realtime", newData.length);
+
+    updatingAllMain = true
+
+    newData.forEach(scannerData => {
+        const scannerID = scannerData._id
+        scannerData.OnlyPairs.forEach(symbol => {
+            delete allScannerDataObject[symbol][scannerID]
+        })
+    })
 
     updatingAllMain = false
 });
@@ -2910,7 +2990,7 @@ socketRealtime.on('sync-symbol', async (newData) => {
     );
 
 
-    await handleSocketListKline(newListKline)
+    await handleSocketListKline(Object.values(newListKline))
 
 });
 

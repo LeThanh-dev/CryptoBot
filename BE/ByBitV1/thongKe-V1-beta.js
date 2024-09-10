@@ -152,6 +152,9 @@ const tinhOC = (symbol, dataAll = []) => {
         let vol = 0
         let OCNotPercent = 0
         let OCLongNotPercent = 0
+
+        vol = dataAll[dataAll.length - 1].turnoverD - dataAll[0].turnoverD
+
         dataAll.forEach((data, index) => {
 
             const Close = +data.close
@@ -159,7 +162,7 @@ const tinhOC = (symbol, dataAll = []) => {
             const Highest = +data.high
             const Lowest = +data.low
 
-            vol += (+data.turnover)
+            
             if (index === 0) {
                 OCNotPercent = Highest - Open
                 OC = OCNotPercent / Open
@@ -293,7 +296,8 @@ let Main = async () => {
                     close: coinCurrent,
                     high: coinCurrent,
                     low: coinCurrent,
-                    turnover
+                    turnover,
+                    turnoverD:turnover
                 }
                 trichMauDataArray[symbol].push(trichMauData[symbol])
             }
@@ -307,11 +311,11 @@ let Main = async () => {
             }
 
 
-            trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
             trichMauData[symbol].turnoverD = turnover
             trichMauData[symbol].close = coinCurrent
-
+            
             if (new Date(dataMain.timestamp) - trichMau[symbol].pre >= 1000) {
+                // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
                 trichMau[symbol].pre = new Date(dataMain.timestamp)
             }
@@ -367,6 +371,7 @@ try {
                 high: coinCurrent,
                 low: coinCurrent,
                 turnover: trichMauData[symbol].turnover,
+                turnoverD: trichMauData[symbol].turnover,
             }
             trichMauDataArray[symbol] = []
         })

@@ -3,7 +3,7 @@ const BotModel = require('../models/bot.model');
 const UserModel = require('../models/user.model');
 const StrategiesModel = require('../models/strategies.model');
 const SpotModel = require('../models/spot.model');
-const MarginMModel = require('../models/margin.model');
+const MarginModel = require('../models/margin.model');
 const ScannerModel = require('../models/scanner.model');
 const { default: mongoose } = require('mongoose');
 
@@ -106,7 +106,7 @@ const BotController = {
         botID,
         IsActive
     }) => {
-        const resultFilter = await MarginMModel.aggregate([
+        const resultFilter = await MarginModel.aggregate([
             {
                 $match: {
                     "children.botID": new mongoose.Types.ObjectId(botID)
@@ -131,7 +131,7 @@ const BotController = {
                 }
             }
         ]);
-        const result = await MarginMModel.populate(resultFilter, {
+        const result = await MarginModel.populate(resultFilter, {
             path: 'children.botID',
         })
 
@@ -410,7 +410,7 @@ const BotController = {
                             { "children.botID": botID },
                             { $pull: { children: { botID: botID } } }
                         );
-                        const deleteAllMargin = MarginMModel.updateMany(
+                        const deleteAllMargin = MarginModel.updateMany(
                             { "children.botID": botID },
                             { $pull: { children: { botID: botID } } }
                         );

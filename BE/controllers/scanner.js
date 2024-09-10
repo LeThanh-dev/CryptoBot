@@ -1,5 +1,7 @@
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 const ScannerModel = require('../models/scanner.model')
+const SpotModel = require('../models/spot.model');
+const MarginModel = require('../models/margin.model');
 const BotModel = require('../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
@@ -198,24 +200,16 @@ const dataCoinByBitController = {
                 );
             }
 
-            const resultFilter = await ScannerModel.aggregate([
-                {
-                    $match: {
-                        IsActive: true,
-                        userID: new mongoose.Types.ObjectId(userID),
-                        TimeTemp: TimeTemp
-                    }
-                },
-            ]);
-
-            const handleResult = await ScannerModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
+            const handleResult = await ScannerModel.find({
+                IsActive: true,
+                userID,
+                TimeTemp
+            }).populate('botID')
 
             if (result) {
 
                 handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
-                    type: "add",
+                    type: "scanner-add",
                     data: handleResult
                 })
                 res.customResponse(200, "Add New Config Successful", []);
@@ -269,25 +263,139 @@ const dataCoinByBitController = {
 
             const TimeTemp = new Date().toString()
 
-            const bulkOperations = dataList.map((data) => ({
-                updateOne: {
-                    filter: { _id: data.id },
-                    update: {
-                        $set: {
-                            ...data.UpdatedFields,
-                            TimeTemp
+            const bulkOperations = []
+            const spotDeleteID = []
+            const marginDeleteID = []
+
+            dataList.forEach((data) => {
+                bulkOperations.push({
+                    updateOne: {
+                        filter: { _id: data.id },
+                        update: {
+                            $set: {
+                                ...data.UpdatedFields,
+                                TimeTemp
+                            }
+                        }
+                    }
+                })
+                if (!data.UpdatedFields.IsActive) {
+                    const id = new mongoose.Types.ObjectId(data.id)
+                    data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
+                }
+            });
+
+            const bulkOperationsRes = ScannerModel.bulkWrite(bulkOperations);
+
+            const bulkOperationsDelSpotRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: spotDeleteID } },
+                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
+            );
+
+
+            const bulkOperationsDelMarginRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: marginDeleteID } },
+                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
+            );
+
+
+
+            // handle get all config by scannerID
+
+            const resultFilterSpot = await SpotModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: spotDeleteID }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", spotDeleteID]
+                                }
+                            }
                         }
                     }
                 }
-            }));
+            ]);
 
-            await ScannerModel.bulkWrite(bulkOperations);
+            const resultGetSpot = await SpotModel.populate(resultFilterSpot, {
+                path: 'children.botID',
+            }) || []
+
+
+            const handleResultSpot = resultGetSpot.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `SPOT-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const resultFilterMargin = await MarginModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: marginDeleteID }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", marginDeleteID]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetMargin = await MarginModel.populate(resultFilterMargin, {
+                path: 'children.botID',
+            }) || []
+
+            const handleResultMargin = resultGetMargin.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `MARGIN-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const handleResultDelete = handleResultMargin.concat(handleResultSpot)
+
+            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
+
+            const handleResult = await ScannerModel.find({
+                TimeTemp
+            }).populate('botID')
+
+            handleResultDelete.length > 0 && dataCoinByBitController.sendDataRealtime({
+                type: "delete",
+                data: handleResultDelete
+            })
+            
+            handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
+                type: "scanner-update",
+                data: handleResult
+            })
 
             res.customResponse(200, "Update Config Successful", "");
 
         } catch (error) {
             // Xử lý lỗi nếu có
-            res.status(500).json({ message: "Update Config Error" });
+            res.status(500).json({ message: "Update Config Error" + error.message });
         }
     },
 
@@ -322,13 +430,19 @@ const dataCoinByBitController = {
 
             const { configID } = req.body
 
-            const result = await ScannerModel.deleteOne(
+            const result = await ScannerModel.findOneAndDelete(
                 {
                     "_id": configID
                 }
             )
 
-            if (result.deletedCount !== 0) {
+            if (result) {
+
+                dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-delete",
+                    data: [result]
+                })
+
                 res.customResponse(200, "Delete Config Successful");
             }
             else {
@@ -344,14 +458,25 @@ const dataCoinByBitController = {
 
             const strategiesIDList = req.body
 
+            const list = strategiesIDList.map(item => item.id)
+            const resultBeforeDelete = await ScannerModel.find(
+                {
+                    "_id": { $in: list }
+                }
+            )
             const result = await ScannerModel.deleteMany(
                 {
-                    "_id": { $in: strategiesIDList.map(item => item.id) }
+                    "_id": { $in: list }
                 }
             )
 
             // if (result.acknowledged && result.deletedCount !== 0) {
             if (result.deletedCount !== 0) {
+
+                dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-delete",
+                    data: resultBeforeDelete
+                })
                 res.customResponse(200, "Delete Config Successful");
             }
             else {
@@ -459,12 +584,15 @@ const dataCoinByBitController = {
 
 
             if (result) {
-                // const newDataSocketWithBotData = await dataCoinByBitController.getAllStrategiesNewUpdate(TimeTemp)
+                const handleResult = await ScannerModel.find({
+                    TimeTemp
+                }).populate('botID')
 
-                // newDataSocketWithBotData.length > 0 && dataCoinByBitController.sendDataRealtime({
-                //     type: "update",
-                //     data: newDataSocketWithBotData
-                // })
+                handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-add",
+                    data: handleResult
+                })
+
                 res.customResponse(200, "Copy Config To Bot Successful", "");
 
             }
