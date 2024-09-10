@@ -316,10 +316,10 @@ let Main = async () => {
             trichMauData[symbol].turnoverD = turnover
             trichMauData[symbol].close = coinCurrent
 
-            if (new Date(dataMain.timestamp) - trichMau[symbol].pre >= 1000) {
+            if (new Date() - trichMau[symbol].pre >= 1000) {
                 // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date(dataMain.timestamp)
+                trichMau[symbol].pre = new Date()
             }
 
             trichMauData[symbol] = {

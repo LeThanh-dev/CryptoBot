@@ -1382,62 +1382,27 @@ const dataCoinByBitController = {
     },
     deleteStrategiesMultipleMarginBE: async ({
         symbol,
-        scannerID,
+        listConFigID,
         botName
     }) => {
         try {
 
-            const resultFilter = await MarginModel.aggregate([
-                {
-                    $match: {
-                        "value": symbol
-                    }
-                },
-                {
-                    $project: {
-                        label: 1,
-                        value: 1,
-                        volume24h: 1,
-                        children: {
-                            $filter: {
-                                input: "$children",
-                                as: "child",
-                                cond: {
-                                    $eq: ["$$child.scannerID", scannerID]
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
-
-            const resultGet = await MarginModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
-
-            const handleResult = resultGet.flatMap((data) => data.children.map(child => {
-                child.symbol = data.value
-                child.value = `MARGIN-${data._id}-${child._id}`
-                return child
-            })) || []
-
             const result = await MarginModel.updateMany(
-                { "children.scannerID": scannerID },
-                { $pull: { "children": { scannerID } } }
+                { "children._id": { $in: listConFigID } },
+                { $pull: { "children": { _id: { $in: listConFigID } } } }
             );
+
 
             if (result.acknowledged && result.matchedCount !== 0) {
 
               
                 return {
                     message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
-                    data: handleResult || []
                 }
             }
             else {
                 return {
                     message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Failed `,
-                    data: []
                 }
             }
 
@@ -1445,7 +1410,6 @@ const dataCoinByBitController = {
         } catch (error) {
             return {
                 message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message} `,
-                data: []
             }
         }
     },
