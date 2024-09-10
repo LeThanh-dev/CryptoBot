@@ -128,7 +128,10 @@ function Strategies() {
     const positionSideSelectedRef = useRef("All")
     const candlestickSelectedRef = useRef("All")
     const selectAllRef = useRef(false)
-    const bookmarkCheckRef = useRef(false)
+    const bookmarkCheckRef = useRef({
+        checked: false,
+        indeterminate: false
+    })
 
     const dispatch = useDispatch()
 
@@ -286,7 +289,15 @@ function Strategies() {
                 const checkPosition = positionSideSelectedRef.current === "All" || positionSideSelectedRef.current === item.PositionSide;
                 const checkCandle = candlestickSelectedRef.current === "All" || candlestickSelectedRef.current === item.Candlestick;
                 const checkSearch = searchDebounce === "" || data.label.toUpperCase().includes(searchDebounce.toUpperCase().trim());
-                const checkBookmark = bookmarkCheckRef.current ? data.bookmarkList?.includes(userData._id) : true
+                let checkBookmark =true
+                if(bookmarkCheckRef.current.checked)
+                {
+                    checkBookmark =   data.bookmarkList?.includes(userData._id)
+                }
+                else if(bookmarkCheckRef.current.indeterminate)
+                {
+                    checkBookmark =  !data.bookmarkList?.includes(userData._id)
+                }
 
                 return checkBotType && checkBot && checkPosition && checkCandle && checkSearch && checkBookmark;
             });
@@ -337,7 +348,10 @@ function Strategies() {
         botSelectedRef.current = "All"
         positionSideSelectedRef.current = "All"
         candlestickSelectedRef.current = "All"
-        bookmarkCheckRef.current = false
+        bookmarkCheckRef.current = {
+            checked: false,
+            indeterminate: false
+        }
         setSearchKey("")
     }
 
@@ -563,22 +577,34 @@ function Strategies() {
                     <span style={{ margin: "0px 2px 3px 12px", opacity: ".6", fontSize: ".9rem" }}>|</span>
                     <div className={styles.bookmarkAll}   >
                         <Checkbox
-                            checked={bookmarkCheckRef.current}
+                            checked={bookmarkCheckRef.current.checked}
+                            indeterminate={bookmarkCheckRef.current.indeterminate}
                             style={{
                                 padding: " 0 6px",
                             }}
                             sx={{
                                 color: "#b5b5b5",
+                                '&.MuiCheckbox-indeterminate': {
+                                    color: "var(--yellowColor)" ,
+                                },
                                 '&.Mui-checked': {
                                     color: "var(--yellowColor)",
                                 },
                             }}
                             onClick={e => {
                                 const value = e.target.checked;
-                                bookmarkCheckRef.current = value
+                                const state = bookmarkCheckRef.current
+                                if (state.indeterminate) {
+                                    bookmarkCheckRef.current = { checked: true, indeterminate: false }
+                                } else if (state.checked) {
+                                    bookmarkCheckRef.current = { checked: false, indeterminate: false }
+                                } else {
+                                    bookmarkCheckRef.current = { checked: false, indeterminate: true }
+                                }
                                 handleFilterAll()
                             }}
                             icon={<StarBorderIcon />}
+                            indeterminateIcon={<StarBorderIcon />}
                             checkedIcon={<StarIcon />}
                         />
                         <span>Bookmark</span>
@@ -687,6 +713,7 @@ function Strategies() {
                     onClose={() => {
                         setOpenFilterDialog(false)
                     }}
+                    userID={userData._id}
                     botListInput={botList.slice(1)}
                 />
 
