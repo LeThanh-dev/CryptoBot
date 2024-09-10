@@ -254,6 +254,7 @@ const PositionController = {
             const { botListID } = req.body
 
             let allViThe = {}
+            let botListData = []
 
             await Promise.allSettled(botListID.map(dataBotItem => {
 
@@ -273,24 +274,38 @@ const PositionController = {
                 }).then(async response => {
 
                     const viTheList = response.result.list;
+                    let listOC = []
+                    let symbolList = []
+
+                    viTheList.forEach(viTheListItem => {
+                        const symbol = viTheListItem.symbol
+                        listOC.push({
+                            side: viTheListItem.side === "Buy" ? "Sell" : "Buy",
+                            symbol,
+                            qty: viTheListItem.size,
+                            orderType: "Market",
+                            positionIdx: 0,
+                        })
+                        symbolList.push(symbol)
+                    })
 
                     allViThe[botID] = {
                         ApiKey: dataBotItem.ApiKey,
                         SecretKey: dataBotItem.SecretKey,
-                        listOC: viTheList.map(viTheListItem => (
-                            {
-                                side: viTheListItem.side === "Buy" ? "Sell" : "Buy",
-                                symbol: viTheListItem.symbol,
-                                qty: viTheListItem.size,
-                                orderType: "Market",
-                                positionIdx: 0,
-                            }
-                        ))
+                        listOC
                     }
+                    botListData.push({
+                        botID,
+                        symbolList
+                    })
                 })
             }))
             await PositionController.handleCancelAllPosition(
                 Object.values(allViThe))
+            PositionController.sendDataRealtime({
+                type: "closeAllPosition",
+                data: botListData
+            })
 
             res.customResponse(200, "Close All Position Successful", "");
 
@@ -416,7 +431,7 @@ const PositionController = {
                 reduceOnly: true
             })
             .then(async (response) => {
-                
+
                 if (response.retCode == 0) {
 
                     const result = await PositionModel.updateOne({ Symbol: symbol, botID: positionData.botID }, {
@@ -444,13 +459,11 @@ const PositionController = {
 
                 }
                 else {
-                    if(response.retCode == 110017)
-                    {
+                    if (response.retCode == 110017) {
                         const text = side === "Sell" ? "cao hơn" : "thấp hơn"
                         res.customResponse(400, `Giá TP không được ${text} giá TP hiện tại`);
                     }
-                    else 
-                    {
+                    else {
                         res.customResponse(400, response.retMsg);
                     }
                 }

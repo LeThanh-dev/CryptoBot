@@ -16,7 +16,6 @@ const wsConfig = {
 }
 
 const wsSymbol = new WebsocketClient(wsConfig);
-
 const LIST_ORDER = ["order", "position"]
 const MAX_ORDER_LIMIT = 10
 
@@ -27,6 +26,7 @@ const clientDigit = new RestClientV5({
 // ----------------------------------------------------------------------------------
 let missTPDataBySymbol = {}
 
+var blockContinueOrderOCByStrategiesID = {}
 var listKline = []
 var allSymbol = []
 var updatingAllMain = false
@@ -212,7 +212,7 @@ const handleSubmitOrder = async ({
 
         const newOC = Math.abs((price - coinOpen)) / coinOpen * 100
 
-     
+
         await client
             .submitOrder({
                 category: 'linear',
@@ -827,17 +827,7 @@ const sendAllBotTelegram = async (text) => {
     }))
 }
 
-const resetAllStrategies = () => {
-    ["1m", "3m", "5m", "15m"].forEach(candle => {
-        const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-        listObject && Object.values(listObject).map(strategyData => {
-            const strategyID = strategyData.strategyID
-            console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${dataMain.side} - ${candle} - Bot: ${botName}`);
-            cancelAll({ botID, strategyID })
-            delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
-        })
-    });
-}
+
 
 const handleSocketBotApiList = async (botApiListInput = {}) => {
 
@@ -905,7 +895,21 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                     if (!orderID) {
 
-                                        resetAllStrategies()
+                                        ["1m", "3m", "5m", "15m"].forEach(candle => {
+                                            const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+                                            listObject && Object.values(listObject).map(strategyData => {
+                                                const strategyID = strategyData.strategyID
+                                                const symbolItem = strategyData.symbol
+                                                if (symbol == symbolItem && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
+                                                    {
+                                                        console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                                                        cancelAll({ botID, strategyID })
+                                                        delete listOCByCandleBot[candle][botID].listOC[strategyID]
+
+                                                    }
+                                                }
+                                            })
+                                        });
 
                                     }
                                 }
@@ -1144,7 +1148,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 const qty = +dataMain.qty;
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
 
-                                                if (allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID) {
+                                                if (allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
                                                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
                                                 }
 
@@ -1265,19 +1269,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     missTPDataBySymbol[botSymbolMissID].prePrice = TPNew
                                                     missTPDataBySymbol[botSymbolMissID].side = side
 
-                                                    // console.log("[...] Đang lọc OC MISS\n");
 
-                                                    // ["1m", "3m", "5m", "15m"].forEach(candle => {
-                                                    //     const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-                                                    //     listObject && Object.values(listObject).map(strategyData => {
-                                                    //         const strategyID = strategyData.strategyID
-                                                    //         if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
-                                                    //             console.log(`[ MISS ] | ${symbol.replace("USDT", "")} - ${side} - ${strategyData.candle} - ${botName} \n`);
-                                                    //             cancelAll({ botID, strategyID })
-                                                    //             delete listOCByCandleBot?.[candle]?.[botID]?.listOC[strategyID]
-                                                    //         }
-                                                    //     })
-                                                    // });
 
                                                     // const dataInput = {
                                                     //     symbol,
@@ -1337,18 +1329,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 // console.log("[...] Đang lọc OC MISS\n");
 
-                                                // ["1m", "3m", "5m", "15m"].forEach(candle => {
-                                                //     const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
-                                                //     listObject && Object.values(listObject).map(item => {
-                                                //         const strategyID = item.strategyID
-                                                //         const teleText = `[ MISS ] | ${symbol.replace("USDT", "")} - ${side} - ${item.candle} - ${botName} \n`
-                                                //         console.log(changeColorConsole.redBright(teleText));
-                                                //         allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
-                                                //         allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
-                                                //         missTPDataBySymbol[botSymbolMissID].gongLai = false
-                                                //         delete listOCByCandleBot[candle][botID].listOC[strategyID]
-                                                //     })
-                                                // });
+
                                                 // updatePositionBE({
                                                 //     newDataUpdate: {
                                                 //         Miss: true,
@@ -1415,6 +1396,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                     missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
+
                                     if (missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
                                         await deletePositionBE({
                                             orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
@@ -1449,10 +1431,15 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                     });
 
                     wsOrder.on('error', (err) => {
-                        !connectErrorMain && sendAllBotTelegram("🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối")
-                        console.log('Connection order error');
-                        console.log(err);
-                        connectErrorMain = true
+                        if (!connectErrorMain) {
+                            const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
+                            console.log(text);
+                            sendAllBotTelegram(text)
+                            console.log('Connection order error');
+                            console.log(err);
+                            connectErrorMain = true
+                            // wsOrder.connectAll()
+                        }
                     });
                 }).catch(err => {
                     console.log(`[V] Subscribe order ( ${botName} ) error:`, err)
@@ -1659,7 +1646,7 @@ const Main = async () => {
 
                     const side = strategy.PositionSide === "Long" ? "Buy" : "Sell"
 
-                    if (dataConfirm == false && strategy.IsActive && !updatingAllMain) {
+                    if (dataConfirm == false && strategy.IsActive && !updatingAllMain && !blockContinueOrderOCByStrategiesID[strategyID]) {
 
                         if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.ordering) {
 
@@ -2016,6 +2003,8 @@ const Main = async () => {
                     // Coin CLosed
                     else if (dataConfirm == true) {
 
+                        blockContinueOrderOCByStrategiesID[strategyID] = false
+
                         // TP chưa khớp -> Dịch TP mới
 
                         if (allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP.orderID) {
@@ -2164,10 +2153,15 @@ const Main = async () => {
     });
 
     wsSymbol.on('error', (err) => {
-        !connectErrorMain && sendAllBotTelegram("🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối")
-        console.log('[!] Connection listKline error');
-        console.log(err);
-        connectErrorMain = true
+        if (!connectErrorMain) {
+            const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
+            console.log(text);
+            sendAllBotTelegram(text)
+            console.log('[!] Connection listKline error');
+            console.log(err);
+            connectErrorMain = true
+            // wsSymbol.connectAll()
+        }
     });
 
 }
@@ -2600,7 +2594,17 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
         botApiList[botIDMain].IsActive = botActive;
 
-        !botActive && resetAllStrategies()
+        if (!botActive) {
+            ["1m", "3m", "5m", "15m"].forEach(candle => {
+                const listObject = listOCByCandleBot?.[candle]?.[botIDMain]?.listOC
+                listObject && Object.values(listObject).map(strategyData => {
+                    const strategyID = strategyData.strategyID
+                    console.log(`[V] RESET | ${strategyData.symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                    cancelAll({ botID: botIDMain, strategyID })
+                    delete listOCByCandleBot[candle][botIDMain].listOC[strategyID]
+                })
+            });
+        }
     }
 
     updatingAllMain = false
@@ -2890,6 +2894,35 @@ socketRealtime.on('sync-symbol', async (newData) => {
 });
 
 
+
+socketRealtime.on('closeAllPosition', (botListData = []) => {
+
+
+    console.log(`[...] Close All Position From Realtime:`, botListData);
+
+    updatingAllMain = true;
+
+    botListData.forEach(botData => {
+
+        ["1m", "3m", "5m", "15m"].forEach(candle => {
+            const botID = botData.botID
+            const symbolList = botData.symbolList
+
+            const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+            listObject && Object.values(listObject).map(strategyData => {
+                const symbolItem = strategyData.symbol
+                const strategyID = strategyData.strategyID
+                if (symbolList.includes(symbolItem)) {
+                    console.log(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                    blockContinueOrderOCByStrategiesID[strategyID] = true
+                }
+            })
+        })
+    });
+
+    updatingAllMain = false
+
+});
 
 socketRealtime.on('close-upcode', async () => {
 
