@@ -126,7 +126,7 @@ const dataCoinByBitController = {
                     secret: botData.SecretKey,
                     syncTimeBeforePrivateRequests: true,
                 });
-                const res = await client.getSpotBorrowCheck(symbol, positionSide === "Long" ? "Buy" :"Sell")
+                const res = await client.getSpotBorrowCheck(symbol, positionSide === "Long" ? "Buy" : "Sell")
                 return {
                     botData,
                     spotMaxTradeAmount: res.result?.maxTradeAmount || 0
@@ -1395,7 +1395,7 @@ const dataCoinByBitController = {
 
             if (result.acknowledged && result.matchedCount !== 0) {
 
-              
+
                 return {
                     message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
                 }
@@ -1413,6 +1413,31 @@ const dataCoinByBitController = {
             }
         }
     },
+
+    offConfigMarginBE: async ({
+        symbol,
+        configID
+    }) => {
+
+        try {
+            const result = await MarginModel.updateOne(
+                { "children._id": configID, label: symbol },
+                { $set: { "children.$.IsActive": false } }
+            )
+
+            if (result.acknowledged && result.matchedCount !== 0) {
+                console.log(`[Mongo] OFf config MARGIN ( ${symbol} ) successful`);
+
+            }
+            else {
+                console.log(`[Mongo] OFf config MARGIN ( ${symbol} ) failed`);
+
+            }
+        } catch (error) {
+            console.log(`[Mongo] OFf config MARGIN ( ${symbol} ) error: ${error.message}`);
+
+        }
+    }
 }
 
 module.exports = dataCoinByBitController 

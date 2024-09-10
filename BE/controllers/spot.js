@@ -1444,6 +1444,31 @@ const dataCoinByBitController = {
             }
         }
     },
+
+    offConfigSpotBE: async ({
+        symbol,
+        configID
+    }) => {
+
+        try {
+            const result = await SpotModel.updateOne(
+                { "children._id": configID, label: symbol },
+                { $set: { "children.$.IsActive": false } }
+            )
+
+            if (result.acknowledged && result.matchedCount !== 0) {
+                console.log(`[Mongo] OFf config SPOT ( ${symbol} ) successful`);
+
+            }
+            else {
+                console.log(`[Mongo] OFf config SPOT ( ${symbol} ) failed`);
+
+            }
+        } catch (error) {
+            console.log(`[Mongo] OFf config SPOT ( ${symbol} ) error: ${error.message}`);
+
+        }
+    }
 }
 
 module.exports = dataCoinByBitController 

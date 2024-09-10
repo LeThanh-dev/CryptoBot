@@ -7,8 +7,8 @@ require('dotenv').config({
 const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
-const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE, createStrategiesMultipleMarginBE, deleteStrategiesMultipleMarginBE } = require('../controllers/margin');
-const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE } = require('../controllers/spot');
+const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE, createStrategiesMultipleMarginBE, deleteStrategiesMultipleMarginBE, offConfigMarginBE } = require('../controllers/margin');
+const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE, offConfigSpotBE } = require('../controllers/spot');
 const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../controllers/positionV1');
 const { getAllStrategiesActiveScannerBE } = require('../controllers/scanner');
 
@@ -1855,8 +1855,6 @@ const tinhOC = (symbol, dataAll = []) => {
             const Market = scannerData.Market
             const scannerID = scannerData._id
 
-            console.log("scannerData", scannerData);
-
             // Check expire 
             try {
                 if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
@@ -1867,10 +1865,7 @@ const tinhOC = (symbol, dataAll = []) => {
                         const listConFigID = listConfigIDOrderOCByScannerID.listConFigID || []
                         const botData = listConfigIDOrderOCByScannerID.botData
 
-                        console.log(listConFigID);
-
                         if (listConFigID.length > 0) {
-
 
                             if (Market === "Spot") {
                                 const res = await deleteStrategiesMultipleSpotBE({
@@ -1879,10 +1874,8 @@ const tinhOC = (symbol, dataAll = []) => {
                                     botName: botData.botName,
                                 })
 
-
                                 const message = res?.message
                                 console.log(message);
-
 
                             }
                             else {
@@ -1969,6 +1962,7 @@ const Main = async () => {
     const getAllConfigScannerRes = allRes[4].value || []
 
     const allSymbolResNotDuplicate = [...new Set(allSymbolRes)]
+
     allSymbolResNotDuplicate.forEach(symbolData => {
         const symbol = symbolData.value
         trichMauOCListObject[symbol] = {
@@ -2049,9 +2043,9 @@ const Main = async () => {
     );
 
 
-    // await handleSocketBotApiList(botApiList)
+    await handleSocketBotApiList(botApiList)
 
-    // await handleSocketListKline(Object.values(listKline))
+    await handleSocketListKline(Object.values(listKline))
 
 
     wsSymbol.on('update', async (dataCoin) => {
@@ -2179,7 +2173,17 @@ const Main = async () => {
                 ) {
 
                     //Check expire config - OK
-                    if (!strategy.scannerID && strategy.Expire && new Date() - strategy.ExpirePre >= strategy.Expire * 60 * 1000) {
+                    if (strategy.Expire && new Date() - strategy.ExpirePre >= strategy.Expire * 60 * 1000) {
+
+                        strategy.IsActive = false
+
+                        symbolTradeTypeObject[symbol] == "Spot" ? offConfigSpotBE({
+                            configID: strategy._id,
+                            symbol,
+                        }) : offConfigMarginBE({
+                            configID: strategy._id,
+                            symbol,
+                        })
 
                         handleCancelOrderOC({
                             strategyID,
@@ -2247,9 +2251,9 @@ const Main = async () => {
         trichMauData[symbol].turnoverD = turnover
         trichMauData[symbol].close = coinCurrent
 
-        if (new Date(dataMain.timestamp) - trichMau[symbol].pre >= 1000) {
+        if (new Date() - trichMau[symbol].pre >= 1000) {
             trichMauDataArray[symbol].push(trichMauData[symbol])
-            trichMau[symbol].pre = new Date(dataMain.timestamp)
+            trichMau[symbol].pre = new Date()
         }
 
         trichMauData[symbol] = {
@@ -2278,10 +2282,11 @@ const Main = async () => {
         console.log(err);
     });
 
-    handleCreateMultipleConfigSpot({
-        scannerData: getAllConfigScannerRes[0],
-        symbol: "CRDSUSDT",
-    })
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "CRDSUSDT",
+    // })
+
 
     // handleCreateMultipleConfigMargin({
     //     scannerData: getAllConfigScannerRes[1],
