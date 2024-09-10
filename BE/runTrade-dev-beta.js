@@ -2277,6 +2277,7 @@ socketRealtime.on('update', async (newData = []) => {
             const IsActive = strategiesData.IsActive
             const Candlestick = strategiesData.Candlestick.split("")[0]
 
+            blockContinueOrderOCByStrategiesID[strategyID] = false
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
@@ -2485,6 +2486,8 @@ socketRealtime.on('bot-update', async (data = {}) => {
         const IsActive = strategiesData.IsActive
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
         const Candlestick = strategiesData.Candlestick.split("")[0]
+
+        blockContinueOrderOCByStrategiesID[strategyID] = false
 
         const botSymbolMissID = `${botID}-${symbol}`
 
