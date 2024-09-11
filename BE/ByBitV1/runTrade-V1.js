@@ -24,6 +24,7 @@ const wsSymbol = new WebsocketClient(wsConfig);
 const LIST_ORDER = ["order", "execution"]
 const MAX_ORDER_LIMIT = 20
 const MAX_AMEND_LIMIT = 10
+const MAX_CANCEL_LIMIT = 10
 const RE_TP_ADAPTIVE = 5
 const TP_ADAPTIVE = 80
 const TP_NOT_ADAPTIVE = 60
@@ -58,6 +59,7 @@ var allStrategiesByBotIDAndOrderID = {}
 var allStrategiesByBotIDAndStrategiesID = {}
 var allStrategiesByBotIDOrderOC = {}
 var maxAmendOrderOCData = {}
+var maxCancelOrderOCData = {}
 var botApiList = {}
 var digitAllCoinObject = {}
 var botAmountListObject = {}
@@ -561,11 +563,21 @@ const handleCancelOrderOC = async ({
     OrderChange
 }) => {
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    !maxCancelOrderOCData[botID] && (
+        maxCancelOrderOCData[botID] = {
+            totalOC: 0,
+            logError: false,
+            timeout: ""
+        }
+    );
 
-    const client = new RestClientV5(clientConfig);
+    if (maxCancelOrderOCData[botID].totalOC < MAX_AMEND_LIMIT) {
 
-    if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled) {
+        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+
+        const client = new RestClientV5(clientConfig);
+
+
         await client
             .cancelOrder({
                 category: 'spot',
@@ -577,20 +589,30 @@ const handleCancelOrderOC = async ({
                     console.log(`[V] Cancel order OC ( ${OrderChange} % ) ( ${botName} - ${side} -  ${symbol} ) successful `);
 
                     cancelAll({ strategyID, botID })
-
+                    delete listOCByCandleBot[botID].listOC[strategyID]
                 }
                 else {
                     console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${OrderChange} % ) ( ${botName} - ${side} -  ${symbol} ) failed `, response.retMsg))
-                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
                 }
             })
             .catch((error) => {
                 console.log(`[!] Cancel order OC ( ${OrderChange} % ) ( ${botName} - ${side} -  ${symbol} ) error `, error)
-                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
 
             });
-        delete listOCByCandleBot[botID].listOC[strategyID]
+
+        maxCancelOrderOCData[botID].timeout && clearTimeout(maxCancelOrderOCData[botID].timeout)
+        maxCancelOrderOCData[botID].timeout = setTimeout(() => {
+            maxCancelOrderOCData[botID].logError = false
+            maxCancelOrderOCData[botID].totalOC = 0
+        }, 1000)
     }
+    else {
+        if (!maxCancelOrderOCData[botID]?.logError) {
+            console.log(changeColorConsole.redBright(`[!] LIMIT AMEND OC ( ${botName} )`));
+            maxCancelOrderOCData[botID].logError = true
+        }
+    }
+
 
 }
 
@@ -654,7 +676,6 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                             delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                         }
                         else {
-                            allStrategiesByBotIDAndStrategiesID[botIDTemp][strategyIDTemp].OC.orderID = ""
                             console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${data.OrderChange} % )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed `, codeData.msg));
                         }
                     })
@@ -1197,7 +1218,6 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${strategyData.side} - Bot: ${strategyData.botName}`);
                                                     cancelAll({ botID, strategyID })
                                                     delete listOCByCandleBot[botID].listOC[strategyID]
-
                                                 }
                                             }
                                         })
@@ -1856,52 +1876,52 @@ const tinhOC = (symbol, dataAll = []) => {
             const scannerID = scannerData._id
 
             // Check expire 
-            try {
-                if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
-                    // Delete all config
-                    const listConfigIDOrderOCByScannerID = listConfigIDOrderOCByScanner[scannerID]
+            // try {
+            //     if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
+            //         // Delete all config
+            //         const listConfigIDOrderOCByScannerID = listConfigIDOrderOCByScanner[scannerID]
 
-                    if (listConfigIDOrderOCByScannerID) {
-                        const listConFigID = listConfigIDOrderOCByScannerID.listConFigID || []
-                        const botData = listConfigIDOrderOCByScannerID.botData
+            //         if (listConfigIDOrderOCByScannerID) {
+            //             const listConFigID = listConfigIDOrderOCByScannerID.listConFigID || []
+            //             const botData = listConfigIDOrderOCByScannerID.botData
 
-                        if (listConFigID.length > 0) {
+            //             if (listConFigID.length > 0) {
 
-                            if (Market === "Spot") {
-                                const res = await deleteStrategiesMultipleSpotBE({
-                                    listConFigID,
-                                    symbol,
-                                    botName: botData.botName,
-                                })
+            //                 if (Market === "Spot") {
+            //                     const res = await deleteStrategiesMultipleSpotBE({
+            //                         listConFigID,
+            //                         symbol,
+            //                         botName: botData.botName,
+            //                     })
 
-                                const message = res?.message
-                                console.log(message);
+            //                     const message = res?.message
+            //                     console.log(message);
 
-                            }
-                            else {
-                                const res = await deleteStrategiesMultipleMarginBE({
-                                    listConFigID,
-                                    symbol,
-                                    botName: botData.botName,
-                                })
+            //                 }
+            //                 else {
+            //                     const res = await deleteStrategiesMultipleMarginBE({
+            //                         listConFigID,
+            //                         symbol,
+            //                         botName: botData.botName,
+            //                     })
 
-                                const message = res?.message
-                                console.log(message);
+            //                     const message = res?.message
+            //                     console.log(message);
 
-                            }
-                            await handleSocketDelete(listConFigID)
+            //                 }
+            //                 await handleSocketDelete(listConFigID)
 
-                            delete listConfigIDOrderOCByScanner[scannerID]
-                        }
-                    }
+            //                 delete listConfigIDOrderOCByScanner[scannerID]
+            //             }
+            //         }
 
-                    allScannerDataObject[symbol][scannerID].ExpirePre = new Date()
+            //         allScannerDataObject[symbol][scannerID].ExpirePre = new Date()
 
-                }
-            } catch (error) {
-                console.log(error);
+            //     }
+            // } catch (error) {
+            //     console.log(error);
 
-            }
+            // }
 
             if (scannerData.IsActive) {
                 if (vol >= Turnover) {
@@ -2176,25 +2196,56 @@ const Main = async () => {
                     if (strategy.Expire && new Date() - strategy.ExpirePre >= strategy.Expire * 60 * 1000) {
 
                         strategy.IsActive = false
+                        const configID = strategy._id
 
-                        symbolTradeTypeObject[symbol] == "Spot" ? offConfigSpotBE({
-                            configID: strategy._id,
-                            symbol,
-                        }) : offConfigMarginBE({
-                            configID: strategy._id,
-                            symbol,
-                        })
+                        if (symbolTradeTypeObject[symbol] == "Spot") {
 
-                        handleCancelOrderOC({
-                            strategyID,
-                            symbol,
-                            side,
-                            ApiKey,
-                            SecretKey,
-                            botName,
-                            botID,
-                            OrderChange: strategy.OrderChange
-                        })
+                            offConfigSpotBE({
+                                configID,
+                                symbol,
+                            })
+                            if (strategy.scannerID) {
+                                deleteStrategiesMultipleSpotBE({
+                                    listConFigID:[configID],
+                                    botName,
+                                    symbol
+                                })
+                            }
+                        }
+                        else {
+                            offConfigMarginBE({
+                                configID,
+                                symbol,
+                            })
+                            if (strategy.scannerID) {
+                                deleteStrategiesMultipleMarginBE({
+                                    listConFigID:[configID],
+                                    botName,
+                                    symbol
+                                })
+                            }
+                        }
+                        if (strategy.scannerID) {
+                            console.log('delete coinfig fropm scanenr');
+                            delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+                        }
+
+                       
+
+
+                        allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID &&
+                            !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
+                            handleCancelOrderOC({
+                                strategyID,
+                                symbol,
+                                side,
+                                ApiKey,
+                                SecretKey,
+                                botName,
+                                botID,
+                                OrderChange: strategy.OrderChange
+                            })
+
                         strategy.ExpirePre = new Date()
                     }
 

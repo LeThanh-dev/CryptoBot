@@ -81,7 +81,6 @@ const getWebsocketClientConfig = ({
         secret: SecretKey,
         market: 'v5',
         recvWindow: 100000,
-        pongTimeout: 5000
     }
 }
 const getRestClientV5Config = ({
@@ -93,7 +92,6 @@ const getRestClientV5Config = ({
         key: ApiKey,
         secret: SecretKey,
         syncTimeBeforePrivateRequests: true,
-        recv_window: 10000
     }
 }
 
@@ -563,7 +561,6 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                             delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
                         }
                         else {
-                            allStrategiesByBotIDAndStrategiesID[botIDTemp][strategyIDTemp].OC.orderID = ""
                             console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) failed `, codeData.msg));
                         }
                     })
@@ -1143,14 +1140,12 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                             if (TPTrue) {
                                                 console.log(`[-] Cancelled TP ( ${botName} - ${strategy.PositionSide === "Long" ? "Sell" : "Buy"} - ${symbol} - ${strategy.Candlestick} ) - Chốt lời `);
 
+                                                allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
                                                 // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
 
                                                 const qty = +dataMain.qty;
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
 
-                                                if (allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
-                                                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
-                                                }
 
                                                 if (missTPDataBySymbol[botSymbolMissID]?.sizeTotal - missTPDataBySymbol[botSymbolMissID].size > 0) {
                                                     missTPDataBySymbol[botSymbolMissID].gongLai = true
@@ -1777,6 +1772,7 @@ const Main = async () => {
                                     price2P = (highPrice1m - price2Percent) / highPrice1m;
 
                                 }
+                                
                                 if (conditionPre && price2P <= newOC && newOC <= MaxOC) {
 
                                     const dataInput = {
