@@ -195,6 +195,7 @@ const handleSubmitOrder = async ({
     qty,
     side,
     price,
+    priceOrderTPTemp,
     ApiKey,
     SecretKey,
     botName,
@@ -204,8 +205,6 @@ const handleSubmitOrder = async ({
     coinOpen,
     isLeverage
 }) => {
-
-    console.log("coinOpen", coinOpen);
 
 
     !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
@@ -245,7 +244,6 @@ const handleSubmitOrder = async ({
 
         allStrategiesByBotIDAndOrderID[botID][orderLinkId] = {
             strategy,
-            coinOpen,
             OC: true
         }
 
@@ -273,7 +271,7 @@ const handleSubmitOrder = async ({
 
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = newOrderID
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderLinkId = newOrderLinkID
-                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen = coinOpen
+                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrderTPTemp = priceOrderTPTemp
 
                     const text = `\n[+OC] Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful: ${price} - ${qty}`
                     console.log(text)
@@ -321,6 +319,7 @@ const handleMoveOrderOC = async ({
     strategyID,
     symbol,
     price,
+    priceOrderTPTemp,
     orderId,
     side,
     ApiKey,
@@ -352,6 +351,7 @@ const handleMoveOrderOC = async ({
             .then((response) => {
                 if (response.retCode == 0) {
                     console.log(`[->] Move Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
+                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrderTPTemp = priceOrderTPTemp
                 }
                 else {
                     console.log(changeColorConsole.yellowBright(`[!] Move Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg, price))
@@ -1040,7 +1040,7 @@ const cancelAll = (
                 orderFilledButMiss: false,
                 moveAfterCompare: false,
                 newOC: 0,
-                coinOpen: 0,
+                priceOrderTPTemp: 0,
                 ordering: false
             },
             "TP": {
@@ -1244,13 +1244,12 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                         const TPMain = strategy.Adaptive ? TP_ADAPTIVE : TP_NOT_ADAPTIVE
 
-                                        // const coinOpenOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen || strategy.coinOpen
+
 
                                         if (orderStatus === "Filled" || orderStatus === "PartiallyFilled") {
 
                                             if (OCTrue) {
 
-                                                const coinOpenOC = strategyData.coinOpen
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilled = true
 
                                                 const openTrade = +dataMain.avgPrice  //Gia khop lenh
@@ -1312,17 +1311,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 // Create TP
 
-                                                let TPNew = 0
+                                                const TPNew = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrderTPTemp
 
-                                                console.log("coinOpenOC", coinOpenOC);
-                                                console.log("openTrade", openTrade);
-
-                                                if (strategy.PositionSide === "Long") {
-                                                    TPNew = openTrade + Math.abs((openTrade - coinOpenOC)) * (TPMain / 100)
-                                                }
-                                                else {
-                                                    TPNew = openTrade - Math.abs((openTrade - coinOpenOC)) * (TPMain / 100)
-                                                }
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.side = strategy.PositionSide === "Long" ? "Sell" : "Buy"
 
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.price = TPNew
@@ -1334,13 +1324,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     strategy,
                                                     strategyID,
                                                     symbol,
-                                                    // qty,
                                                     qty,
-                                                    price: roundPrice({
-                                                        price: TPNew,
-                                                        tickSize: digitAllCoinObject[symbol]?.priceScale
-                                                    }),
-                                                    // price:(Math.floor(TPNew / digitAllCoinObject[symbol]?.priceScale) * digitAllCoinObject[symbol]?.priceScale).toString(),
+                                                    price: TPNew,
                                                     side: strategy.PositionSide === "Long" ? "Sell" : "Buy",
                                                     ApiKey,
                                                     SecretKey,
@@ -1869,14 +1854,14 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
 
-        if (symbol === "CRDSUSDT") {
+        // if (symbol === "CRDSUSDT") {
 
 
-            const htLong = (`LONG:  <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
-            console.log(htLong, new Date().toLocaleTimeString());
+        //     const htLong = (`LONG:  <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+        //     console.log(htLong, new Date().toLocaleTimeString());
 
-            console.log(dataAll);
-        }
+        //     console.log(dataAll);
+        // }
 
         const listScannerObject = allScannerDataObject[symbol]
 
@@ -1891,52 +1876,53 @@ const tinhOC = (symbol, dataAll = []) => {
             const scannerID = scannerData._id
 
             // Check expire 
-            // try {
-            //     if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
-            //         // Delete all config
-            //         const listConfigIDOrderOCByScannerID = listConfigIDOrderOCByScanner[scannerID]
+            try {
+                if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
+                    // Delete all config
+                    const listConfigIDOrderOCByScannerID = listConfigIDOrderOCByScanner[scannerID]
 
-            //         if (listConfigIDOrderOCByScannerID) {
-            //             const listConFigID = listConfigIDOrderOCByScannerID.listConFigID || []
-            //             const botData = listConfigIDOrderOCByScannerID.botData
+                    if (listConfigIDOrderOCByScannerID) {
+                        const listConFigID = listConfigIDOrderOCByScannerID.listConFigID || []
+                        const botData = listConfigIDOrderOCByScannerID.botData
 
-            //             if (listConFigID.length > 0) {
+                        if (listConFigID.length > 0) {
 
-            //                 if (Market === "Spot") {
-            //                     const res = await deleteStrategiesMultipleSpotBE({
-            //                         listConFigID,
-            //                         symbol,
-            //                         botName: botData.botName,
-            //                     })
+                            if (Market === "Spot") {
+                                const res = await deleteStrategiesMultipleSpotBE({
+                                    listConFigID,
+                                    symbol,
+                                    botName: botData.botName,
+                                })
 
-            //                     const message = res?.message
-            //                     console.log(message);
+                                const message = res?.message
+                                console.log(message);
 
-            //                 }
-            //                 else {
-            //                     const res = await deleteStrategiesMultipleMarginBE({
-            //                         listConFigID,
-            //                         symbol,
-            //                         botName: botData.botName,
-            //                     })
+                            }
+                            else {
+                                const res = await deleteStrategiesMultipleMarginBE({
+                                    listConFigID,
+                                    symbol,
+                                    botName: botData.botName,
+                                })
 
-            //                     const message = res?.message
-            //                     console.log(message);
+                                const message = res?.message
+                                console.log(message);
 
-            //                 }
-            //                 await handleSocketDelete(listConFigID)
+                            }
+                            await handleSocketDelete(listConFigID)
 
-            //                 delete listConfigIDOrderOCByScanner[scannerID]
-            //             }
-            //         }
+                            delete listConfigIDOrderOCByScanner[scannerID]
+                            scannerData.OrderConfig = false
+                        }
+                    }
 
-            //         allScannerDataObject[symbol][scannerID].ExpirePre = new Date()
+                    allScannerDataObject[symbol][scannerID].ExpirePre = new Date()
 
-            //     }
-            // } catch (error) {
-            //     console.log(error);
+                }
+            } catch (error) {
+                console.log(error);
 
-            // }
+            }
 
             if (scannerData.IsActive) {
                 if (vol >= Turnover) {
@@ -2083,7 +2069,7 @@ const Main = async () => {
     await handleSocketListKline(Object.values(listKline))
 
 
-    wsSymbol.on('update', async (dataCoin) => {
+    await wsSymbol.on('update', async (dataCoin) => {
 
         const [_, candle, symbol] = dataCoin.topic.split(".");
 
@@ -2131,13 +2117,17 @@ const Main = async () => {
 
 
                 let priceOrderOC = 0
+                let priceOrderTPTemp = 0
                 let qty = 0
+                const TPMain = strategy.Adaptive ? TP_ADAPTIVE : TP_NOT_ADAPTIVE
 
                 if (side === "Buy") {
                     priceOrderOC = coinCurrent - coinCurrent * strategy.OrderChange / 100
+                    priceOrderTPTemp = coinCurrent - coinCurrent * (strategy.OrderChange / 100) * (TPMain / 100)
                 }
                 else {
                     priceOrderOC = coinCurrent + coinCurrent * strategy.OrderChange / 100
+                    priceOrderTPTemp = coinCurrent + coinCurrent * (strategy.OrderChange / 100) * (TPMain / 100)
                 }
 
                 qty = (strategy.Amount / +priceOrderOC)
@@ -2155,6 +2145,10 @@ const Main = async () => {
                     side,
                     price: roundPrice({
                         price: priceOrderOC,
+                        tickSize: digitAllCoinObject[symbol]?.priceScale
+                    }),
+                    priceOrderTPTemp: roundPrice({
+                        price: priceOrderTPTemp,
                         tickSize: digitAllCoinObject[symbol]?.priceScale
                     }),
                     botName,
@@ -2289,8 +2283,8 @@ const Main = async () => {
 
         trichMauOCListObject[symbol].preTime = new Date()
 
-
-        // Realtime Scanner
+        //----------------------------------------------------------------
+        // SCANNER
         const turnover = +dataMain.turnover
 
         if (!trichMauData[symbol].open) {
@@ -2359,23 +2353,6 @@ const Main = async () => {
         }
     });
 
-    // handleCreateMultipleConfigSpot({
-    //     scannerData: getAllConfigScannerRes[0],
-    //     symbol: "CRDSUSDT",
-    // })
-
-
-    // handleCreateMultipleConfigMargin({
-    //     scannerData: getAllConfigScannerRes[1],
-    //     symbol: "AAVEUSDT",
-    // })
-
-
-}
-
-try {
-    Main()
-
 
     setInterval(() => {
 
@@ -2398,6 +2375,26 @@ try {
             trichMauDataArray[symbol] = []
         })
     }, 3000)
+
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "CRDSUSDT",
+    // })
+
+
+    // handleCreateMultipleConfigMargin({
+    //     scannerData: getAllConfigScannerRes[1],
+    //     symbol: "AAVEUSDT",
+    // })
+
+
+}
+
+try {
+    Main()
+
+
+
 
 }
 
