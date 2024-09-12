@@ -28,6 +28,7 @@ let messageList = []
 
 var delayTimeOut = ""
 var coinAllClose = false
+var preTurnover = {}
 var trichMauData = {}
 var trichMauDataArray = {}
 var trichMau = {}
@@ -95,6 +96,7 @@ async function ListCoinFT() {
                     low: 0,
                     turnover: 0
                 }
+                preTurnover[symbol] = 0
                 trichMauDataArray[symbol] = []
                 trichMau[symbol] = {
                     cur: 0,
@@ -149,11 +151,10 @@ const tinhOC = (symbol, dataAll = []) => {
         let TP = 0
         let OCLong = 0
         let TPLong = 0
-        let vol = 0
         let OCNotPercent = 0
         let OCLongNotPercent = 0
 
-        vol = dataAll[dataAll.length - 1].turnoverD - dataAll[0].turnoverD
+        const vol = dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol]
 
         dataAll.forEach((data, index) => {
 
@@ -162,7 +163,7 @@ const tinhOC = (symbol, dataAll = []) => {
             const Highest = +data.high
             const Lowest = +data.low
 
-            
+
             if (index === 0) {
                 OCNotPercent = Highest - Open
                 OC = OCNotPercent / Open
@@ -222,8 +223,8 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
 
-        if (vol >= 0) {
-            if (OCRound >= .5 && TPRound > 20) {
+        if (vol >= 2000) {
+            if (OCRound >= 1 && TPRound > 0 ) {
                 // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
                 messageList.push(ht)
@@ -231,8 +232,7 @@ const tinhOC = (symbol, dataAll = []) => {
                 console.log(dataAll);
             }
 
-            // if (OCLongRound <= -1 && TPLongRound > 60) {
-            if (OCLongRound <= -.5 && TPLongRound > 20) {
+            if (OCLongRound <= -1 && TPLongRound > 0 ) {
                 // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
                 messageList.push(htLong)
@@ -246,7 +246,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                // sendMessageTinhOC(messageList)
+                sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
@@ -273,7 +273,7 @@ let Main = async () => {
 
     listKline = await ListCoinFT()
 
-    wsSymbol.subscribeV5(listKline, 'spot').then(() => {
+   await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
         console.log("[V] Subscribe Kline Successful");
 
         wsSymbol.on('update', (dataCoin) => {
@@ -296,8 +296,9 @@ let Main = async () => {
                     high: coinCurrent,
                     low: coinCurrent,
                     turnover,
-                    turnoverD:turnover
+                    turnoverD: turnover
                 }
+                preTurnover[symbol] = turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
             }
 
@@ -312,13 +313,13 @@ let Main = async () => {
 
             trichMauData[symbol].turnoverD = turnover
             trichMauData[symbol].close = coinCurrent
-            
-            if (new Date(dataMain.timestamp) - trichMau[symbol].pre >= 1000) {
+
+            if (new Date() - trichMau[symbol].pre >= 1000) {
                 // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date(dataMain.timestamp)
+                trichMau[symbol].pre = new Date()
             }
-
+            
             trichMauData[symbol] = {
                 open: coinCurrent,
                 close: coinCurrent,
@@ -326,6 +327,8 @@ let Main = async () => {
                 low: coinCurrent,
                 turnover
             }
+
+
 
 
             // }
@@ -344,7 +347,25 @@ let Main = async () => {
         });
     }).catch((err) => { console.log(err) });
 
+    setInterval(() => {
 
+        listKline.forEach(item => {
+            const [_, candle, symbol] = item.split(".");
+            tinhOC(symbol, trichMauDataArray[symbol])
+            const coinCurrent = trichMauData[symbol].close
+            const turnover = trichMauData[symbol].turnover
+            trichMauData[symbol] = {
+                open: coinCurrent,
+                close: coinCurrent,
+                high: coinCurrent,
+                low: coinCurrent,
+                turnover,
+                turnoverD: turnover,
+            }
+            preTurnover[symbol] = trichMauData[symbol].turnover
+            trichMauDataArray[symbol] = []
+        })
+    }, 3000)
 
 
 
@@ -358,23 +379,7 @@ let Main = async () => {
 try {
     Main()
 
-    setInterval(() => {
-
-        listKline.forEach(item => {
-            const [_, candle, symbol] = item.split(".");
-            tinhOC(symbol, trichMauDataArray[symbol])
-            const coinCurrent = trichMauData[symbol].close
-            trichMauData[symbol] = {
-                open: coinCurrent,
-                close: coinCurrent,
-                high: coinCurrent,
-                low: coinCurrent,
-                turnover: trichMauData[symbol].turnover,
-                turnoverD: trichMauData[symbol].turnover,
-            }
-            trichMauDataArray[symbol] = []
-        })
-    }, 3000)
+    
 
     setTimeout(() => {
         cron.schedule('0 */3 * * *', async () => {

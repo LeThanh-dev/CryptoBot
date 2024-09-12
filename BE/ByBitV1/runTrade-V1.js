@@ -45,6 +45,7 @@ let missTPDataBySymbol = {}
 var listKline = {}
 var allSymbol = []
 var updatingAllMain = false
+var connectErrorMain = false
 
 
 // -------  ------------
@@ -89,7 +90,6 @@ const getWebsocketClientConfig = ({
         secret: SecretKey,
         market: 'v5',
         recvWindow: 100000,
-        pongTimeout: 5000
     }
 }
 
@@ -102,7 +102,6 @@ const getRestClientV5Config = ({
         key: ApiKey,
         secret: SecretKey,
         syncTimeBeforePrivateRequests: true,
-        recv_window: 10000
     }
 }
 
@@ -206,6 +205,9 @@ const handleSubmitOrder = async ({
     isLeverage
 }) => {
 
+    console.log("coinOpen", coinOpen);
+
+
     !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
 
     !allStrategiesByBotIDOrderOC[botID] && (
@@ -273,7 +275,7 @@ const handleSubmitOrder = async ({
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderLinkId = newOrderLinkID
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen = coinOpen
 
-                    const text = `\n[+OC] Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful`
+                    const text = `\n[+OC] Order OC ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful: ${price} - ${qty}`
                     console.log(text)
                     console.log(changeColorConsole.greenBright(`[_OC orderID_] ( ${botName} - ${side} - ${symbol} ): ${newOrderLinkID}`));
 
@@ -285,7 +287,7 @@ const handleSubmitOrder = async ({
 
                 }
                 else {
-                    console.log(changeColorConsole.yellowBright(`\n[!] Ordered OC ( ${strategy.OrderChange} % )  ( ${botName} - ${side} - ${symbol} ) failed: `, response.retMsg, price, qty))
+                    console.log(changeColorConsole.yellowBright(`\n[!] Ordered OC ( ${strategy.OrderChange} % )  ( ${botName} - ${side} - ${symbol} ) failed: ${price} - ${qty}`, response.retMsg))
                     delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                     delete listOCByCandleBot[botID].listOC[strategyID]
 
@@ -316,6 +318,7 @@ const handleSubmitOrder = async ({
 
 const handleMoveOrderOC = async ({
     strategy,
+    strategyID,
     symbol,
     price,
     orderId,
@@ -446,19 +449,19 @@ const handleSubmitOrderTP = async ({
                 // }
 
 
-                console.log(`[+TP] Order TP ${missState ? "( MISS )" : ''} ( ${botName} - ${side} - ${symbol} ) successful:  ${qty}`)
+                console.log(`[+TP] Order TP ( ${strategy.OrderChange} % ) ${missState ? "( MISS )" : ''} ( ${botName} - ${side} - ${symbol} ) successful: ${price} - ${qty}`)
                 console.log(changeColorConsole.greenBright(`[_TP orderID_] ( ${botName} - ${side} - ${symbol} ): ${newOrderLinkID}`));
 
             }
             else {
-                console.log(changeColorConsole.yellowBright(`[!] Order TP ${missState ? "( MISS )" : ''} - ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg, price))
+                console.log(changeColorConsole.yellowBright(`[!] Order TP ( ${strategy.OrderChange} % ) ${missState ? "( MISS )" : ''} - ( ${botName} - ${side} - ${symbol} ) failed: ${price} - ${qty}`, response.retMsg))
                 delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
 
 
             }
         })
         .catch((error) => {
-            console.log(`[!] Order TP ${missState ? "( MISS )" : ''} - ( ${botName} - ${side} - ${symbol} ) error `, error)
+            console.log(`[!] Order TP ( ${strategy.OrderChange} % ) ${missState ? "( MISS )" : ''} - ( ${botName} - ${side} - ${symbol} ) error `, error)
             delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
 
             console.log("ERROR Order TP:", error)
@@ -468,6 +471,7 @@ const handleSubmitOrderTP = async ({
 
 const moveOrderTP = async ({
     strategyID,
+    strategy,
     symbol,
     price,
     orderId,
@@ -492,16 +496,14 @@ const moveOrderTP = async ({
         .then((response) => {
             if (response.retCode == 0) {
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = response.result.orderId
-                console.log(`[->] Move Order TP ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
+                console.log(`[->] Move Order TP ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
             }
             else {
-                console.log(changeColorConsole.yellowBright(`[!] Move Order TP ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg))
-                // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+                console.log(changeColorConsole.yellowBright(`[!] Move Order TP ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg))
             }
         })
         .catch((error) => {
-            console.log(`[!] Move Order TP ( ${botName} - ${side} - ${symbol} ) error `, error)
-            // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+            console.log(`[!] Move Order TP ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) error `, error)
         });
 
 }
@@ -535,6 +537,7 @@ const handleMoveOrderTP = async ({
 
         const dataInput = {
             strategyID,
+            strategy,
             symbol,
             price: roundPrice({
                 price: TPNew,
@@ -571,7 +574,7 @@ const handleCancelOrderOC = async ({
         }
     );
 
-    if (maxCancelOrderOCData[botID].totalOC < MAX_AMEND_LIMIT) {
+    if (maxCancelOrderOCData[botID].totalOC < MAX_CANCEL_LIMIT) {
 
         const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
@@ -1126,14 +1129,12 @@ const sendMessageWithRetry = async ({
 //     }
 // }
 
-const sendAllBotTelegram = async (BTCPricePercent) => {
-    const text = `<b>❗ BTC đang biến động ${BTCPricePercent}% [1m] ❗</b>`
-    console.log(text);
-    await Promise.allSettled(Object.values(botApiList).map(botApiData => {
+const sendAllBotTelegram = async (text) => {
 
+    await Promise.allSettled(Object.values(botApiList).map(botApiData => {
         const telegramID = botApiData.telegramID
         const telegramToken = botApiData.telegramToken
-        sendMessageWithRetry({
+        return sendMessageWithRetry({
             messageText: text,
             telegramID,
             telegramToken
@@ -1245,7 +1246,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                         // const coinOpenOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen || strategy.coinOpen
 
-                                        if (orderStatus === "Filled") {
+                                        if (orderStatus === "Filled" || orderStatus === "PartiallyFilled") {
 
                                             if (OCTrue) {
 
@@ -1312,6 +1313,9 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 // Create TP
 
                                                 let TPNew = 0
+
+                                                console.log("coinOpenOC", coinOpenOC);
+                                                console.log("openTrade", openTrade);
 
                                                 if (strategy.PositionSide === "Long") {
                                                     TPNew = openTrade + Math.abs((openTrade - coinOpenOC)) * (TPMain / 100)
@@ -1718,11 +1722,19 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                     wsOrder.on('reconnected', () => {
                         console.log('Reconnected order successful')
+                        connectErrorMain = false
                     });
 
                     wsOrder.on('error', (err) => {
-                        console.log('Connection order error');
-                        console.log(err);
+                        if (!connectErrorMain) {
+                            const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
+                            console.log(text);
+                            // sendAllBotTelegram(text)
+                            console.log('Connection order error');
+                            console.log(err);
+                            connectErrorMain = true
+                            wsOrder.connectAll()
+                        }
                     });
                 }).catch(err => {
                     console.log(`[V] Subscribe order ( ${botName} ) error:`, err)
@@ -1857,11 +1869,14 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
 
+        if (symbol === "CRDSUSDT") {
 
-        // const htLong = (`LONG:  <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
-        // console.log(htLong, new Date().toLocaleTimeString());
 
-        // console.log(dataAll);
+            const htLong = (`LONG:  <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+            console.log(htLong, new Date().toLocaleTimeString());
+
+            console.log(dataAll);
+        }
 
         const listScannerObject = allScannerDataObject[symbol]
 
@@ -2198,40 +2213,42 @@ const Main = async () => {
                         strategy.IsActive = false
                         const configID = strategy._id
 
+                        const scannerID = strategy.scannerID
+
                         if (symbolTradeTypeObject[symbol] == "Spot") {
 
-                            offConfigSpotBE({
-                                configID,
-                                symbol,
-                            })
-                            if (strategy.scannerID) {
+                            if (scannerID) {
                                 deleteStrategiesMultipleSpotBE({
-                                    listConFigID:[configID],
+                                    listConFigID: [configID],
                                     botName,
                                     symbol
+                                })
+                                delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+                            }
+                            else {
+                                offConfigSpotBE({
+                                    configID,
+                                    symbol,
                                 })
                             }
                         }
                         else {
-                            offConfigMarginBE({
-                                configID,
-                                symbol,
-                            })
-                            if (strategy.scannerID) {
+
+                            if (scannerID) {
                                 deleteStrategiesMultipleMarginBE({
-                                    listConFigID:[configID],
+                                    listConFigID: [configID],
                                     botName,
                                     symbol
                                 })
+                                delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+                            }
+                            else {
+                                offConfigMarginBE({
+                                    configID,
+                                    symbol,
+                                })
                             }
                         }
-                        if (strategy.scannerID) {
-                            console.log('delete coinfig fropm scanenr');
-                            delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
-                        }
-
-                       
-
 
                         allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID &&
                             !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
@@ -2326,11 +2343,20 @@ const Main = async () => {
 
     wsSymbol.on('reconnected', () => {
         console.log('[V] Reconnected listKline successful')
+        connectErrorMain = false
+
     });
 
     wsSymbol.on('error', (err) => {
-        console.log('[!] Connection listKline error');
-        console.log(err);
+        if (!connectErrorMain) {
+            const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
+            console.log(text);
+            // sendAllBotTelegram(text)
+            console.log('[!] Connection listKline error');
+            console.log(err);
+            connectErrorMain = true
+            wsSymbol.connectAll()
+        }
     });
 
     // handleCreateMultipleConfigSpot({

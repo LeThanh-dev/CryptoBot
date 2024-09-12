@@ -82,14 +82,22 @@ function Strategies() {
             name: "15m",
             value: "15m",
         },
-        // {
-        //     name: "30m",
-        //     value: "30m",
-        // },
-        // {
-        //     name: "60m",
-        //     value: "60m",
-        // },
+
+    ]
+
+    const bookmarkListDefault = [
+        {
+            name: "All",
+            value: "All",
+        },
+        {
+            name: "Yes",
+            value: "Yes",
+        },
+        {
+            name: "No",
+            value: "No",
+        },
     ]
 
     const navigate = useNavigate()
@@ -127,6 +135,7 @@ function Strategies() {
     const botSelectedRef = useRef("All")
     const positionSideSelectedRef = useRef("All")
     const candlestickSelectedRef = useRef("All")
+    const bookmarkSelectedRef = useRef("All")
     const selectAllRef = useRef(false)
     const bookmarkCheckRef = useRef({
         checked: false,
@@ -289,14 +298,12 @@ function Strategies() {
                 const checkPosition = positionSideSelectedRef.current === "All" || positionSideSelectedRef.current === item.PositionSide;
                 const checkCandle = candlestickSelectedRef.current === "All" || candlestickSelectedRef.current === item.Candlestick;
                 const checkSearch = searchDebounce === "" || data.label.toUpperCase().includes(searchDebounce.toUpperCase().trim());
-                let checkBookmark =true
-                if(bookmarkCheckRef.current.checked)
-                {
-                    checkBookmark =   data.bookmarkList?.includes(userData._id)
+                let checkBookmark = true
+                if (bookmarkSelectedRef.current === "Yes") {
+                    checkBookmark = data.bookmarkList?.includes(userData._id)
                 }
-                else if(bookmarkCheckRef.current.indeterminate)
-                {
-                    checkBookmark =  !data.bookmarkList?.includes(userData._id)
+                else if (bookmarkSelectedRef.current === "No") {
+                    checkBookmark = !data.bookmarkList?.includes(userData._id)
                 }
 
                 return checkBotType && checkBot && checkPosition && checkCandle && checkSearch && checkBookmark;
@@ -517,6 +524,25 @@ function Strategies() {
                         </Select>
                     </FormControl>
 
+                    <FormControl className={styles.strategiesHeaderItem}>
+                        <FormLabel className={styles.formLabel}>Bookmark</FormLabel>
+                        <Select
+                            value={bookmarkSelectedRef.current}
+                            size="small"
+                            onChange={e => {
+                                const value = e.target.value;
+                                bookmarkSelectedRef.current = value
+                                handleFilterAll()
+                            }}
+                        >
+                            {
+                                bookmarkListDefault.map(item => (
+                                    <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
+                                ))
+                            }
+                        </Select>
+                    </FormControl>
+
                 </div>
 
 
@@ -574,8 +600,8 @@ function Strategies() {
                         marginLeft: "6px"
                     }}>( {countTotalActive.countActive} / {countTotalActive.totalItem} )</span>
 
-                    <span style={{ margin: "0px 2px 3px 12px", opacity: ".6", fontSize: ".9rem" }}>|</span>
-                    <div className={styles.bookmarkAll}   >
+                    {/* <span style={{ margin: "0px 2px 3px 12px", opacity: ".6", fontSize: ".9rem" }}>|</span> */}
+                    {/* <div className={styles.bookmarkAll}   >
                         <Checkbox
                             checked={bookmarkCheckRef.current.checked}
                             indeterminate={bookmarkCheckRef.current.indeterminate}
@@ -608,7 +634,7 @@ function Strategies() {
                             checkedIcon={<StarIcon />}
                         />
                         <span>Bookmark</span>
-                    </div>
+                    </div> */}
                 </p>}
                 {
                     (dataCheckTree.length > 0 && !loadingDataCheckTree)

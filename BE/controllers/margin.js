@@ -1386,31 +1386,21 @@ const dataCoinByBitController = {
         botName
     }) => {
         try {
-
             const result = await MarginModel.updateMany(
                 { "children._id": { $in: listConFigID } },
                 { $pull: { "children": { _id: { $in: listConFigID } } } }
             );
 
-
             if (result.acknowledged && result.matchedCount !== 0) {
-
-
-                return {
-                    message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
-                }
+                console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} ) Successful`);
             }
             else {
-                return {
-                    message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Failed `,
-                }
+                console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} ) Failed `)
             }
 
 
         } catch (error) {
-            return {
-                message: `[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message} `,
-            }
+            console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} ) Error: ${error.message} `)
         }
     },
 
@@ -1426,15 +1416,15 @@ const dataCoinByBitController = {
             )
 
             if (result.acknowledged && result.matchedCount !== 0) {
-                console.log(`[Mongo] OFf config MARGIN ( ${symbol} ) successful`);
+                console.log(`[Mongo] OFF config MARGIN ( ${symbol} ) successful`);
 
             }
             else {
-                console.log(`[Mongo] OFf config MARGIN ( ${symbol} ) failed`);
+                console.log(`[Mongo] OFF config MARGIN ( ${symbol} ) failed`);
 
             }
         } catch (error) {
-            console.log(`[Mongo] OFf config MARGIN ( ${symbol} ) error: ${error.message}`);
+            console.log(`[Mongo] OFF config MARGIN ( ${symbol} ) error: ${error.message}`);
 
         }
     }

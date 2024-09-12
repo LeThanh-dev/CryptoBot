@@ -108,7 +108,11 @@
             justify-content: space-between;
 
             &Item {
-                flex: 1
+                flex: 1;
+                &:nth-last-child(1)
+                {
+                    margin-right: 0 !important;
+                }
             }
         }
 
