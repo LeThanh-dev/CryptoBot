@@ -4,6 +4,7 @@ import DialogCustom from "../../../../../components/DialogCustom";
 import { closeMarket } from "../../../../../services/positionService";
 import { addMessageToast } from "../../../../../store/slices/Toast";
 import styles from "../../../../Bot/components/AddBot/AddBot.module.scss"
+import { useState } from "react";
 
 
 function AddMarket({
@@ -13,8 +14,11 @@ function AddMarket({
 
 
     const dispatch = useDispatch();
+    const [loading, setLoading] = useState(false);
+
 
     const handleSubmitLimit = async (data) => {
+        setLoading(true)
         try {
             const res = await closeMarket({
                 positionData,
@@ -36,6 +40,7 @@ function AddMarket({
                 message: "Close Market Error",
             }))
         }
+        setLoading(false)
     }
 
     const handleClose = (dataChange = false) => {
@@ -46,6 +51,7 @@ function AddMarket({
     }
     return (
         <DialogCustom
+            loading={loading}
             dialogTitle="Close Market"
             open={true}
             onClose={() => { handleClose(false) }}

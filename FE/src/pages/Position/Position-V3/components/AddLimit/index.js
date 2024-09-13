@@ -20,11 +20,12 @@ function AddLimit({
         formState: { errors }
     } = useForm();
 
+    const [loading, setLoading] = useState(false);
     const [priceCurrent, setPriceCurrent] = useState(0);
     const dispatch = useDispatch();
 
     const handleSubmitLimit = async (data) => {
-
+        setLoading(true)
         try {
             const res = await closeLimit({
                 positionData,
@@ -49,6 +50,7 @@ function AddLimit({
                 message: "Close Market Error",
             }))
         }
+        setLoading(false)
     }
 
     const handleClose = (dataChange = false) => {
@@ -86,6 +88,7 @@ function AddLimit({
 
     return (
         <DialogCustom
+            loading={loading}
             dialogTitle="Close Limit"
             open={true}
             onClose={() => { handleClose(false) }}
@@ -94,7 +97,7 @@ function AddLimit({
             submitBtnColor="warning"
         >
             {
-               <form className={styles.dialogForm}>
+                <form className={styles.dialogForm}>
                     <FormControl className={styles.formControl}>
                         <FormLabel className={styles.label}>Price</FormLabel>
                         <TextField
@@ -102,7 +105,7 @@ function AddLimit({
                             type="number"
                             size="small"
                             value={priceCurrent}
-                            onChange = {e=>{
+                            onChange={e => {
                                 setPriceCurrent(e.target.value.toString())
                             }}
                         />

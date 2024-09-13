@@ -13,6 +13,7 @@ import AddLimit from "./components/AddLimit";
 import AddMarket from "./components/AddMarket";
 import { closeAllPosition, updatePL } from "../../../services/positionV1Service";
 import { formatNumber } from "../../../functions";
+import { LoadingButton } from "@mui/lab";
 
 function PositionV1() {
 
@@ -206,6 +207,7 @@ function PositionV1() {
 
     ]
 
+    const [loadingRefresh, setLoadingRefresh] = useState(true);
     const [botTypeSelected, setBotTypeSelected] = useState("All");
     const [botSelected, setBotSelected] = useState("All");
     const [botList, setBotList] = useState([{
@@ -284,6 +286,7 @@ function PositionV1() {
     }
 
     const handleRefreshData = async (botListInput = botList, alert = true) => {
+        setLoadingRefresh(true)
         try {
             const res = await updatePL(botListInput.slice(1))
             const { status, message, data: resData } = res.data
@@ -325,6 +328,8 @@ function PositionV1() {
                 message: "Refresh Position Error",
             }))
         }
+        setLoadingRefresh(false)
+
     }
     useEffect(() => {
 
@@ -386,16 +391,25 @@ function PositionV1() {
 
                     <div className={styles.refreshBtn}>
                         {botList.length > 0 &&
-                            <Button
+                            <LoadingButton
                                 variant="contained"
                                 size="small"
+                                loading={loadingRefresh}
                                 color="info"
                                 onClick={() => {
                                     handleRefreshData()
                                 }}
+                                sx = {{
+                                    ".MuiLoadingButton-label":{
+
+                                        fontSize: "14px !important",
+                                    }
+                                }}
+                               
                             >
                                 Refresh
-                            </Button>}
+                            </LoadingButton>
+                            }
                         {positionData.length > 0 &&
                             <Button
                                 variant="contained"

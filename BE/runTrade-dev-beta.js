@@ -398,12 +398,12 @@ const moveOrderTP = async ({
             }
             else {
                 console.log(changeColorConsole.yellowBright(`[!] Move Order TP ( ${botName} - ${side} - ${symbol} - ${candle} ) failed `, response.retMsg))
-                // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+                allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
             }
         })
         .catch((error) => {
             console.log(`[!] Move Order TP ( ${botName} - ${side} - ${symbol} - ${candle} ) error `, error)
-            // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+            allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
         });
 
 }
@@ -571,9 +571,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
             }
         }))
         console.log("[V] Cancel All OC Successful");
-        // setTimeout(() => {
-        //     updatingAllMain = false
-        // }, 1000)
+       
     }
 
 }
@@ -1421,8 +1419,13 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                     });
 
                     wsOrder.on('reconnected', () => {
-                        console.log('[V] Reconnected order successful')
-                        connectErrorMain = false
+                        if (connectErrorMain) {
+                            const text = "🔰 Hệ thống khôi phục kết nối thành công"
+                            console.log(text);
+                            sendAllBotTelegram(text)
+                            console.log('[V] Reconnected order successful')
+                            connectErrorMain = false
+                        }
                     });
 
                     wsOrder.on('error', (err) => {
@@ -1772,7 +1775,7 @@ const Main = async () => {
                                     price2P = (highPrice1m - price2Percent) / highPrice1m;
 
                                 }
-                                
+
                                 if (conditionPre && price2P <= newOC && newOC <= MaxOC) {
 
                                     const dataInput = {
@@ -2144,8 +2147,13 @@ const Main = async () => {
     });
 
     wsSymbol.on('reconnected', () => {
-        console.log('[V] Reconnected listKline successful')
-        connectErrorMain = false
+        if (connectErrorMain) {
+            const text = "🔰 Hệ thống khôi phục kết nối thành công"
+            console.log(text);
+            sendAllBotTelegram(text)
+            console.log('[V] Reconnected order successful')
+            connectErrorMain = false
+        }
     });
 
     wsSymbol.on('error', (err) => {
@@ -2252,7 +2260,6 @@ socketRealtime.on('add', async (newData = []) => {
 
 socketRealtime.on('update', async (newData = []) => {
     console.log("[...] Update Strategies From Realtime", newData.length);
-    updatingAllMain = true
 
     const newBotApiList = {}
 
@@ -2371,14 +2378,11 @@ socketRealtime.on('update', async (newData = []) => {
 
     await handleSocketBotApiList(newBotApiList)
 
-    updatingAllMain = false
-
 
 });
 
 socketRealtime.on('delete', async (newData) => {
     console.log("[...] Deleted Strategies From Realtime", newData.length);
-    updatingAllMain = true
 
     const listOrderOC = {}
     const listOrderTP = []
@@ -2449,15 +2453,12 @@ socketRealtime.on('delete', async (newData) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    updatingAllMain = false
-
 
 });
 
 
 socketRealtime.on('bot-update', async (data = {}) => {
     const { newData, botIDMain, botActive } = data;
-    updatingAllMain = true
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
     console.log(`[...] Bot-Update ( ${botNameExist} ) Strategies From Realtime`, newData.length);
@@ -2606,14 +2607,11 @@ socketRealtime.on('bot-update', async (data = {}) => {
         }
     }
 
-    updatingAllMain = false
-
 
 });
 
 socketRealtime.on('bot-api', async (data) => {
     const { newData, botID: botIDMain, newApiData } = data;
-    updatingAllMain = true
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
 
@@ -2717,14 +2715,11 @@ socketRealtime.on('bot-api', async (data) => {
         console.log("[!] Error subscribeV5", error)
     }
 
-    updatingAllMain = false
-
 
 });
 
 socketRealtime.on('bot-delete', async (data) => {
     const { newData, botID: botIDMain } = data;
-    updatingAllMain = true
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
 
@@ -2815,8 +2810,6 @@ socketRealtime.on('bot-delete', async (data) => {
         delete listOCByCandleBot?.[candle]?.[botIDMain]
     });
 
-    updatingAllMain = false
-
 
 });
 
@@ -2899,8 +2892,6 @@ socketRealtime.on('closeAllPosition', (botListData = []) => {
 
     console.log(`[...] Close All Position From Realtime:`, botListData);
 
-    updatingAllMain = true;
-
     botListData.forEach(botData => {
 
         ["1m", "3m", "5m", "15m"].forEach(candle => {
@@ -2918,8 +2909,6 @@ socketRealtime.on('closeAllPosition', (botListData = []) => {
             })
         })
     });
-
-    updatingAllMain = false
 
 });
 

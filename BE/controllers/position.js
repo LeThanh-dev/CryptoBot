@@ -496,7 +496,10 @@ const PositionController = {
                 }
             }
         } catch (error) {
-            return `[Mongo] Re-Get Position Error: ${error}`
+            return {
+                message: `[Mongo] Re-Get Position Error: ${error}`,
+                id: ""
+            }
 
         }
     },
@@ -526,7 +529,10 @@ const PositionController = {
             }
 
         } catch (error) {
-            return `[Mongo] Add Position Error: ${error}`
+            return {
+                message: `[Mongo] Add Position Error: ${error}`,
+                id: ""
+            }
         }
     },
 

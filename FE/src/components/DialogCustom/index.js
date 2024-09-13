@@ -3,6 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import styles from "./DialogCustom.module.scss"
 import { memo } from "react";
 import clsx from "clsx";
+import { LoadingButton } from "@mui/lab";
 
 
 
@@ -81,7 +82,7 @@ function DialogCustom({
                         }}
                         onClick={addMoreFuntion}
                     >Add More</Button>}
-                    {
+                    {/* {
                         !loading ?
                             <Button variant="contained" color={submitBtnColor} onClick={() => {
                                 onSubmit()
@@ -94,7 +95,24 @@ function DialogCustom({
                                 color: "#2e75db",
                                 marginRight:"12px"
                             }} color='inherit' />
-                    }
+                    } */}
+
+                    <LoadingButton
+                        variant="contained"
+                        size="medium"
+                        loading={loading}
+                        color={submitBtnColor}
+                        onClick={onSubmit}
+                        sx={{
+                            ".MuiLoadingButton-label": {
+
+                                fontSize: "14px !important",
+                            }
+                        }}
+
+                    >
+                        {submitBtnText}
+                    </LoadingButton>
                 </div>}
             </div>
         </Dialog>

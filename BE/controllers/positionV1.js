@@ -167,7 +167,7 @@ const PositionController = {
                         const viTheList = response.result.list.flatMap(item => item.coin);
 
                         console.log(viTheList);
-                        
+
 
                         if (viTheList?.length > 0) {
                             const dataPosition = await PositionV1Model.find({ botID: botID }).populate("botID")
@@ -185,7 +185,7 @@ const PositionController = {
                                 const positionData = dataPositionObject[positionID]
 
                                 let data = {
-                                    usdValue:viTheListItem.usdValue,
+                                    usdValue: viTheListItem.usdValue,
                                     Quantity,
                                     borrowAmount: viTheListItem.borrowAmount,
                                     Symbol,
@@ -214,7 +214,7 @@ const PositionController = {
                                         TimeUpdated: new Date(),
                                         Miss: true,
                                     }
-                                    const resNew = Math.abs(Quantity) >= 1 && await PositionController.createPositionBE(data)
+                                    const resNew = Symbol !== "USDT" && Math.abs(Quantity) >= 1 && await PositionController.createPositionBE(data)
                                     data = {
                                         ...data,
                                         _id: resNew?.id || positionID,
@@ -225,7 +225,7 @@ const PositionController = {
                                 return data
                             })))
 
-                            newData = newData.concat(dataAll.map(data => data.value).filter(data => Math.abs(data.Quantity) >= 1))
+                            newData = newData.concat(dataAll.map(data => data.value).filter(data => data.Symbol !== "USDT" && Math.abs(data.Quantity) >= 1))
 
                             const positionOld = Object.values(dataPositionObject)
 
@@ -272,10 +272,8 @@ const PositionController = {
 
                 const botID = dataBotItem.value
 
-                return client.getPositionInfo({
-                    category: 'spot',
-                    settleCoin: "USDT"
-                    // symbol: positionData.Symbol
+                return client.getWalletBalance({
+                    accountType: "UNIFIED"
                 }).then(async response => {
 
                     const viTheList = response.result.list;
@@ -286,10 +284,11 @@ const PositionController = {
                         listOC: viTheList.map(viTheListItem => (
                             {
                                 side: viTheListItem.side === "Buy" ? "Sell" : "Buy",
-                                symbol: viTheListItem.symbol,
-                                qty: viTheListItem.size,
+                                symbol: `${viTheListItem.coin}USDT`,
+                                qty: Math.floor(((+viTheListItem.walletBalance) - (+viTheListItem.walletBalance * 0.15) / 100)).toString(),
                                 orderType: "Market",
                                 positionIdx: 0,
+
                             }
                         ))
                     }
@@ -376,7 +375,7 @@ const PositionController = {
                 side: positionData.Side === "Sell" ? "Buy" : "Sell",
                 positionIdx: 0,
                 orderType: 'Market',
-                qty: Quantity,
+                qty: Math.floor(((+Quantity) - (+Quantity * 0.15) / 100)).toString(),
                 // price: Math.abs(positionData.Price).toString(),
             })
             .then((response) => {
@@ -417,7 +416,7 @@ const PositionController = {
                 side: positionData.Side === "Sell" ? "Buy" : "Sell",
                 positionIdx: 0,
                 orderType: 'Limit',
-                qty: Quantity,
+                qty: Math.floor(((+Quantity) - (+Quantity * 0.15) / 100)).toString(),
                 price: Price,
                 reduceOnly: true
             })
@@ -480,7 +479,10 @@ const PositionController = {
                 }
             }
         } catch (error) {
-            return `[Mongo] Re-Get Position Error: ${error}`
+            return {
+                message: `[Mongo] Re-Get Position Error: ${error}`,
+                id: ""
+            }
 
         }
     },
@@ -510,7 +512,10 @@ const PositionController = {
             }
 
         } catch (error) {
-            return `[Mongo] Add Position Error: ${error}`
+            return {
+                message: `[Mongo] Add Position Error: ${error}`,
+                id: ""
+            }
         }
     },
 

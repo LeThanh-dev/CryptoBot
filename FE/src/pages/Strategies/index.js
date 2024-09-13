@@ -289,6 +289,7 @@ function Strategies() {
     }
 
     const handleFilterAll = () => {
+        
         filterQuantityRef.current = []
         const listData = dataCheckTreeDefaultRef.current.reduce((acc, data) => {
 
