@@ -17,6 +17,7 @@ import { LoadingButton } from "@mui/lab";
 
 function PositionV1() {
 
+    const [loading, setLoading] = useState(false);
     const userData = useSelector(state => state.userDataSlice.userData)
     const [confirmCloseAllPosition, setConfirmCloseAllPosition] = useState({
         isOpen: false,
@@ -399,17 +400,17 @@ function PositionV1() {
                                 onClick={() => {
                                     handleRefreshData()
                                 }}
-                                sx = {{
-                                    ".MuiLoadingButton-label":{
+                                sx={{
+                                    ".MuiLoadingButton-label": {
 
                                         fontSize: "14px !important",
                                     }
                                 }}
-                               
+
                             >
                                 Refresh
                             </LoadingButton>
-                            }
+                        }
                         {positionData.length > 0 &&
                             <Button
                                 variant="contained"
@@ -477,6 +478,7 @@ function PositionV1() {
             {
                 confirmCloseAllPosition.isOpen && (
                     <DialogCustom
+                        loading={loading}
                         backdrop
                         open={true}
                         onClose={() => {
@@ -486,6 +488,7 @@ function PositionV1() {
                             })
                         }}
                         onSubmit={async () => {
+                            setLoading(true)
                             const res = await closeAllPosition(botList.slice(1))
                             const { message } = res.data
 
@@ -497,6 +500,7 @@ function PositionV1() {
                                 dataChange: true,
                                 isOpen: false
                             })
+                            setLoading(false)
                         }}
                         dialogTitle="The action requires confirmation"
                         submitBtnColor="error"

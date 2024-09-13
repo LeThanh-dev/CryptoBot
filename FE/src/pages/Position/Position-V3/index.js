@@ -16,6 +16,7 @@ import { LoadingButton } from "@mui/lab";
 
 function PositionV3() {
 
+    const [loading, setLoading] = useState(false);
     const userData = useSelector(state => state.userDataSlice.userData)
     const [confirmCloseAllPosition, setConfirmCloseAllPosition] = useState({
         isOpen: false,
@@ -448,6 +449,7 @@ function PositionV3() {
             {
                 confirmCloseAllPosition.isOpen && (
                     <DialogCustom
+                        loading={loading}
                         backdrop
                         open={true}
                         onClose={() => {
@@ -457,6 +459,7 @@ function PositionV3() {
                             })
                         }}
                         onSubmit={async () => {
+                            setLoading(true)
                             const res = await closeAllPosition(botList.slice(1))
                             const { message } = res.data
 
@@ -468,6 +471,7 @@ function PositionV3() {
                                 dataChange: true,
                                 isOpen: false
                             })
+                            setLoading(false)
                         }}
                         dialogTitle="The action requires confirmation"
                         submitBtnColor="error"
