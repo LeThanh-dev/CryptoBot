@@ -571,7 +571,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
             }
         }))
         console.log("[V] Cancel All OC Successful");
-       
+
     }
 
 }
@@ -1566,6 +1566,11 @@ const Main = async () => {
 
     await handleSocketListKline(listKline)
 
+}
+
+try {
+    Main()
+
     let cancelingAll = {};
 
     [1, 3, 5, 15].forEach(candleItem => {
@@ -1897,7 +1902,7 @@ const Main = async () => {
                         if (
                             allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID &&
                             !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderFilled &&
-                            !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.moveAfterCompare 
+                            !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.moveAfterCompare
                             // !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderFilledButMiss
                         ) {
                             let checkMoveMain = false || allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.moveSuccess
@@ -2167,12 +2172,6 @@ const Main = async () => {
             wsSymbol.connectAll()
         }
     });
-
-}
-
-try {
-    Main()
-
     setTimeout(() => {
         cron.schedule('*/15 * * * *', () => {
             getMoneyFuture(botApiList)

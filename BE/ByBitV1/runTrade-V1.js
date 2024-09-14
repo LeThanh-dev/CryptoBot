@@ -1858,11 +1858,12 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 const handleSocketListKline = async (listKlineInput) => {
 
     await wsSymbol.subscribeV5(listKlineInput, 'spot').then(() => {
+        const length = listKlineInput.length
 
-        console.log("[V] Subscribe kline successful\n");
+        console.log(`[V] Subscribe ${length} kline successful\n`);
 
     }).catch(err => {
-        console.log("[!] Subscribe kline error:", err)
+        console.log(`[!] Subscribe ${length} kline error: ${err}`, )
     })
 
 }
@@ -2192,14 +2193,15 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
-
-
     await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(Object.values(listKline))
 
 
-    await wsSymbol.on('update', async (dataCoin) => {
+    wsSymbol.on('update', async (dataCoin) => {
+
+        console.log("dataCoin",dataCoin);
+        
 
         const [_, candle, symbol] = dataCoin.topic.split(".");
 
@@ -2501,26 +2503,6 @@ const Main = async () => {
         }
     });
 
-
- 
-
-    // handleCreateMultipleConfigSpot({
-    //     scannerData: getAllConfigScannerRes[0],
-    //     symbol: "CRDSUSDT",
-    // })
-
-
-    // handleCreateMultipleConfigMargin({
-    //     scannerData: getAllConfigScannerRes[1],
-    //     symbol: "AAVEUSDT",
-    // })
-
-
-}
-
-try {
-    Main()
-
     setInterval(() => {
 
         Object.values(listKline).forEach(item => {
@@ -2542,8 +2524,21 @@ try {
             trichMauDataArray[symbol] = []
         })
     }, 3000)
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "CRDSUSDT",
+    // })
 
 
+    // handleCreateMultipleConfigMargin({
+    //     scannerData: getAllConfigScannerRes[1],
+    //     symbol: "AAVEUSDT",
+    // })
+
+}
+
+try {
+    Main()
 }
 
 catch (e) {
