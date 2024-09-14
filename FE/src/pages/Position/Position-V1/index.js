@@ -47,7 +47,6 @@ function PositionV1() {
             field: 'Symbol',
             headerName: 'Symbol',
             minWidth: 150,
-            maxWidth: 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
 
         },
@@ -92,7 +91,7 @@ function PositionV1() {
             renderCell: (params) => {
                 return <p style={{
                     color: +params.value >= 0 ? "green" : "red"
-                }}>{formatNumber(params.value)}</p>
+                }}>{(params.value)}</p>
             }
         },
         {
@@ -111,7 +110,6 @@ function PositionV1() {
             field: 'borrowAmount',
             headerName: 'Borrow',
             minWidth: 150,
-            maxWidth: 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: (params) => {
                 return <p style={{
@@ -305,7 +303,7 @@ function PositionV1() {
                         Side: item.Side,
                         usdValue: formatNumber(+item.usdValue),
                         Quantity: +item.Quantity,
-                        borrowAmount: formatNumber(+item.borrowAmount),
+                        borrowAmount: +item.borrowAmount,
                         TradeType: item.TradeType,
                         Time: new Date(item.Time).toLocaleString("vi-vn", { timeZone: 'Asia/Ho_Chi_Minh' }),
                         TimeUpdated: new Date(item.TimeUpdated).toLocaleString("vi-vn", { timeZone: 'Asia/Ho_Chi_Minh' }),

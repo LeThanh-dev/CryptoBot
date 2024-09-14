@@ -32,7 +32,7 @@ function AddLimit({
                     ...positionData,
                     Symbol: `${positionData.Symbol}USDT`,
                 },
-                Quantity: positionData.Quantity,
+                Quantity: data.Quantity,
                 Price: priceCurrent,
 
             })
@@ -122,8 +122,7 @@ function AddLimit({
                             {...register("Quantity")}
                             type="number"
                             size="small"
-                            value={Math.abs(positionData.Quantity)}
-                            disabled
+                            defaultValue={Math.abs(positionData.Quantity)}
                         />
                         {errors.Quantity && <p className="formControlErrorLabel">The Quantity field is required.</p>}
 

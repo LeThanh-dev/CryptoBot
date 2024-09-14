@@ -1,5 +1,8 @@
 const { RestClientV5 } = require('bybit-api');
 const PositionV1Model = require('../models/positionV1.model');
+const clientDigit = new RestClientV5({
+    testnet: false,
+});
 
 const PositionController = {
 
@@ -148,6 +151,20 @@ const PositionController = {
             if (botListID.length > 0) {
                 let newData = []
 
+                let minOrderQtyObject = {}
+
+                const responseDigit = await clientDigit.getInstrumentsInfo({
+                    category: 'spot',
+                })
+
+                responseDigit.result.list?.forEach((e) => {
+                    const symbol = e.symbol
+                    if (symbol.split("USDT")[1] === "") {
+                        minOrderQtyObject[symbol] = +e.lotSizeFilter.minOrderQty
+                    }
+                })
+
+
                 await Promise.allSettled(botListID.map(dataBotItem => {
 
                     const client = new RestClientV5({
@@ -165,8 +182,6 @@ const PositionController = {
 
 
                         const viTheList = response.result.list.flatMap(item => item.coin);
-
-                        console.log(viTheList);
 
 
                         if (viTheList?.length > 0) {
@@ -213,7 +228,7 @@ const PositionController = {
                                         TimeUpdated: new Date(),
                                         Miss: true,
                                     }
-                                    const resNew =  Math.abs(Quantity) >= 1 && await PositionController.createPositionBE(data)
+                                    const resNew = (Math.abs(Quantity) >= minOrderQtyObject[`${Symbol}USDT`] || Symbol === "USDT") && await PositionController.createPositionBE(data)
                                     data = {
                                         ...data,
                                         _id: resNew?.id || positionID,
@@ -224,7 +239,7 @@ const PositionController = {
                                 return data
                             })))
 
-                            newData = newData.concat(dataAll.map(data => data.value).filter(data =>  Math.abs(data.Quantity) >= 1))
+                            newData = newData.concat(dataAll.map(data => data.value).filter(data => Math.abs(data.Quantity) >= minOrderQtyObject[`${data.Symbol}USDT`] || data.Symbol === "USDT"))
 
                             const positionOld = Object.values(dataPositionObject)
 
@@ -242,10 +257,10 @@ const PositionController = {
                     });
                 }));
 
-                res.customResponse(200, "Refresh Position Successful", newData);
+                res.customResponse(200, "Refresh Position V1 Successful", newData);
             }
             else {
-                res.customResponse(200, "Refresh Position Successful", "");
+                res.customResponse(200, "Refresh Position V1 Successful", "");
             }
 
         } catch (err) {
@@ -374,7 +389,7 @@ const PositionController = {
                 side: positionData.Side === "Sell" ? "Buy" : "Sell",
                 positionIdx: 0,
                 orderType: 'Market',
-                qty: Math.floor(((+Quantity) - (+Quantity * 0.15) / 100)).toString(),
+                qty: Quantity
                 // price: Math.abs(positionData.Price).toString(),
             })
             .then((response) => {
@@ -415,7 +430,7 @@ const PositionController = {
                 side: positionData.Side === "Sell" ? "Buy" : "Sell",
                 positionIdx: 0,
                 orderType: 'Limit',
-                qty: Math.floor(((+Quantity) - (+Quantity * 0.15) / 100)).toString(),
+                qty: Quantity,
                 price: Price,
                 reduceOnly: true
             })

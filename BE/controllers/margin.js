@@ -1363,13 +1363,13 @@ const dataCoinByBitController = {
                 //     data: handleResult
                 // })
                 return {
-                    message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
+                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} ) Successful`,
                     data: handleResult || []
                 }
             }
             else {
                 return {
-                    message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Failed`,
+                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} ) Failed`,
                     data: []
                 }
             }

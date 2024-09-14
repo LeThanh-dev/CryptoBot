@@ -31,7 +31,7 @@ function AddMarket({
                     ...positionData,
                     Symbol: `${positionData.Symbol}USDT`,
                 },
-                Quantity: positionData.Quantity,
+                Quantity: data.Quantity,
             })
             const { status, message } = res.data
 
@@ -85,8 +85,7 @@ function AddMarket({
                         {...register("Quantity")}
                         type="number"
                         size="small"
-                        value={Math.abs(positionData.Quantity)}
-                        disabled
+                        defaultValue={Math.abs(positionData.Quantity)}
                     />
                     {errors.Quantity && <p className="formControlErrorLabel">The Quantity field is required.</p>}
 

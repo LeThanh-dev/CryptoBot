@@ -238,10 +238,10 @@ const PositionController = {
                     });
                 }));
 
-                res.customResponse(200, "Refresh Position Successful", newData);
+                res.customResponse(200, "Refresh Position V3 Successful", newData);
             }
             else {
-                res.customResponse(200, "Refresh Position Successful", "");
+                res.customResponse(200, "Refresh Position V3 Successful", "");
             }
 
         } catch (err) {
