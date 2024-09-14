@@ -864,13 +864,14 @@ const dataCoinByBitController = {
                 const newSymbolNameList = []
 
                 valuesToAdd.forEach(value => {
+                    const symbol = value.symbol
                     newSymbolList.push({
-                        label: value.symbol,
-                        value: value.symbol,
+                        label: symbol,
+                        value: symbol,
                         volume24h: value.volume24h,
                         children: []
                     });
-                    newSymbolNameList.push(value.symbol);
+                    newSymbolNameList.push(symbol);
                 })
 
                 const insertSymbolNew = SpotModel.insertMany(newSymbolList)
@@ -898,7 +899,10 @@ const dataCoinByBitController = {
 
                     dataCoinByBitController.sendDataRealtime({
                         type: "sync-symbol",
-                        data: newSymbolResult
+                        data: newSymbolResult.map(data => ({
+                            value:data.value,
+                            type: "Spot"
+                        }))
                     })
                     res.customResponse(200, "Have New Sync Successful", newSymbolList)
 

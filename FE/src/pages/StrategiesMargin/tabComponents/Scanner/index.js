@@ -169,7 +169,7 @@ function Scanner() {
                     }}>
                         <Switch
                             size='small'
-                            defaultChecked={params.row['IsActive']}
+                            checked={params.row['IsActive']}
                             onChange={async e => {
                                 try {
                                     const newIsActive = e.target.checked
@@ -200,6 +200,16 @@ function Scanner() {
                                             }
                                             return item
                                         })
+
+                                        setDataCheckTree(dataCheckTree=>dataCheckTree.map(item => {
+                                            if (item._id === configID) {
+                                                return {
+                                                    ...data,
+                                                    IsActive: newIsActive
+                                                }
+                                            }
+                                            return item
+                                        }))
                                     }
                                 } catch (error) {
                                     dispatch(addMessageToast({
@@ -362,6 +372,7 @@ function Scanner() {
         },
     ]
 
+    
 
     const [openFilterDialog, setOpenFilterDialog] = useState(false);
     const [openEditTreeItemMultipleDialog, setOpenEditTreeItemMultipleDialog] = useState({
@@ -406,7 +417,6 @@ function Scanner() {
     const bookmarkCheckRef = useRef(false)
 
     const dispatch = useDispatch()
-
 
     const handleGetAllBotByUserID = () => {
 

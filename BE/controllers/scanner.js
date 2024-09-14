@@ -238,12 +238,10 @@ const dataCoinByBitController = {
             )
 
             if (result.acknowledged && result.matchedCount !== 0) {
-                if (newData.IsActive) {
-                    dataCoinByBitController.sendDataRealtime({
-                        type: "scanner-update",
-                        data: [newData]
-                    })
-                }
+                dataCoinByBitController.sendDataRealtime({
+                    type: "scanner-update",
+                    data: [newData]
+                })
                 res.customResponse(200, "Update Config Successful", "");
             }
             else {

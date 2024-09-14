@@ -518,10 +518,8 @@ function UpdateStrategy({
                                     min
                                 </InputAdornment>
                             }}
-                            {...register("Expire", { required: true, min: formControlMinValue })}
+                            {...register("Expire")}
                         />
-                        {errors.Expire?.type === 'required' && <p className="formControlErrorLabel">The Expire field is required.</p>}
-                        {errors.Expire?.type === "min" && <p className="formControlErrorLabel">The Expire must bigger 0.1.</p>}
 
                     </FormControl>
 

@@ -398,12 +398,12 @@ const moveOrderTP = async ({
             }
             else {
                 console.log(changeColorConsole.yellowBright(`[!] Move Order TP ( ${botName} - ${side} - ${symbol} - ${candle} ) failed `, response.retMsg))
-                allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+                // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
             }
         })
         .catch((error) => {
             console.log(`[!] Move Order TP ( ${botName} - ${side} - ${symbol} - ${candle} ) error `, error)
-            allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+            // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
         });
 
 }
@@ -1822,7 +1822,7 @@ const Main = async () => {
                         if (
                             allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID &&
                             !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
-                            !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilledButMiss &&
+                            // !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilledButMiss &&
                             !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.moveAfterCompare
                         ) {
                             const textQuanSat = `🙄 Xem xét OC ( ${botName} - ${side} - ${symbol} - ${candle} )`
@@ -1881,12 +1881,12 @@ const Main = async () => {
                                         }
                                         else {
                                             console.log(changeColorConsole.yellowBright(`[!] Move Order OC Compare ( ${botName} - ${side} - ${symbol} - ${candle} ) failed `, response.retMsg))
-                                            allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilledButMiss = true
+                                            // allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilledButMiss = true
                                         }
                                     })
                                     .catch((error) => {
                                         console.log(`[!] Move Order OC Compare ( ${botName} - ${side} - ${symbol} - ${candle} ) error `, error)
-                                        allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilledButMiss = true
+                                        // allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilledButMiss = true
                                     });
 
 
@@ -1898,7 +1898,7 @@ const Main = async () => {
                             allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID &&
                             !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderFilled &&
                             !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.moveAfterCompare &&
-                            !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderFilledButMiss
+                            // !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderFilledButMiss
                         ) {
                             let checkMoveMain = false || allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.moveSuccess
 
@@ -1981,12 +1981,12 @@ const Main = async () => {
                                         }
                                         else {
                                             console.log(changeColorConsole.yellowBright(`[!] Move Order TP Compare ( ${botName} - ${side} - ${symbol} - ${candle} ) failed `, response.retMsg))
-                                            allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderFilledButMiss = true
+                                            // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderFilledButMiss = true
                                         }
                                     })
                                     .catch((error) => {
                                         console.log(`[!] Move Order TP Compare ( ${botName} - ${side} - ${symbol} - ${candle} ) error `, error)
-                                        allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderFilledButMiss = true
+                                        // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderFilledButMiss = true
                                     });
 
 

@@ -79,7 +79,8 @@ function PositionV1() {
             maxWidth: 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: (params) => {
-                return <p> {params.value && (params.value == "Margin" ? "🍁" : "🍀")} {params.value}</p>
+                const TradeType = params.value  ? "Margin"  : "Spot"
+                return <p> {TradeType == "Margin" ? "🍁" : "🍀"} {TradeType}</p>
             }
         },
         {
@@ -90,8 +91,8 @@ function PositionV1() {
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: (params) => {
                 return <p style={{
-                    color: params.value >= 0 ? "green" : "red"
-                }}>{params.value}</p>
+                    color: +params.value >= 0 ? "green" : "red"
+                }}>{formatNumber(params.value)}</p>
             }
         },
         {
@@ -162,7 +163,7 @@ function PositionV1() {
                     <>
                         {Symbol !== "USDT" && (
                             <div >
-                                {
+                                {/* {
                                     <Button
                                         variant="contained"
                                         size="small"
@@ -180,7 +181,7 @@ function PositionV1() {
                                     >
                                         Limit
                                     </Button>
-                                }
+                                } */}
                                 <Button
                                     variant="contained"
                                     size="small"
@@ -303,7 +304,7 @@ function PositionV1() {
                         Symbol: item.Symbol,
                         Side: item.Side,
                         usdValue: formatNumber(+item.usdValue),
-                        Quantity: formatNumber(+item.Quantity),
+                        Quantity: +item.Quantity,
                         borrowAmount: formatNumber(+item.borrowAmount),
                         TradeType: item.TradeType,
                         Time: new Date(item.Time).toLocaleString("vi-vn", { timeZone: 'Asia/Ho_Chi_Minh' }),
@@ -447,7 +448,7 @@ function PositionV1() {
                 </div>
             </div>
 
-            {
+            {/* {
                 openAddLimit.isOpen && positionData.find(item => item.id == openAddLimit.data?.id) && (
                     <AddLimit
                         onClose={(data) => {
@@ -459,7 +460,7 @@ function PositionV1() {
                         positionData={openAddLimit.data}
                     />
                 )
-            }
+            } */}
 
             {
                 openAddMarket.isOpen && positionData.find(item => item.id == openAddMarket.data?.id) && (

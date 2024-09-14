@@ -237,7 +237,8 @@ const handleSubmitOrder = async ({
             side,
             botName,
             botID,
-            botData,
+            ApiKey,
+            SecretKey,
             orderLinkId,
             OrderChange: strategy.OrderChange
         }
@@ -503,12 +504,12 @@ const moveOrderTP = async ({
             }
             else {
                 console.log(changeColorConsole.yellowBright(`[!] Move Order TP ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) failed `, response.retMsg))
-                allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+                // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
             }
         })
         .catch((error) => {
             console.log(`[!] Move Order TP ( ${strategy.OrderChange} % ) ( ${botName} - ${side} - ${symbol} ) error `, error)
-            allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
+            // allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
         });
 
 }
@@ -587,14 +588,14 @@ const handleCloseMarket = async ({
         .then((response) => {
 
             if (response.retCode == 0) {
-                console.log(`[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange}) successful`);
+                console.log(`[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) successful`);
             }
             else {
-                console.log(changeColorConsole.yellowBright(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange}) failed: ${response.retMsg}`));
+                console.log(changeColorConsole.yellowBright(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) failed: ${response.retMsg}`));
             }
         })
         .catch((error) => {
-            console.log(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange}) error: ${error}`)
+            console.log(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) error: ${error}`)
         });
 }
 const handleCancelOrderOC = async ({
@@ -617,6 +618,8 @@ const handleCancelOrderOC = async ({
             timeout: ""
         }
     );
+
+
 
     if (maxCancelOrderOCData[botID].totalOC < MAX_CANCEL_LIMIT) {
 
@@ -719,6 +722,8 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 botID: botIDTemp,
                                 side: cur.side === "Buy" ? "Sell" : "Buy",
                                 symbol: cur.symbol,
+                                ApiKey: cur.ApiKey,
+                                SecretKey: cur.SecretKey,
                             })
 
                         }
@@ -753,7 +758,9 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 OrderChange: data.OrderChange,
                                 botID: botIDTemp,
                                 side: data.side === "Buy" ? "Sell" : "Buy",
-                                symbol: data.symbol
+                                symbol: data.symbol,
+                                ApiKey: data.ApiKey,
+                                SecretKey: data.SecretKey,
                             })
                         }
                     })
@@ -864,7 +871,7 @@ const handleCreateMultipleConfigSpot = async ({
     symbol = "",
 }) => {
 
-    console.log("[...] Create Multiple Config Spot");
+    console.log("[...] Create Multiple Config Spot:", scannerData.Numbs);
 
     const listOC = handleCalcOrderChange({ OrderChange: +scannerData.OrderChange, Numbs: +scannerData.Numbs })
 
@@ -909,7 +916,7 @@ const handleCreateMultipleConfigSpot = async ({
         }
 
         newData.forEach(data => {
-            listConfigIDOrderOCByScanner[scannerID][data.value] = data
+            listConfigIDOrderOCByScanner[scannerID].listConFigID[data.value] = data
         })
 
         allScannerDataObject[symbol][scannerID].OrderConfig = true
@@ -924,7 +931,7 @@ const handleCreateMultipleConfigMargin = async ({
     symbol = "",
 }) => {
 
-    console.log("[...] Create Multiple Config Margin");
+    console.log("[...] Create Multiple Config Margin:", scannerData.Numbs);
 
     const Market = scannerData.Market
 
@@ -973,7 +980,7 @@ const handleCreateMultipleConfigMargin = async ({
         }
 
         newData.forEach(data => {
-            listConfigIDOrderOCByScanner[scannerID][data.value] = data
+            listConfigIDOrderOCByScanner[scannerID].listConFigID[data.value] = data
         })
 
         await handleSocketAddNew(newData)
@@ -1284,12 +1291,13 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                 const symbol = dataMain.symbol
                                 const orderID = dataMain.orderLinkId
                                 const orderStatus = dataMain.orderStatus
+                                const qty = +dataMain.cumExecQty
 
 
                                 const botSymbolMissID = `${botID}-${symbol}`
 
                                 if (orderStatus === "Filled") {
-                                    console.log(changeColorConsole.greenBright(`[V] Filled OrderID ( ${botName} - ${dataMain.side} - ${symbol} ):`, orderID));
+                                    console.log(changeColorConsole.greenBright(`[V] Filled OrderID ( ${botName} - ${dataMain.side} - ${symbol} ): ${orderID} - ${qty}`,));
 
                                     if (!orderID) {
 
@@ -1309,7 +1317,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                     }
                                 }
                                 if (orderStatus === "PartiallyFilled") {
-                                    console.log(changeColorConsole.blueBright(`[V] PartiallyFilled OrderID( ${botName} - ${dataMain.side} - ${symbol}):`, dataMain.qty));
+                                    console.log(changeColorConsole.blueBright(`[V] PartiallyFilled OrderID( ${botName} - ${dataMain.side} - ${symbol}):`, qty));
                                 }
 
                                 if (topicMain === "order") {
@@ -1330,31 +1338,16 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                         let timeOut = 5000
 
-                                        
                                         if (orderStatus === "Filled" || orderStatus === "PartiallyFilled") {
                                             strategyData?.timeOutFunc && clearTimeout(strategyData?.timeOutFunc)
 
                                             if (orderStatus === "Filled") {
                                                 timeOut = 0
                                             }
-                                            
+
                                             allStrategiesByBotIDAndOrderID[botID][orderID].timeOutFunc = setTimeout(async () => {
 
-                                                if (timeOut !== 0) {
-                                                    console.log("[...] Canceling remain quantity");
-                                                    handleCancelOrderOC({
-                                                        strategyID,
-                                                        strategy,
-                                                        symbol,
-                                                        side: strategy.PositionSide,
-                                                        ApiKey,
-                                                        SecretKey,
-                                                        botName,
-                                                        botID,
-                                                        OrderChange: strategy.OrderChange,
-                                                        orderId: orderID
-                                                    })
-                                                }
+
                                                 if (OCTrue) {
 
                                                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderFilled = true
@@ -1363,17 +1356,13 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.openTrade = openTrade
 
-                                                    const sideText = strategy.PositionSide === "Long" ? "Buy" : "Sell"
-
-                                                    const qty = +dataMain.cumExecQty
-
                                                     // const newOC = (Math.abs((openTrade - coinOpenOC)) / coinOpenOC * 100).toFixed(2)
 
                                                     // allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.newOC = newOC
 
                                                     const priceOldOrder = (strategy.Amount / 100).toFixed(2)
 
-                                                    console.log(`\n\n[V] Filled OC: \n${symbol.replace("USDT", "")} | Open ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}\n`);
+                                                    console.log(`\n\n[V] ${orderStatus} OC: \n${symbol.replace("USDT", "")} | Open ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}\n`);
                                                     const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
                                                     // const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${sideText} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
 
@@ -1388,7 +1377,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                             TradeType: symbolTradeTypeObject[symbol]
                                                         }
 
-                                                        console.log(`\n[Saving->Mongo] Position When Filled OC ( ${botName} - ${dataMain.side} - ${symbol} )`);
+                                                        console.log(`\n[Saving->Mongo] Position When ${orderStatus} OC ( ${botName} - ${dataMain.side} - ${symbol} )`);
 
                                                         await createPositionBE({
                                                             ...newDataToDB,
@@ -1430,7 +1419,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     // const minOrderQty = digitAllCoinObject[symbol]?.minOrderQty
                                                     const minOrderQty = 1
-                                                    
+
                                                     const dataInput = {
                                                         strategy,
                                                         strategyID,
@@ -1470,7 +1459,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     // const newOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.newOC
 
-                                                    console.log(`\n\n[V] Filled TP: \n${symbol.replace("USDT", "")} | Close ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}\n`);
+                                                    console.log(`\n\n[V] ${orderStatus} TP: \n${symbol.replace("USDT", "")} | Close ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}\n`);
                                                     const teleText = `<b>${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
                                                     // const teleText = `<b>${symbol.replace("USDT", "")}</b> | Close ${side} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
 
@@ -1508,7 +1497,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     // Fill toàn bộ
                                                     if (missTPDataBySymbol[botSymbolMissID]?.sizeTotal == qty || missTPDataBySymbol[botSymbolMissID]?.size == 0) {
-                                                        console.log(`\n[_FULL Filled_] Filled TP ( ${botName} - ${side} - ${symbol})\n`);
+                                                        console.log(`\n[_FULL Filled_] ${orderStatus} TP ( ${botName} - ${side} - ${symbol})\n`);
 
                                                         missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
@@ -1535,7 +1524,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                         delete listOCByCandleBot[botID].listOC[strategyID]
                                                     }
                                                     else {
-                                                        console.log(`\n[_Part Filled_] Filled TP ( ${botName} - ${side} - ${symbol})\n`);
+                                                        console.log(`\n[_Part Filled_] ${orderStatus} TP ( ${botName} - ${side} - ${symbol})\n`);
                                                     }
 
 
@@ -1547,6 +1536,22 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     })
 
 
+                                                }
+
+                                                if (timeOut !== 0) {
+                                                    console.log("[...] Canceling remain quantity");
+                                                    handleCancelOrderOC({
+                                                        strategyID,
+                                                        strategy,
+                                                        symbol,
+                                                        side: strategy.PositionSide === "Long" ? "Buy" : "Sell",
+                                                        ApiKey,
+                                                        SecretKey,
+                                                        botName,
+                                                        botID,
+                                                        OrderChange: strategy.OrderChange,
+                                                        orderId: dataMain.orderId
+                                                    })
                                                 }
                                             }, timeOut)
 
@@ -1607,150 +1612,155 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                     missTPDataBySymbol[botSymbolMissID].sizeTotal = size
 
-                                    if (size > 0) {
-                                        missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
-                                        missTPDataBySymbol[botSymbolMissID].timeOutFunc = setTimeout(async () => {
+                                    try {
+                                        if (size > 0) {
+                                            missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+                                            missTPDataBySymbol[botSymbolMissID].timeOutFunc = setTimeout(async () => {
 
-                                            const symbol = dataMain.symbol
-                                            const side = dataMain.side
-                                            const openTrade = +dataMain.execPrice  //Gia khop lenh
+                                                const symbol = dataMain.symbol
+                                                const side = dataMain.side
+                                                const openTrade = +dataMain.execPrice  //Gia khop lenh
 
-                                            const size = Math.abs(dataMain.size)
+                                                const size = Math.abs(dataMain.size)
 
-                                            missTPDataBySymbol[botSymbolMissID].sizeTotal = size
+                                                missTPDataBySymbol[botSymbolMissID].sizeTotal = size
 
-                                            const missSize = size - missTPDataBySymbol[botSymbolMissID].size
+                                                const missSize = size - missTPDataBySymbol[botSymbolMissID].size
 
-                                            const Quantity = side === "Buy" ? size : (size * -1)
+                                                const Quantity = side === "Buy" ? size : (size * -1)
 
-                                            if (!missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
+                                                if (!missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
 
-                                                const newDataToDB = {
-                                                    Symbol: symbol,
-                                                    Side: side,
-                                                    Quantity,
-                                                    TradeType: symbolTradeTypeObject[symbol]
+                                                    const newDataToDB = {
+                                                        Symbol: symbol,
+                                                        Side: side,
+                                                        Quantity,
+                                                        TradeType: symbolTradeTypeObject[symbol]
+                                                    }
+
+                                                    console.log(`\n[Saving->Mongo] Position When Check Miss ( ${botName} - ${side} - ${symbol} )`);
+
+                                                    await createPositionBE({
+                                                        ...newDataToDB,
+                                                        botID,
+                                                    }).then(async data => {
+                                                        console.log(data.message);
+
+                                                        const newID = data.id
+
+                                                        !missTPDataBySymbol[botSymbolMissID] && resetMissData({ botID, symbol })
+
+                                                        if (newID) {
+                                                            missTPDataBySymbol[botSymbolMissID].orderIDToDB = newID
+                                                        }
+                                                        else {
+                                                            await getPositionBySymbol({ symbol, botID }).then(data => {
+                                                                console.log(data.message);
+                                                                missTPDataBySymbol[botSymbolMissID].orderIDToDB = data.id
+                                                            }).catch(error => {
+                                                                console.log("ERROR getPositionBySymbol:", error)
+                                                            })
+                                                        }
+
+                                                    }).catch(err => {
+                                                        console.log("ERROR createPositionBE:", err)
+                                                    })
                                                 }
 
-                                                console.log(`\n[Saving->Mongo] Position When Check Miss ( ${botName} - ${side} - ${symbol} )`);
+                                                if (!missTPDataBySymbol[botSymbolMissID]?.gongLai) {
+                                                    if (missSize > 0 && !missTPDataBySymbol[botSymbolMissID]?.orderID) {
 
-                                                await createPositionBE({
-                                                    ...newDataToDB,
-                                                    botID,
-                                                }).then(async data => {
-                                                    console.log(data.message);
 
-                                                    const newID = data.id
+                                                        const teleText = `<b>⚠️ [ MISS ] | ${symbol.replace("USDT", "")}</b> - ${side} - Bot: ${botName}  \n`
+                                                        console.log(changeColorConsole.redBright(`\n${teleText.slice(5)}\n`));
 
-                                                    !missTPDataBySymbol[botSymbolMissID] && resetMissData({ botID, symbol })
+                                                        // const TPNew = missTPDataBySymbol[botSymbolMissID].priceOrderTP
+                                                        let TPNew = openTrade
 
-                                                    if (newID) {
-                                                        missTPDataBySymbol[botSymbolMissID].orderIDToDB = newID
-                                                    }
-                                                    else {
-                                                        await getPositionBySymbol({ symbol, botID }).then(data => {
-                                                            console.log(data.message);
-                                                            missTPDataBySymbol[botSymbolMissID].orderIDToDB = data.id
-                                                        }).catch(error => {
-                                                            console.log("ERROR getPositionBySymbol:", error)
+                                                        if (side === "Buy") {
+                                                            TPNew = openTrade + (openTrade * 3 / 100) * (50 / 100)
+                                                        }
+                                                        else {
+                                                            TPNew = openTrade - (openTrade * 3 / 100) * (50 / 100)
+                                                        }
+
+                                                        missTPDataBySymbol[botSymbolMissID].prePrice = TPNew
+                                                        missTPDataBySymbol[botSymbolMissID].side = side
+
+                                                        // const dataInput = {
+                                                        //     symbol,
+                                                        //     qty: missSize.toString(),
+                                                        //     price: roundPrice({
+                                                        //         price: TPNew,
+                                                        //         tickSize: digitAllCoinObject[symbol]
+                                                        //     }),
+                                                        //     side: side === "Buy" ? "Sell" : "Buy",
+                                                        //     ApiKey,
+                                                        //     SecretKey,
+                                                        //     missState: true,
+                                                        //     botName,
+                                                        //     botID,
+                                                        // }
+
+                                                        // console.log("[ Re-TP ] Order TP Miss");
+
+                                                        // handleSubmitOrderTP(dataInput)
+
+                                                        updatePositionBE({
+                                                            newDataUpdate: {
+                                                                Miss: true
+                                                            },
+                                                            orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
+                                                        }).then(message => {
+                                                            console.log(message);
+                                                        }).catch(err => {
+                                                            console.log("ERROR updatePositionBE:", err)
+                                                        })
+                                                        sendMessageWithRetry({
+                                                            messageText: teleText,
+                                                            telegramID,
+                                                            telegramToken
                                                         })
                                                     }
-
-                                                }).catch(err => {
-                                                    console.log("ERROR createPositionBE:", err)
-                                                })
-                                            }
-
-                                            if (!missTPDataBySymbol[botSymbolMissID]?.gongLai) {
-                                                if (missSize > 0 && !missTPDataBySymbol[botSymbolMissID]?.orderID) {
-
-
-                                                    const teleText = `<b>⚠️ [ MISS ] | ${symbol.replace("USDT", "")}</b> - ${side} - Bot: ${botName}  \n`
-                                                    console.log(changeColorConsole.redBright(`\n${teleText.slice(5)}\n`));
-
-                                                    // const TPNew = missTPDataBySymbol[botSymbolMissID].priceOrderTP
-                                                    let TPNew = openTrade
-
-                                                    if (side === "Buy") {
-                                                        TPNew = openTrade + (openTrade * 3 / 100) * (50 / 100)
-                                                    }
-                                                    else {
-                                                        TPNew = openTrade - (openTrade * 3 / 100) * (50 / 100)
-                                                    }
-
-                                                    missTPDataBySymbol[botSymbolMissID].prePrice = TPNew
-                                                    missTPDataBySymbol[botSymbolMissID].side = side
-
-                                                    // const dataInput = {
-                                                    //     symbol,
-                                                    //     qty: missSize.toString(),
-                                                    //     price: roundPrice({
-                                                    //         price: TPNew,
-                                                    //         tickSize: digitAllCoinObject[symbol]
-                                                    //     }),
-                                                    //     side: side === "Buy" ? "Sell" : "Buy",
-                                                    //     ApiKey,
-                                                    //     SecretKey,
-                                                    //     missState: true,
-                                                    //     botName,
-                                                    //     botID,
+                                                    // else {
+                                                    //     console.log(`[_ Not Miss _] TP ( ${botName} - ${side} - ${symbol}} )`);
+                                                    //     updatePositionBE({
+                                                    //         newDataUpdate: {
+                                                    //             Miss: false,
+                                                    //             TimeUpdated: new Date()
+                                                    //         },
+                                                    //         orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
+                                                    //     }).then(message => {
+                                                    //         console.log(message);
+                                                    //     }).catch(err => {
+                                                    //         console.log("ERROR updatePositionBE:", err)
+                                                    //     })
                                                     // }
-
-                                                    // console.log("[ Re-TP ] Order TP Miss");
-
-                                                    // handleSubmitOrderTP(dataInput)
-
-                                                    updatePositionBE({
-                                                        newDataUpdate: {
-                                                            Miss: true
-                                                        },
-                                                        orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
-                                                    }).then(message => {
-                                                        console.log(message);
-                                                    }).catch(err => {
-                                                        console.log("ERROR updatePositionBE:", err)
-                                                    })
-                                                    sendMessageWithRetry({
-                                                        messageText: teleText,
-                                                        telegramID,
-                                                        telegramToken
-                                                    })
                                                 }
-                                                // else {
-                                                //     console.log(`[_ Not Miss _] TP ( ${botName} - ${side} - ${symbol}} )`);
-                                                //     updatePositionBE({
-                                                //         newDataUpdate: {
-                                                //             Miss: false,
-                                                //             TimeUpdated: new Date()
-                                                //         },
-                                                //         orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
-                                                //     }).then(message => {
-                                                //         console.log(message);
-                                                //     }).catch(err => {
-                                                //         console.log("ERROR updatePositionBE:", err)
-                                                //     })
-                                                // }
-                                            }
-                                            else {
-                                                const teleText = `<b>⚠️ [ MISS-GongLai ] | ${symbol.replace("USDT", "")}</b> - ${side} - Bot: ${botName}  \n`
-                                                console.log(changeColorConsole.redBright(`\n${teleText.slice(5)}\n`));
-                                                // updatePositionBE({
-                                                //     newDataUpdate: {
-                                                //         Miss: true,
-                                                //         TimeUpdated: new Date()
-                                                //     },
-                                                //     orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
-                                                // }).then(message => {
-                                                //     console.log(message);
-                                                // }).catch(err => {
-                                                //     console.log("ERROR updatePositionBE:", err)
-                                                // })
-                                            }
+                                                else {
+                                                    const teleText = `<b>⚠️ [ MISS-GongLai ] | ${symbol.replace("USDT", "")}</b> - ${side} - Bot: ${botName}  \n`
+                                                    console.log(changeColorConsole.redBright(`\n${teleText.slice(5)}\n`));
+                                                    // updatePositionBE({
+                                                    //     newDataUpdate: {
+                                                    //         Miss: true,
+                                                    //         TimeUpdated: new Date()
+                                                    //     },
+                                                    //     orderID: missTPDataBySymbol[botSymbolMissID].orderIDToDB
+                                                    // }).then(message => {
+                                                    //     console.log(message);
+                                                    // }).catch(err => {
+                                                    //     console.log("ERROR updatePositionBE:", err)
+                                                    // })
+                                                }
 
-                                        }, 3000)
-                                    }
-                                    else {
-                                        missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+                                            }, 3000)
+                                        }
+                                        else {
+                                            missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
+                                        }
+                                    } catch (error) {
+                                        console.log("error check miss", error);
+
                                     }
                                 }
 
@@ -1988,7 +1998,7 @@ const tinhOC = (symbol, dataAll = []) => {
 
             // Check expire 
             try {
-                if (new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
+                if (+scannerData.Expire && new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
                     console.log(changeColorConsole.blueBright(`[V] Scanner Expire ( ${scannerData.Expire} min )`));
 
                     // Delete all config
@@ -2041,6 +2051,7 @@ const tinhOC = (symbol, dataAll = []) => {
 
             }
 
+
             if (scannerData.IsActive) {
                 if (vol >= Turnover) {
                     if (PositionSide === "Long") {
@@ -2049,6 +2060,7 @@ const tinhOC = (symbol, dataAll = []) => {
                         if (Math.abs(OCLongRound) >= OrderChange && TPLongRound >= Elastic) {
                             const htLong = (`[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
                             console.log(changeColorConsole.cyanBright(htLong, new Date().toLocaleTimeString()));
+                            console.log(dataAll);
                             !scannerData.OrderConfig && await handleCreateMultipleConfigSpot({
                                 scannerData,
                                 symbol
@@ -2060,6 +2072,7 @@ const tinhOC = (symbol, dataAll = []) => {
                         if (Math.abs(OCRound) >= OrderChange && TPRound >= Elastic) {
                             const ht = (`[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
                             console.log(changeColorConsole.cyanBright(ht, new Date().toLocaleTimeString()));
+                            console.log(dataAll);
                             !scannerData.OrderConfig && await handleCreateMultipleConfigMargin({
                                 scannerData,
                                 symbol
@@ -2099,9 +2112,9 @@ const Main = async () => {
 
     const getAllConfigScannerRes = allRes[4].value || []
 
-    const allSymbolResNotDuplicate = [...new Set(allSymbolRes)]
+    const allSymbol = [...new Set(allSymbolRes)]
 
-    allSymbolResNotDuplicate.forEach(symbolData => {
+    allSymbol.forEach(symbolData => {
         const symbol = symbolData.value
         trichMauOCListObject[symbol] = {
             preTime: 0
@@ -2229,7 +2242,7 @@ const Main = async () => {
 
                 //Check expire Increase-Amount - OK
                 if (+strategy.AmountExpire && new Date() - strategy.AmountExpirePre >= strategy.AmountExpire * 60 * 1000) {
-                    console.log(changeColorConsole.blueBright(`[V] Amount Expire ( ${strategy.AmountExpire} min )`));
+                    console.log(changeColorConsole.blueBright(`[V] Amount Expire ( ${symbol} ) ( ${strategy.AmountExpire} min )`));
 
                     strategy.Amount = strategy.AmountOld
                     strategy.AmountExpirePre = new Date()
@@ -2336,7 +2349,7 @@ const Main = async () => {
 
                     //Check expire config - OK
                     if (+strategy.Expire && new Date() - strategy.ExpirePre >= strategy.Expire * 60 * 1000) {
-                        console.log(changeColorConsole.blueBright(`[V] Config ( ${symbolTradeTypeObject[symbol]} ) Expire ( ${strategy.Expire} min )`));
+                        console.log(changeColorConsole.blueBright(`[V] Config ( ${symbolTradeTypeObject[symbol]} - ${symbol} ) Expire ( ${strategy.Expire} min )`));
 
                         strategy.IsActive = false
                         const configID = strategy._id
@@ -2489,6 +2502,25 @@ const Main = async () => {
     });
 
 
+ 
+
+    // handleCreateMultipleConfigSpot({
+    //     scannerData: getAllConfigScannerRes[0],
+    //     symbol: "CRDSUSDT",
+    // })
+
+
+    // handleCreateMultipleConfigMargin({
+    //     scannerData: getAllConfigScannerRes[1],
+    //     symbol: "AAVEUSDT",
+    // })
+
+
+}
+
+try {
+    Main()
+
     setInterval(() => {
 
         Object.values(listKline).forEach(item => {
@@ -2510,25 +2542,6 @@ const Main = async () => {
             trichMauDataArray[symbol] = []
         })
     }, 3000)
-
-    // handleCreateMultipleConfigSpot({
-    //     scannerData: getAllConfigScannerRes[0],
-    //     symbol: "CRDSUSDT",
-    // })
-
-
-    // handleCreateMultipleConfigMargin({
-    //     scannerData: getAllConfigScannerRes[1],
-    //     symbol: "AAVEUSDT",
-    // })
-
-
-}
-
-try {
-    Main()
-
-
 
 
 }
@@ -2650,11 +2663,13 @@ const handleSocketDelete = async (newData = []) => {
 
             allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
                 strategyID,
-                strategy:strategiesData,
+                strategy: strategiesData,
                 symbol,
                 side,
                 botName,
                 botID,
+                ApiKey,
+                SecretKey,
                 orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
             });
 
@@ -2794,10 +2809,12 @@ socketRealtime.on('update', async (newData = []) => {
                 allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
                     strategyID,
                     symbol,
-                strategy:strategiesData,
+                    strategy: strategiesData,
                     side,
                     botName,
                     botID,
+                    ApiKey,
+                    SecretKey,
                     orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
                 });
 
@@ -2825,8 +2842,6 @@ socketRealtime.on('scanner-add', async (newData = []) => {
 
     updatingAllMain = true
 
-    const newListKline = {}
-
     newData.forEach(scannerData => {
 
         const scannerID = scannerData._id
@@ -2845,48 +2860,36 @@ socketRealtime.on('scanner-add', async (newData = []) => {
         }
     })
 
-    console.log(allScannerDataObject);
-
-    await handleSocketListKline(Object.values(newListKline))
-
-
     updatingAllMain = false
 });
 
 socketRealtime.on('scanner-update', async (newData = []) => {
     console.log("[...] Update Scanner From Realtime", newData.length);
 
-    updatingAllMain = true
-
-    const newListKline = {}
-
     newData.forEach(scannerData => {
 
         const scannerID = scannerData._id
+        const setOnlyPairs = new Set(scannerData.OnlyPairs)
         const setBlacklist = new Set(scannerData.Blacklist)
         if (checkConditionBot(scannerData)) {
-            scannerData.OnlyPairs.forEach(symbol => {
-                if (!setBlacklist.has(symbol)) {
+            allSymbol.forEach(symbolData => {
+                const symbol = symbolData.value
+                if (setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
                     !allScannerDataObject[symbol] && (allScannerDataObject[symbol] = {})
                     const newScannerData = scannerData
                     newScannerData.ExpirePre = new Date()
-                    allScannerDataObject[symbol][scannerID] = newScannerData
 
+                    allScannerDataObject[symbol][scannerID] = newScannerData
 
                 }
                 else {
-                    allScannerDataObject[symbol]?.[scannerID] && (allScannerDataObject[symbol][scannerID].IsActive = false);
+                    delete allScannerDataObject[symbol]?.[scannerID]
                 }
             })
         }
     })
 
 
-
-
-    await handleSocketListKline(Object.values(newListKline))
-
-    updatingAllMain = false
 });
 
 socketRealtime.on('scanner-delete', async (newData = []) => {
@@ -2896,8 +2899,8 @@ socketRealtime.on('scanner-delete', async (newData = []) => {
 
     newData.forEach(scannerData => {
         const scannerID = scannerData._id
-        scannerData.OnlyPairs.forEach(symbol => {
-            delete allScannerDataObject[symbol][scannerID]
+        allSymbol.forEach(symbol => {
+            delete allScannerDataObject[symbol.value]?.[scannerID]
         })
     })
 
@@ -3022,11 +3025,13 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
         allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
             strategyID,
-            strategy:strategiesData,
+            strategy: strategiesData,
             symbol,
             side,
             botName,
             botID,
+            ApiKey,
+            SecretKey,
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
         });
 
@@ -3108,11 +3113,13 @@ socketRealtime.on('bot-api', async (data) => {
 
         allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
             strategyID,
-            strategy:strategiesData,
+            strategy: strategiesData,
             symbol,
             side,
             botName,
             botID,
+            ApiKey,
+            SecretKey,
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
         });
         // handleCancelOrderTP({
@@ -3210,11 +3217,13 @@ socketRealtime.on('bot-delete', async (data) => {
 
         allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[botID].listOC[strategyID] = {
             strategyID,
-            strategy:strategiesData,
+            strategy: strategiesData,
             symbol,
             side,
             botName,
             botID,
+            ApiKey,
+            SecretKey,
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
         });
         // handleCancelOrderTP({
@@ -3262,16 +3271,12 @@ socketRealtime.on('bot-telegram', async (data) => {
 });
 
 socketRealtime.on('sync-symbol', async (newData) => {
-    console.log("[...] Sync Symbol");
+
+    console.log("[...] Sync Symbol:", newData.length);
 
     allSymbol = allSymbol.concat(newData)
 
-    const newListKline = newData.map(symbol => {
-        trichMauOCListObject[symbol.value] = {
-            preTime: 0,
-        }
-        return `kline.D.${symbol}`
-    })
+    let newListKline = {}
 
     const resultDigitAll = await Digit()
     resultDigitAll?.length > 0 && (
@@ -3286,6 +3291,32 @@ socketRealtime.on('sync-symbol', async (newData) => {
         }, digitAllCoinObject)
     );
 
+    newData.forEach(symbolData => {
+        const symbol = symbolData.value
+        trichMauOCListObject[symbol] = {
+            preTime: 0
+        }
+        symbolTradeTypeObject[symbol] = symbolData.type
+
+        trichMauData[symbol] = {
+            open: 0,
+            close: 0,
+            high: 0,
+            low: 0,
+            turnover: 0
+        }
+        preTurnover[symbol] = 0
+        trichMauDataArray[symbol] = []
+        trichMau[symbol] = {
+            cur: 0,
+            pre: 0,
+        }
+
+        const klineText = `kline.D.${symbol}`
+        listKline[symbol] = klineText
+        newListKline[symbol] = klineText
+
+    })
 
     await handleSocketListKline(Object.values(newListKline))
 

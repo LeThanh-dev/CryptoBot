@@ -189,7 +189,7 @@ const PositionController = {
                                     Quantity,
                                     borrowAmount: viTheListItem.borrowAmount,
                                     Symbol,
-
+                                    TradeType: viTheListItem?.marginCollateral,
                                     botID,
                                     botName: dataBotItem?.name,
                                     botData: dataBotItem,
@@ -201,7 +201,6 @@ const PositionController = {
                                         _id: positionData?._id,
                                         Side: positionData.side,
                                         Time: positionData?.Time,
-                                        TradeType: positionData?.TradeType,
                                         TimeUpdated: new Date(),
                                         Miss: positionData.Miss,
                                     }
@@ -214,7 +213,7 @@ const PositionController = {
                                         TimeUpdated: new Date(),
                                         Miss: true,
                                     }
-                                    const resNew = Symbol !== "USDT" && Math.abs(Quantity) >= 1 && await PositionController.createPositionBE(data)
+                                    const resNew =  Math.abs(Quantity) >= 1 && await PositionController.createPositionBE(data)
                                     data = {
                                         ...data,
                                         _id: resNew?.id || positionID,
@@ -225,7 +224,7 @@ const PositionController = {
                                 return data
                             })))
 
-                            newData = newData.concat(dataAll.map(data => data.value).filter(data => data.Symbol !== "USDT" && Math.abs(data.Quantity) >= 1))
+                            newData = newData.concat(dataAll.map(data => data.value).filter(data =>  Math.abs(data.Quantity) >= 1))
 
                             const positionOld = Object.values(dataPositionObject)
 
