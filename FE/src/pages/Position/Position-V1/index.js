@@ -78,13 +78,25 @@ function PositionV1() {
             maxWidth: 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: (params) => {
-                const TradeType = params.value  ? "Margin"  : "Spot"
+                const TradeType = params.value ? "Margin" : "Spot"
                 return <p> {TradeType == "Margin" ? "🍁" : "🍀"} {TradeType}</p>
             }
         },
         {
             field: 'Quantity',
             headerName: 'Quantity',
+            maxWidth: 170,
+            minWidth: 170,
+            flex: window.innerWidth <= 740 ? undefined : 1,
+            renderCell: (params) => {
+                return <p style={{
+                    color: +params.value >= 0 ? "green" : "red"
+                }}>{(params.value)}</p>
+            }
+        },
+        {
+            field: 'MaxQty',
+            headerName: 'MaxQty',
             maxWidth: 170,
             minWidth: 170,
             flex: window.innerWidth <= 740 ? undefined : 1,
@@ -300,9 +312,10 @@ function PositionV1() {
                         botID: item.botID,
                         botData: item.botData,
                         Symbol: item.Symbol,
-                        Side: item.Side,
+                        Side: item.TradeType !== "Spot" ? item.Side : "Buy",
                         usdValue: formatNumber(+item.usdValue),
                         Quantity: +item.Quantity,
+                        MaxQty: item.MaxQty,
                         borrowAmount: +item.borrowAmount,
                         TradeType: item.TradeType,
                         Time: new Date(item.Time).toLocaleString("vi-vn", { timeZone: 'Asia/Ho_Chi_Minh' }),

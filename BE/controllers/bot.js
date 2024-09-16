@@ -484,6 +484,61 @@ const BotController = {
         }
     },
 
+    setMargin: async (req, res) => {
+        try {
+
+            const botData = req.body;
+
+            const allSymbolMargin = []
+
+            const { RestClientV5 } = require('bybit-api');
+
+            const client = new RestClientV5({
+                testnet: false,
+                key: botData.ApiKey,
+                secret: botData.SecretKey,
+                syncTimeBeforePrivateRequests: true,
+            });
+
+            await client.getWalletBalance({
+                accountType: "UNIFIED"
+            })
+                .then((rescoin) => {
+                    const coinList = rescoin.result.list.flatMap(item => item.coin);
+
+                    coinList.forEach(coinData => {
+                        console.log(coinData);
+                        
+                        if (coinData.collateralSwitch) {
+                            allSymbolMargin.push({
+                                coin: coinData.coin,
+                                collateralSwitch: 'ON',
+                            })
+                        }
+                    })
+                })
+
+
+            try {
+
+                const resSet = await client.batchSetCollateralCoin({ request: allSymbolMargin })
+
+                if (resSet.retCode == 0) {
+                    res.customResponse(200, "Set Margin Bot Successful", "");
+                }
+                else {
+                    res.customResponse(400, resSet.retMsg, "");
+                }
+
+            } catch (error) {
+                throw new Error(error)
+            }
+        } catch (error) {
+            // Xử lý lỗi nếu có
+            res.status(500).json({ message: `Set Margin Bot Error: ${error.message}` });
+        }
+    },
+
     // OTHER 
 
     getAllBotActiveBE: async () => {

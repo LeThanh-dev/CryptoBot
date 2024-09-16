@@ -73,10 +73,14 @@ const RoleController = {
     addMore: async () => {
         try {
             const result = await RoleModel.updateMany(
-                {},
-                { "$addToSet": { roleList: [
-                    // "Spot","Margin","Scanner","PositionV3","PositionV1"
-                ] } },
+                { name: "SuperAdmin" },
+                {
+                    "$addToSet": {
+                        roleList: [
+                            "InstrumentsInfo"
+                        ]
+                    }
+                },
             );
 
             if (result.modifiedCount > 0) {

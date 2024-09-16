@@ -1,3 +1,4 @@
+import PaymentsIcon from '@mui/icons-material/Payments';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
 import GridViewIcon from '@mui/icons-material/GridView';
@@ -60,6 +61,11 @@ function SideBar({
             linK: "/PositionV3",
             name: "Positions",
             icon: <ViewInArIcon className={styles.icon} />
+        },
+        {
+            linK: "/InstrumentsInfo",
+            name: "InstrumentsInfo",
+            icon: <PaymentsIcon className={styles.icon} />
         },
         {
             linK: "/Order",

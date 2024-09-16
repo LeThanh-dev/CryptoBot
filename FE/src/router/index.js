@@ -19,6 +19,7 @@ import PositionAll from "../pages/Position"
 import PositionV3 from "../pages/Position/Position-V3"
 import PositionV1 from "../pages/Position/Position-V1"
 import StrategiesHistory from "../pages/StrategiesHistory"
+import InstrumentsInfo from "../pages/InstrumentsInfo"
 
 
 const routeList = [
@@ -82,6 +83,10 @@ const routeList = [
                         <StrategiesMargin />
                         <Scanner />
                     </>
+            },
+            {
+                path: "InstrumentsInfo",
+                element: <InstrumentsInfo />,
             },
             {
                 path: "Coin",

@@ -1,5 +1,7 @@
+const Big = require('big.js');
 const { RestClientV5 } = require('bybit-api');
 const PositionV1Model = require('../models/positionV1.model');
+const InstrumentsInfoModel = require('../models/instrumentsInfo.model');
 const clientDigit = new RestClientV5({
     testnet: false,
 });
@@ -153,14 +155,16 @@ const PositionController = {
 
                 let minOrderQtyObject = {}
 
-                const responseDigit = await clientDigit.getInstrumentsInfo({
-                    category: 'spot',
-                })
+                const responseDigit = await InstrumentsInfoModel.find()
 
-                responseDigit.result.list?.forEach((e) => {
+                responseDigit.forEach((e) => {
                     const symbol = e.symbol
                     if (symbol.split("USDT")[1] === "") {
-                        minOrderQtyObject[symbol] = +e.lotSizeFilter.minOrderQty
+                        minOrderQtyObject[symbol] = {
+                            minOrderQty: e.minOrderQty,
+                            basePrecision: e.basePrecision,
+
+                        }
                     }
                 })
 
@@ -194,11 +198,12 @@ const PositionController = {
 
                             const dataAll = await Promise.allSettled((viTheList.map(async viTheListItem => {
 
-                                const Quantity = viTheListItem.walletBalance
+                                const Quantity = +viTheListItem.walletBalance
                                 const Symbol = viTheListItem.coin
                                 const positionID = `${botID}-${Symbol}`
                                 const positionData = dataPositionObject[positionID]
 
+                                const minOrderQtyObjectSymbol = minOrderQtyObject[`${Symbol}USDT`]
                                 let data = {
                                     usdValue: viTheListItem.usdValue,
                                     Quantity,
@@ -210,6 +215,12 @@ const PositionController = {
                                     botData: dataBotItem,
                                 }
 
+                                if (Symbol !== "USDT") {
+                                    const priceFix = new Big(Quantity)
+                                    const tickSizeFIx = new Big(minOrderQtyObjectSymbol.basePrecision)
+
+                                    data.MaxQty = new Big(Math.floor(priceFix.div(tickSizeFIx).toNumber())).times(tickSizeFIx).toString();
+                                }
                                 if (positionData?._id) {
                                     data = {
                                         ...data,
@@ -228,7 +239,7 @@ const PositionController = {
                                         TimeUpdated: new Date(),
                                         Miss: true,
                                     }
-                                    const resNew = (Math.abs(Quantity) >= minOrderQtyObject[`${Symbol}USDT`] || Symbol === "USDT") && await PositionController.createPositionBE(data)
+                                    const resNew = (Symbol === "USDT" || Math.abs(Quantity) >= minOrderQtyObjectSymbol.minOrderQty) && await PositionController.createPositionBE(data)
                                     data = {
                                         ...data,
                                         _id: resNew?.id || positionID,
@@ -239,7 +250,7 @@ const PositionController = {
                                 return data
                             })))
 
-                            newData = newData.concat(dataAll.map(data => data.value).filter(data => Math.abs(data.Quantity) >= minOrderQtyObject[`${data.Symbol}USDT`] || data.Symbol === "USDT"))
+                            newData = newData.concat(dataAll.map(data => data.value).filter(data => (data.Symbol === "USDT" || Math.abs(data.Quantity) >= minOrderQtyObject[`${data.Symbol}USDT`].minOrderQty)))
 
                             const positionOld = Object.values(dataPositionObject)
 

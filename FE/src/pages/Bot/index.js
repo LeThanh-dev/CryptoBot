@@ -6,7 +6,7 @@ import { useState, memo, useEffect, useRef } from "react";
 import AddBreadcrumbs from "../../components/BreadcrumbsCutom";
 import DataGridCustom from "../../components/DataGridCustom";
 import AddBot from "./components/AddBot";
-import { deleteBot, deleteMultipleBot, getAllBot, getAllBotBySameGroup, getAllBotByUserID, updateBot } from "../../services/botService";
+import { deleteBot, deleteMultipleBot, getAllBot, getAllBotBySameGroup, getAllBotByUserID, setMargin, updateBot } from "../../services/botService";
 import styles from "./Bot.module.scss"
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';
@@ -14,6 +14,7 @@ import DialogCustom from '../../components/DialogCustom';
 import { getTotalFutureSpot, getTotalFutureSpotByBot } from '../../services/dataCoinByBitService';
 import { formatNumber } from '../../functions';
 import { getAllBotType } from '../../services/botTypeService';
+import { LoadingButton } from '@mui/lab';
 
 function Bot() {
 
@@ -216,7 +217,42 @@ function Bot() {
             )
 
         },
-    })
+    });
+
+    (roleName === "Admin" || roleName === "SuperAdmin") && tableColumns.push({
+        field: 'Set Margin',
+        headerName: 'Set Margin',
+        type: "actions",
+        minWidth: 150,
+        flex: window.innerWidth <= 740 ? undefined : 1,
+        renderCell: params => {
+            const rowData = params.row;
+            const botType = rowData['botType']
+
+            return (
+                <LoadingButton
+                    variant="contained"
+                    size="small"
+                    loading={loadingSetMargin == rowData["_id"]}
+                    sx={{
+                        ".MuiLoadingButton-label": {
+
+                            fontSize: "12px !important",
+                        }
+                    }}
+                    onClick={() => {
+                        handleSetMargin(rowData)
+                    }}
+                    style={{
+                        display: botType === "ByBitV1" ? "block" : "none"
+                    }}
+                >
+                    Set Margin
+                </LoadingButton >
+            )
+
+        },
+    });
 
     // const [statusChoose, setStatusChoose] = useState(statusList[0].value);
     const [botList, setBotList] = useState([]);
@@ -228,6 +264,7 @@ function Bot() {
     const [openDeleteBot, setOpenDeleteBot] = useState("");
     const [openEditMultiple, setOpenEditMultiple] = useState(false);
     const [confirmActiveBot, setConfirmActiveBot] = useState(false);
+    const [loadingSetMargin, setLoadingSetMargin] = useState("");
     const [totalFutureSpot, setTotalFutureSpot] = useState(0);
     const totalFutureSpotOfMeDefault = useRef(0)
 
@@ -248,6 +285,26 @@ function Bot() {
         setBotList(newBotList)
     }
 
+    const handleSetMargin = async (botData) => {
+        setLoadingSetMargin(botData._id)
+        try {
+            const res = await setMargin(botData)
+            const { status, message } = res.data
+
+            dispatch(addMessageToast({
+                status: status,
+                message: message,
+            }))
+
+        }
+        catch (err) {
+            dispatch(addMessageToast({
+                status: 500,
+                message: "Update Bot Error",
+            }))
+        }
+        setLoadingSetMargin("")
+    }
     const handleUpdateBot = async ({ botID, data }) => {
         try {
             const res = await updateBot({

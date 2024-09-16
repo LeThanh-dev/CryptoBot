@@ -1,14 +1,13 @@
-import { Button, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import styles from './CoinContent.module.scss'
 import { useEffect, useRef, useState } from 'react';
-import DataGridCustom from '../../../components/DataGridCustom';
+import DataGridCustom from '../../components/DataGridCustom';
 import { useDispatch } from 'react-redux';
-import { addMessageToast } from '../../../store/slices/Toast';
-import { formatNumberString } from '../../../functions';
-import { getAllCoin, syncCoin } from '../../../services/coinService';
+import { addMessageToast } from '../../store/slices/Toast';
+import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../services/instrumentsInfoService';
 import { LoadingButton } from '@mui/lab';
 
-function CoinContent() {
+function InstrumentsInfo() {
     const tableColumns = [
         {
             field: 'stt',
@@ -23,12 +22,30 @@ function CoinContent() {
             flex: 1,
         },
         {
-            field: 'volume24h',
-            headerName: 'Volume24h',
-            type: "number",
+            field: 'market',
+            headerName: 'Market',
             flex: 1,
-            renderCell: (params) => formatNumberString(params.value)
+            renderCell: (params) => {
+                const TradeType = params.value
+                return <p> {TradeType == "Margin" ? "🍁" : "🍀"} {TradeType}</p>
+            }
         },
+        {
+            field: 'minOrderQty',
+            headerName: 'minOrderQty',
+            flex: 1,
+        },
+        {
+            field: 'basePrecision',
+            headerName: 'BasePrecision',
+            flex: 1,
+        },
+        {
+            field: 'tickSize',
+            headerName: 'TickSize',
+            flex: 1,
+        },
+
     ]
 
     const [tableRows, setTableRows] = useState([]);
@@ -40,7 +57,7 @@ function CoinContent() {
 
     const handleGetSymbolList = async () => {
         try {
-            const res = await getAllCoin()
+            const res = await getAllInstrumentsInfo()
             const { status, message, data: symbolListDataRes } = res.data
 
             const newSymbolList = symbolListDataRes.map(item => (
@@ -48,7 +65,10 @@ function CoinContent() {
                     id: item._id,
                     Coin: item.symbol.split("USDT")[0],
                     Symbol: item.symbol,
-                    volume24h: item.volume24h,
+                    minOrderQty: item.minOrderQty,
+                    basePrecision: item.basePrecision,
+                    market: item.market,
+                    tickSize: item.tickSize,
                 }))
             tableRowsDefault.current = newSymbolList
             setTableRows(newSymbolList)
@@ -61,14 +81,15 @@ function CoinContent() {
             }))
         }
     }
+
     const handleSyncCoin = async () => {
         setLoading(true)
         try {
-            const res = await syncCoin()
+            const res = await syncInstrumentsInfo()
             const { status, message } = res.data
 
             if (status === 200) {
-                handleGetSymbolList()
+                await handleGetSymbolList()
             }
             dispatch(addMessageToast({
                 status,
@@ -106,7 +127,7 @@ function CoinContent() {
                         })
                     }}
                 />
-              
+
                 <LoadingButton
                     variant="contained"
                     size="medium"
@@ -132,4 +153,4 @@ function CoinContent() {
     );
 }
 
-export default CoinContent;
+export default InstrumentsInfo;

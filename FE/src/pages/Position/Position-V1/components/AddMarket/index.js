@@ -85,7 +85,7 @@ function AddMarket({
                         {...register("Quantity")}
                         type="number"
                         size="small"
-                        defaultValue={Math.abs(positionData.Quantity)}
+                        defaultValue={positionData.MaxQty}
                     />
                     {errors.Quantity && <p className="formControlErrorLabel">The Quantity field is required.</p>}
 

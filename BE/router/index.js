@@ -14,6 +14,7 @@ const spotRouter = require('./spot.route');
 const marginRouter = require('./margin.route');
 const scannerRouter = require('./scanner.route');
 const coinRouter = require('./coin.route');
+const instrumentsInfoRouter = require('./instrumentsInfo.route');
 
 router.use('/auth', authRouter);
 router.use('/user', userRouter);
@@ -28,6 +29,7 @@ router.use('/position', positionRouter);
 router.use('/positionV1', positionV1Router);
 router.use('/scanner', scannerRouter);
 router.use('/coin', coinRouter);
+router.use('/instrumentsInfo', instrumentsInfoRouter);
 
 // Sử dụng các route khác tương tự
 

@@ -163,8 +163,6 @@ function TreeChild({
             }))
         }
     }
-
-    console.log(treeNode.scannerID);
     
     return (
         <>

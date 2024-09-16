@@ -7,9 +7,9 @@ const positionV1Schema = new mongoose.Schema({
   },
   Side: String,
   usdValue: String,
-  Quantity	: String,
+  Quantity: String,
   borrowAmount: String,
-  TradeType:String,
+  TradeType: String,
   botID: {
     type: mongoose.Types.ObjectId,
     ref: 'Bot',
@@ -18,7 +18,7 @@ const positionV1Schema = new mongoose.Schema({
   Time: Date,
   TimeUpdated: Date,
   Miss: Boolean,
-
+  MaxQty: String
 });
 
 
