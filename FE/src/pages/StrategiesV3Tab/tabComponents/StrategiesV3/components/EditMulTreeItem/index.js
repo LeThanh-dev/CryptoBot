@@ -1,21 +1,21 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { useEffect, useMemo, useState } from "react";
-import { Checkbox, TextField, Autocomplete, Button, Table, TableHead, TableRow, TableCell, TableBody, Select, MenuItem, FormControl, RadioGroup, FormControlLabel, Radio } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
-import DialogCustom from '../../../../../../components/DialogCustom';
+import { Autocomplete, Button, Checkbox, FormControl, FormControlLabel, MenuItem, Radio, RadioGroup, Select, Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
+import { useDispatch, useSelector } from 'react-redux';
 import { verifyTokenVIP } from '../../../../../../services/authService';
 import { getAllBotActive } from '../../../../../../services/botService';
+import { updateStrategiesMultiple, deleteStrategiesMultiple, copyMultipleStrategiesToSymbol, copyMultipleStrategiesToBot, getAllSymbol } from '../../../../../../services/dataCoinByBitService';
 import { getUserByID } from '../../../../../../services/userService';
+import { setStrategiesHistoryData } from '../../../../../../store/slices/StrategiesHistory';
+import DialogCustom from '../../../../../../components/DialogCustom';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
-import { getAllSymbolSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../services/spotService';
-import { copyMultipleStrategiesToBotScanner, deleteStrategiesMultipleScanner, updateStrategiesMultipleScanner } from '../../../../../../services/scannerService';
-import { NumericFormat } from 'react-number-format';
 
 function EditMulTreeItem({
     onClose,
     botListInput,
     dataCheckTreeSelected,
+    dataCheckTreeDefaultRef
 }) {
 
     const userData = useSelector(state => state.userDataSlice.userData)
@@ -54,8 +54,19 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
-            name: "Elastic",
-            value: "Elastic",
+            name: "Extended",
+            value: "ExtendedOCPercent",
+            compareFilterList: compareFilterListDefault,
+
+        },
+
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "TP",
+            value: "TakeProfit",
             compareFilterList: compareFilterListDefault,
 
         },
@@ -64,8 +75,8 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
-            name: "Turnover",
-            value: "Turnover",
+            name: "Reduce",
+            value: "ReduceTakeProfit",
             compareFilterList: compareFilterListDefault,
         },
         {
@@ -73,28 +84,9 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
-            name: "Numbs",
-            value: "Numbs",
+            name: "Ignore",
+            value: "Ignore",
             compareFilterList: compareFilterListDefault,
-        },
-        {
-            data: {
-                compare: "=",
-                value: ""
-            },
-            name: "Limit",
-            value: "Limit",
-            compareFilterList: compareFilterListDefault,
-        },
-        {
-            data: {
-                compare: "=",
-                value: ""
-            },
-            name: "Expire",
-            value: "Expire",
-            compareFilterList: compareFilterListDefault,
-
         },
         {
             data: {
@@ -110,9 +102,18 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
-            name: "Label",
-            value: "Label",
-            compareFilterList: ["="],
+            name: "EntryTrailing",
+            value: "EntryTrailing",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Max OC (%)",
+            value: "StopLose",
+            compareFilterList: compareFilterListDefault,
         },
     ]
 
@@ -120,7 +121,7 @@ function EditMulTreeItem({
 
 
 
-    const [copyType, setCopyType] = useState("Bot");
+    const [copyType, setCopyType] = useState("Symbol");
     const [symbolListData, setSymbolListData] = useState([]);
     const [symbolListSelected, setSymbolListSelected] = useState([]);
 
@@ -156,7 +157,7 @@ function EditMulTreeItem({
     }
     const handleGetAllBot = async () => {
         try {
-            const res = await getAllBotActive("ByBitV1")
+            const res = await getAllBotActive("ByBitV3")
             const { data: resUserData } = res.data
             setBotListInputVIP(resUserData.map(item => ({
                 name: item.botName,
@@ -214,8 +215,9 @@ function EditMulTreeItem({
                         handleChangeValue(e.target.checked, indexRow)
                     }}
                 />
-            case "Label":
+            default:
                 return <TextField
+                    type='number'
                     value={item.data.value}
                     onChange={(e) => { handleChangeValue(e.target.value, indexRow) }}
                     size="small"
@@ -224,35 +226,6 @@ function EditMulTreeItem({
                     }}
                 >
                 </TextField>
-            default:
-                // return <TextField
-                //     type='number'
-                //     value={item.data.value}
-                //     onChange={(e) => { handleChangeValue(e.target.value, indexRow) }}
-                //     size="small"
-                //     style={{
-                //         width: "100%"
-                //     }}
-                // >
-                // </TextField>
-                return <NumericFormat
-                    thousandSeparator
-                    value={item.data.value}
-                    type='text'
-                    onChange={(e) => {
-                        const value = Number.parseFloat(e.target.value.replace(/,/g, ''))
-                        handleChangeValue(value, indexRow)
-                    }}
-                    style={{
-                        width: "100%",
-                        height: "40px",
-                        outline: "none",
-                        border: "1px solid #c4c4c4",
-                        padding: "0 12px",
-                        borderRadius: "6px"
-                    }}
-                >
-                </NumericFormat>
         }
     }
 
@@ -321,11 +294,12 @@ function EditMulTreeItem({
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => (
                 {
                     id: dataCheckTreeItem._id,
+                    parentID: dataCheckTreeItem.parentID,
                     UpdatedFields: filterDataRowList.map(filterRow => {
-                        let valueHandle = filterRow.value != "Label" ? handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
+                        let valueHandle = handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value)
                         if (typeof (valueHandle) === "number") {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
-                            if (valueHandle < 0.01) {
+                            if (valueHandle < 0.1) {
                                 checkValueMin = false
                             }
                         }
@@ -343,7 +317,9 @@ function EditMulTreeItem({
             if (checkValueMin) {
                 setLoadingSubmit(true)
 
-                const res = await updateStrategiesMultipleScanner(newData)
+                dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
+
+                const res = await updateStrategiesMultiple(newData)
 
                 const { status, message } = res.data
 
@@ -353,13 +329,12 @@ function EditMulTreeItem({
                 }))
                 if (status === 200) {
                     closeDialog(true)
-
                 }
             }
             else {
                 dispatch(addMessageToast({
                     status: 400,
-                    message: "All Field Value >= 0.01",
+                    message: "All Field Value >= 0.1",
                 }))
             }
         }
@@ -381,10 +356,12 @@ function EditMulTreeItem({
         try {
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => ({
                 id: dataCheckTreeItem._id,
-                Market:dataCheckTreeItem.Market
+                parentID: dataCheckTreeItem.parentID,
             }))
 
-            const res = await deleteStrategiesMultipleScanner(newData)
+            dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
+
+            const res = await deleteStrategiesMultiple(newData)
 
             const { status, message } = res.data
 
@@ -416,16 +393,18 @@ function EditMulTreeItem({
         if (symbolListSelected.length > 0 || botLisSelected.length > 0) {
             let dataChange = false
             setLoadingSubmit(true)
+            dataCheckTreeDefaultRef.current.length > 0 && dispatch(setStrategiesHistoryData(dataCheckTreeDefaultRef.current))
+
             try {
                 let res
                 if (copyType === "Symbol") {
-                    res = await copyMultipleStrategiesToSymbolSpot({
+                    res = await copyMultipleStrategiesToSymbol({
                         symbolListData: handleDataCheckTreeSelected,
                         symbolList: symbolListSelected.map(item => item.value)
                     })
                 }
                 else {
-                    res = await copyMultipleStrategiesToBotScanner({
+                    res = await copyMultipleStrategiesToBot({
                         symbolListData: handleDataCheckTreeSelected,
                         symbolList: botLisSelected.map(item => item.value)
                     })
@@ -468,7 +447,7 @@ function EditMulTreeItem({
                 }
             ))
 
-            const res = await updateStrategiesMultipleScanner(newData)
+            const res = await updateStrategiesMultiple(newData)
 
             const { status, message } = res.data
 
@@ -505,7 +484,7 @@ function EditMulTreeItem({
                 }
             ))
 
-            const res = await updateStrategiesMultipleScanner(newData)
+            const res = await updateStrategiesMultiple(newData)
 
             const { status, message } = res.data
 
@@ -559,7 +538,7 @@ function EditMulTreeItem({
 
     const handleGetSymbolList = async () => {
         try {
-            const res = await getAllSymbolSpot()
+            const res = await getAllSymbol()
             const { status, message, data: symbolListDataRes } = res.data
 
             if (status === 200) {
@@ -870,14 +849,14 @@ function EditMulTreeItem({
                     <div>
                         <FormControl style={{ marginBottom: "6px" }} >
                             <RadioGroup
-                                defaultValue="Bot"
+                                defaultValue="Symbol"
                                 onChange={handleChangeRatioCopy}
                                 style={{
                                     display: "flex",
                                     flexDirection: "row"
                                 }}
                             >
-                                {/* <FormControlLabel value="Symbol" control={<Radio />} label="Symbol" /> */}
+                                <FormControlLabel value="Symbol" control={<Radio />} label="Symbol" />
                                 <FormControlLabel value="Bot" control={<Radio />} label="Bot" />
                                 {roleNameMainVIP && <FormControlLabel value="BotVip" control={<Radio />} label="Bot VIP" style={{ color: "var(--blueLightColor)" }} />}
                             </RadioGroup>
@@ -901,7 +880,7 @@ function EditMulTreeItem({
 
     useEffect(() => {
         if (radioValue === "Copy") {
-            // handleGetSymbolList()
+            handleGetSymbolList()
             handleVerifyLogin()
             handleGetAllBot()
         }

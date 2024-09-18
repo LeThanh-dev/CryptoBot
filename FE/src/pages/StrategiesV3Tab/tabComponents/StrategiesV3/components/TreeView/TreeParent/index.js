@@ -11,10 +11,12 @@ import clsx from "clsx";
 import styles from "./TreeParent.module.scss"
 import TreeChild from '../TreeChild';
 import { memo, useState } from 'react';
-import { addToBookmark, removeToBookmark, updateStrategiesMultiple } from '../../../../../services/dataCoinByBitService';
 import { useDispatch, useSelector } from 'react-redux';
-import { addMessageToast } from '../../../../../store/slices/Toast';
-import { handleCheckAllCheckBox } from '../../../../../functions';
+import { handleCheckAllCheckBox } from '../../../../../../../functions';
+import { updateStrategiesMultiple, addToBookmark, removeToBookmark } from '../../../../../../../services/dataCoinByBitService';
+import { addMessageToast } from '../../../../../../../store/slices/Toast';
+
+
 function TreeParent({
     treeData,
     dataCheckTreeSelectedSymbolRef,
@@ -359,7 +361,7 @@ function TreeParent({
                                     <TableCell className={styles.tableHeadCell}>Extended</TableCell>
                                     <TableCell className={styles.tableHeadCell}>Ignore</TableCell>
                                     <TableCell className={styles.tableHeadCell}>EntryTrailing</TableCell>
-                                    <TableCell className={styles.tableHeadCell}>Max OC</TableCell>
+                                    <TableCell className={styles.tableHeadCell}>Max OC (%)</TableCell>
                                     <TableCell className={styles.tableHeadCell}>Volume24h</TableCell>
                                 </TableRow>
                             </TableHead>

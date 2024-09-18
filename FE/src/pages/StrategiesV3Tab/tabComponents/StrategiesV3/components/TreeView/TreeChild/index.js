@@ -1,15 +1,16 @@
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import styles from "./TreeChild.module.scss"
-import { deleteStrategiesItem, updateStrategiesByID } from '../../../../../services/dataCoinByBitService';
-import { addMessageToast } from '../../../../../store/slices/Toast';
 import { useDispatch } from 'react-redux';
-import DialogCustom from '../../../../../components/DialogCustom';
 import { memo, useCallback, useState } from 'react';
 import { TableRow, TableCell, Switch } from '@mui/material';
 import UpdateStrategy from '../../UpdateStrategy';
 import clsx from 'clsx';
-import { formatNumberString, handleCheckAllCheckBox } from '../../../../../functions';
+import DialogCustom from '../../../../../../../components/DialogCustom';
+import { handleCheckAllCheckBox, formatNumberString } from '../../../../../../../functions';
+import { deleteStrategiesItem, updateStrategiesByID } from '../../../../../../../services/dataCoinByBitService';
+import { addMessageToast } from '../../../../../../../store/slices/Toast';
+
 
 function TreeChild({
     treeData,

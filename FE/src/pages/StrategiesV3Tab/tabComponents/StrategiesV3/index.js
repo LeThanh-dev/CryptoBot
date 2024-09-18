@@ -1,30 +1,28 @@
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import RestoreIcon from '@mui/icons-material/Restore';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { MenuItem, Select, TextField, Avatar, Checkbox, CircularProgress, FormLabel, FormControl, Tooltip, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
-import AddBreadcrumbs from '../../components/BreadcrumbsCutom';
+import { MenuItem, Select, TextField, Avatar, CircularProgress, FormLabel, FormControl, Tooltip, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from "./Strategies.module.scss"
-import { getAllStrategies, getTotalFutureByBot, syncSymbol } from '../../services/dataCoinByBitService';
 import { useDispatch, useSelector } from 'react-redux';
-import { addMessageToast } from '../../store/slices/Toast';
 import CreateStrategy from './components/CreateStrategy';
 import EditMulTreeItem from './components/EditMulTreeItem';
 import FilterDialog from './components/FilterDialog';
 import TreeParent from './components/TreeView/TreeParent';
-import { handleCheckAllCheckBox } from '../../functions';
 import clsx from 'clsx';
-import { getAllBotActiveByUserID } from '../../services/botService';
-import { setTotalFuture } from '../../store/slices/TotalFuture';
-import useDebounce from '../../hooks/useDebounce';
 import { useNavigate } from 'react-router-dom';
-import DialogCustom from '../../components/DialogCustom';
+import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
+import DialogCustom from '../../../../components/DialogCustom';
+import { handleCheckAllCheckBox } from '../../../../functions';
+import useDebounce from '../../../../hooks/useDebounce';
+import { getAllBotActiveByUserID } from '../../../../services/botService';
+import { getTotalFutureByBot, getAllStrategies, syncSymbol } from '../../../../services/dataCoinByBitService';
+import { addMessageToast } from '../../../../store/slices/Toast';
+import { setTotalFuture } from '../../../../store/slices/TotalFuture';
 
 function Strategies() {
 

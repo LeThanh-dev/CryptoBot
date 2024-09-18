@@ -309,7 +309,7 @@ function EditMulTreeItem({
                         let valueHandle = handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value)
                         if (typeof (valueHandle) === "number") {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
-                            if (valueHandle < 0.1) {
+                            if (valueHandle < 0.01) {
                                 checkValueMin = false
                             }
                         }
@@ -342,7 +342,7 @@ function EditMulTreeItem({
             else {
                 dispatch(addMessageToast({
                     status: 400,
-                    message: "All Field Value >= 0.1",
+                    message: "All Field Value >= 0.01",
                 }))
             }
         }

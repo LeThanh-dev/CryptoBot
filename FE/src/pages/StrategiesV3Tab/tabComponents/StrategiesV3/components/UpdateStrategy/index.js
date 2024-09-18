@@ -1,12 +1,12 @@
 import { useForm } from "react-hook-form";
-import DialogCustom from "../../../../components/DialogCustom";
 import { FormControl, FormLabel, Switch, TextField } from "@mui/material";
 import clsx from "clsx";
 import styles from "../CreateStrategy/CreateStrategy.module.scss"
-import { updateStrategiesByID } from "../../../../services/dataCoinByBitService";
 import { useDispatch } from "react-redux";
-import { addMessageToast } from "../../../../store/slices/Toast";
 import { useRef } from "react";
+import DialogCustom from "../../../../../../components/DialogCustom";
+import { updateStrategiesByID } from "../../../../../../services/dataCoinByBitService";
+import { addMessageToast } from "../../../../../../store/slices/Toast";
 
 function UpdateStrategy({
     onClose,
@@ -238,7 +238,7 @@ function UpdateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Max OC"
+                            label="Max OC (%)"
                             variant="outlined"
                             defaultValue={treeNodeValue.StopLose}
                             size="medium"

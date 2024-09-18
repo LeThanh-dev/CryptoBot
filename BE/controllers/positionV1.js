@@ -202,10 +202,11 @@ const PositionController = {
                                 const Symbol = viTheListItem.coin
                                 const positionID = `${botID}-${Symbol}`
                                 const positionData = dataPositionObject[positionID]
+                                const usdValue = viTheListItem.usdValue
 
                                 const minOrderQtyObjectSymbol = minOrderQtyObject[`${Symbol}USDT`]
                                 let data = {
-                                    usdValue: viTheListItem.usdValue,
+                                    usdValue,
                                     Quantity,
                                     borrowAmount: viTheListItem.borrowAmount,
                                     Symbol,
@@ -216,7 +217,7 @@ const PositionController = {
                                 }
 
                                 if (Symbol !== "USDT") {
-                                    const priceFix = new Big(Quantity)
+                                    const priceFix = new Big(Math.abs(Quantity))
                                     const tickSizeFIx = new Big(minOrderQtyObjectSymbol.basePrecision)
 
                                     data.MaxQty = new Big(Math.floor(priceFix.div(tickSizeFIx).toNumber())).times(tickSizeFIx).toString();
@@ -244,7 +245,6 @@ const PositionController = {
                                         ...data,
                                         _id: resNew?.id || positionID,
                                     }
-
                                 }
 
                                 return data

@@ -7,10 +7,10 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { getAllCoin, syncCoin } from "../../../../../../services/coinService"
-import { createConfigScanner } from '../../../../../../services/scannerService';
 import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../services/spotService';
 import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../services/marginService';
+import { createConfigScannerV3 } from '../../../../../../services/scannerV3Service';
+import { getAllSymbol, syncSymbol } from '../../../../../../services/dataCoinByBitService';
 
 function CreateStrategy({
     botListInput,
@@ -18,16 +18,7 @@ function CreateStrategy({
 }) {
 
     const formControlMinValue = 0.01
-    const marketList = [
-        {
-            name: "Margin",
-            value: "Margin",
-        },
-        {
-            name: "Spot",
-            value: "Spot",
-        },
-    ]
+
     const positionSideListDefault = [
         {
             name: "Both",
@@ -40,6 +31,25 @@ function CreateStrategy({
         {
             name: "Short",
             value: "Short",
+        },
+    ]
+
+    const candlestickList = [
+        {
+            name: "1m",
+            value: "1m",
+        },
+        {
+            name: "3m",
+            value: "3m",
+        },
+        {
+            name: "5m",
+            value: "5m",
+        },
+        {
+            name: "15m",
+            value: "15m",
         },
     ]
 
@@ -60,63 +70,27 @@ function CreateStrategy({
 
     const dataChangeRef = useRef(false)
     const spotDataListRef = useRef([])
-    const marginDataListRef = useRef([])
-    const positionSideListRef = useRef(positionSideListDefault)
+
 
     const [symbolGroupDataList, setSymbolGroupDataList] = useState({
-        label: "Margin",
         list: []
     });
 
     const dispatch = useDispatch()
 
-    const handleGetSpotDataList = async (syncNew = true) => {
+    const handleGetStrategyDataList = async (syncNew = true) => {
         try {
-            let newData = spotDataListRef.current
-            if (syncNew) {
-                const res = await getAllSymbolSpot()
-                const { data: symbolListDataRes } = res.data
-                newData = symbolListDataRes.map(item => ({ name: item, value: item }))
-            }
+            const res = await getAllSymbol()
+            const { data: symbolListDataRes } = res.data
+            const newData = symbolListDataRes.map(item => ({ name: item, value: item }))
 
             setBlackListSelected([])
             setOnlyPairsSelected([])
             setSymbolGroupDataList(
                 {
-                    label: "Spot",
                     list: newData
                 }
             )
-            spotDataListRef.current = newData
-
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: err.message,
-            }))
-        }
-    }
-
-    const handleGetMarginDataList = async (syncNew = true) => {
-        try {
-
-            let newData = marginDataListRef.current
-            if (syncNew) {
-                const res = await getAllSymbolMargin()
-                const { data: symbolListDataRes } = res.data
-                newData = symbolListDataRes.map(item => ({ name: item, value: item }))
-            }
-
-            setBlackListSelected([])
-            setOnlyPairsSelected([])
-            setSymbolGroupDataList(
-                {
-                    label: "Margin",
-                    list: newData
-                }
-            )
-            marginDataListRef.current = newData
         }
         catch (err) {
             dispatch(addMessageToast({
@@ -130,15 +104,8 @@ function CreateStrategy({
         if (!loadingSyncCoin) {
             try {
                 setLoadingSyncCoin(true)
-                let res
-                if (symbolGroupDataList.label === "Spot") {
-                    res = await syncSymbolSpot()
-                    handleGetSpotDataList()
-                }
-                else {
-                    res = await syncSymbolMargin()
-                    handleGetMarginDataList()
-                }
+                const res = await syncSymbol()
+                handleGetStrategyDataList()
                 const { status, message, data: resData } = res.data
 
                 dispatch(addMessageToast({
@@ -160,10 +127,10 @@ function CreateStrategy({
 
     const handleSubmitCreate = async data => {
 
-        if (onlyPairsSelected.length > 0 && botList.length > 0)  {
+        if (onlyPairsSelected.length > 0 && botList.length > 0) {
 
             try {
-                const res = await createConfigScanner({
+                const res = await createConfigScannerV3({
                     data: data,
                     botListId: botList.map(item => item.value),
                     Blacklist: blackListSelected.map(item => item.value),
@@ -194,7 +161,7 @@ function CreateStrategy({
     const handleSubmitCreateWithAddMore = async data => {
 
         try {
-            const res = await createConfigScanner({
+            const res = await createConfigScannerV3({
                 data: data,
                 botListId: botList.map(item => item.value),
                 Blacklist: blackListSelected.map(item => item.value),
@@ -228,8 +195,7 @@ function CreateStrategy({
     }
 
     useEffect(() => {
-        // handleGetSpotDataList()
-        handleGetMarginDataList()
+        handleGetStrategyDataList()
     }, []);
 
 
@@ -319,61 +285,48 @@ function CreateStrategy({
                     {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label field is required.</p>}
                 </FormControl>
 
-                <div className={styles.formMainData}>
+                <div className={styles.formMainData} style={{ marginTop: "12px" }}>
                     <FormControl
                         className={clsx(styles.formControl, styles.formMainDataItem)}
                     >
                         <TextField
                             select
-                            label="Market"
+                            label="Frame"
                             variant="outlined"
-                            defaultValue={marketList[0].value}
                             size="medium"
-                            {...register("Market", { required: true, })}
-                            onChange={e => {
-                                if (e.target.value === "Spot") {
-                                    handleGetSpotDataList(!spotDataListRef.current.length)
-                                    positionSideListRef.current = [
-                                        {
-                                            name: "Long",
-                                            value: "Long",
-                                        }
-                                    ]
-                                }
-                                else {
-                                    handleGetMarginDataList(!marginDataListRef.current.length)
-                                    positionSideListRef.current = positionSideListDefault
-                                }
-                            }}
+                            defaultValue={"15m"}
+                            {...register("Frame", { required: true, })}
                         >
                             {
+                                candlestickList.map(item => (
+                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                ))
+                            }
+                        </TextField>
+                        {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">The Frame field is required.</p>}
+                    </FormControl>
 
-                                marketList.map(item => (
-                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
-                                ))
-                            }
-                        </TextField>
-                    </FormControl>
                     <FormControl
                         className={clsx(styles.formControl, styles.formMainDataItem)}
                     >
                         <TextField
                             select
-                            label="Position side"
+                            label="Candle"
                             variant="outlined"
-                            // defaultValue={positionSideListRef.current[0].value}
                             size="medium"
-                            {...register("PositionSide", { required: true, })}
+                            {...register("Candle", { required: true, })}
                         >
                             {
-                                positionSideListRef.current.map(item => (
+                                candlestickList.map(item => (
                                     <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
                                 ))
                             }
                         </TextField>
-                        {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position field is required.</p>}
+                        {errors.Candle?.type === 'required' && <p className="formControlErrorLabel">The Candle field is required.</p>}
                     </FormControl>
+
                 </div>
+
                 <FormControl className={styles.formControl}>
                     <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center" }}>
                         <FormLabel className={styles.label}>Only pairs</FormLabel>
@@ -507,26 +460,8 @@ function CreateStrategy({
 
                 </FormControl>
 
-                <div className={styles.formMainData}>
-                    {/* <FormControl
-                        className={clsx(styles.formControl, styles.formMainDataItem)}
-                    >
-                        <TextField
-                            select
-                            label="Market"
-                            variant="outlined"
-                            defaultValue={marketList[0].value}
-                            size="medium"
-                            {...register("Market", { required: true, })}
-                        >
-                            {
+                <div className={styles.formMainData} style={{ marginTop: "6px" }}>
 
-                                marketList.map(item => (
-                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
-                                ))
-                            }
-                        </TextField>
-                    </FormControl>
                     <FormControl
                         className={clsx(styles.formControl, styles.formMainDataItem)}
                     >
@@ -534,18 +469,17 @@ function CreateStrategy({
                             select
                             label="Position side"
                             variant="outlined"
-                            defaultValue={positionSideList[0].value}
                             size="medium"
                             {...register("PositionSide", { required: true, })}
                         >
                             {
-
-                                positionSideList.map(item => (
+                                positionSideListDefault.map(item => (
                                     <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
                                 ))
                             }
                         </TextField>
-                    </FormControl> */}
+                        {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position field is required.</p>}
+                    </FormControl>
 
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
@@ -568,20 +502,25 @@ function CreateStrategy({
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
-                            type='number'
-                            label="Elastic"
+                            label="Longest_% || Elastic || Ratio_%"
                             variant="outlined"
-                            defaultValue={80}
+                            defaultValue={"20-80-30"}
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
                                     %
                                 </InputAdornment>
                             }}
-                            {...register("Elastic", { required: true })}
+                            {...register("Elastic", {
+                                required: true,
+                                pattern: {
+                                    value: /^\d+-\d+-\d+$/,
+                                    message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
+                                }
+                            })}
                         />
                         {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic field is required.</p>}
-                        {/* {errors.Elastic?.type === "min" && <p className="formControlErrorLabel">The Elastic must bigger 0.01.</p>} */}
+                        {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>}
 
                     </FormControl>
 
@@ -595,7 +534,7 @@ function CreateStrategy({
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
-                                    USDT
+                                    %
                                 </InputAdornment>
                             }}
                             {...register("Amount", { required: true, min: formControlMinValue })}
@@ -605,24 +544,6 @@ function CreateStrategy({
 
                     </FormControl>
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            type='number'
-                            label="Numbs"
-                            variant="outlined"
-                            defaultValue={5}
-                            size="medium"
-                            // InputProps={{
-                            //     endAdornment: <InputAdornment position="end">
-                            //         %
-                            //     </InputAdornment>
-                            // }}
-                            {...register("Numbs", { required: true, min: 1 })}
-                        />
-                        {errors.Numbs?.type === 'required' && <p className="formControlErrorLabel">The Numbs field is required.</p>}
-                        {errors.Numbs?.type === "min" && <p className="formControlErrorLabel">The Numbs must bigger 1.</p>}
-
-                    </FormControl>
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
@@ -641,31 +562,11 @@ function CreateStrategy({
 
                     </FormControl>
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            type='number'
-                            label="Limit"
-                            variant="outlined"
-                            defaultValue={200}
-                            size="medium"
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">
-                                    USDT
-                                </InputAdornment>
-                            }}
-                            {...register("Limit", { required: true, min: formControlMinValue })}
-                        />
-                        {errors.Limit?.type === 'required' && <p className="formControlErrorLabel">The Limit field is required.</p>}
-                        {errors.Limit?.type === "min" && <p className="formControlErrorLabel">The Limit must bigger 0.01.</p>}
-
-                    </FormControl>
-
-
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Turnover"
+                            label="Turnover Avg"
                             variant="outlined"
                             defaultValue={4000}
                             size="medium"
@@ -676,10 +577,11 @@ function CreateStrategy({
                             }}
                             {...register("Turnover", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover field is required.</p>}
-                        {errors.Turnover?.type === "min" && <p className="formControlErrorLabel">The Turnover must bigger 0.01.</p>}
+                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover Avg field is required.</p>}
+                        {errors.Turnover?.type === "min" && <p className="formControlErrorLabel">The Turnover Avg must bigger 0.01.</p>}
 
                     </FormControl>
+
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
 
                         <FormLabel className={styles.label}>IsActive</FormLabel>

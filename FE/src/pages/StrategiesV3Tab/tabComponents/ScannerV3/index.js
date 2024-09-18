@@ -19,13 +19,13 @@ import { getAllBotActiveByUserID } from '../../../../services/botService';
 import { getTotalFutureByBot } from '../../../../services/dataCoinByBitService';
 import { addMessageToast } from '../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../store/slices/TotalFuture';
-import { deleteStrategiesMultipleScanner, getAllConfigScanner, handleBookmarkScanner, updateStrategiesMultipleScanner } from '../../../../services/scannerService';
 import DataGridCustom from '../../../../components/DataGridCustom';
 import DialogCustom from '../../../../components/DialogCustom';
 import UpdateStrategy from './components/UpdateStrategy';
+import { deleteStrategiesMultipleScannerV3, getAllConfigScannerV3, handleBookmarkScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../services/scannerV3Service';
 
 
-function Scanner() {
+function ScannerV3() {
 
     const userData = useSelector(state => state.userDataSlice.userData)
 
@@ -56,18 +56,26 @@ function Scanner() {
         },
     ]
 
-    const marketList = [
+    const candlestickList = [
         {
             name: "All",
-            value: "All"
+            value: "All",
         },
         {
-            name: "Margin",
-            value: "Margin",
+            name: "1m",
+            value: "1m",
         },
         {
-            name: "Spot",
-            value: "Spot",
+            name: "3m",
+            value: "3m",
+        },
+        {
+            name: "5m",
+            value: "5m",
+        },
+        {
+            name: "15m",
+            value: "15m",
         },
     ]
 
@@ -117,7 +125,7 @@ function Scanner() {
                     onClick={async e => {
                         try {
                             const newIsBookmark =  e.target.checked
-                            const res = await handleBookmarkScanner({
+                            const res = await handleBookmarkScannerV3({
                                 configID, IsBookmark: newIsBookmark
                             }
                             )
@@ -173,7 +181,7 @@ function Scanner() {
                             onChange={async e => {
                                 try {
                                     const newIsActive = e.target.checked
-                                    const res = await updateStrategiesMultipleScanner([
+                                    const res = await updateStrategiesMultipleScannerV3([
                                         {
                                             id: configID,
                                             UpdatedFields: {
@@ -247,19 +255,13 @@ function Scanner() {
         {
             field: 'Label',
             headerName: 'Label',
-            minWidth: 130,
+            minWidth: 100,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
             field: 'BotName',
             headerName: 'Bot',
             minWidth:  130,
-            flex: window.innerWidth <= 740 ? undefined : 1,
-        },
-        {
-            field: 'Market',
-            headerName: 'Market',
-            minWidth: window.innerWidth <= 740 ? 130 : 100,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -276,15 +278,27 @@ function Scanner() {
             }
         },
         {
+            field: 'Frame',
+            headerName: 'Frame',
+            minWidth: window.innerWidth <= 740 ? 130 : 100,
+            flex: window.innerWidth <= 740 ? undefined : 1,
+        },
+        {
+            field: 'Candle',
+            headerName: 'Candle',
+            minWidth: window.innerWidth <= 740 ? 130 : 100,
+            flex: window.innerWidth <= 740 ? undefined : 1,
+        },
+        {
             field: 'OrderChange',
             headerName: 'OC (%)',
-            minWidth: window.innerWidth <= 740 ? 120 : 100,
+            minWidth: window.innerWidth <= 740 ? 130 : 100,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
             field: 'Elastic',
             headerName: 'Elastic (%)',
-            minWidth: window.innerWidth <= 740 ? 150 : 100,
+            minWidth: window.innerWidth <= 740 ? 170 : 100,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -297,27 +311,12 @@ function Scanner() {
             }
         },
         {
-            field: 'Numbs',
-            headerName: 'Numbs',
-            minWidth: window.innerWidth <= 740 ? 130 : 100,
-            flex: window.innerWidth <= 740 ? undefined : 1,
-        },
-        {
             field: 'Amount',
             headerName: 'Amount ($)',
             minWidth: window.innerWidth <= 740 ? 160 : 130,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 return <p >{formatNumberString(params.row['Amount'])}</p>
-            }
-        },
-        {
-            field: 'Limit',
-            headerName: 'Limit ($)',
-            minWidth: window.innerWidth <= 740 ? 150 : 130,
-            flex: window.innerWidth <= 740 ? undefined : 1,
-            renderCell: params => {
-                return <p >{formatNumberString(params.row['Limit'])}</p>
             }
         },
         {
@@ -414,14 +413,15 @@ function Scanner() {
     const botTypeSelectedRef = useRef("All")
     const botSelectedRef = useRef("All")
     const positionSideSelectedRef = useRef("All")
-    const marketSelectedRef = useRef("All")
+    const candleSelectedRef = useRef("All")
+    const frameSelectedRef = useRef("All")
     const bookmarkCheckRef = useRef(false)
 
     const dispatch = useDispatch()
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotActiveByUserID(userData._id, "ByBitV1")
+        getAllBotActiveByUserID(userData._id, "ByBitV3")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (
@@ -484,7 +484,7 @@ function Scanner() {
         try {
             window.scrollTo(0, 0)
 
-            const res = await getAllConfigScanner(botListInput?.map(item => item?.value))
+            const res = await getAllConfigScannerV3(botListInput?.map(item => item?.value))
             const { data: resData } = res.data
 
             const newData = resData.map(item => {
@@ -542,11 +542,12 @@ function Scanner() {
             const checkBotType = botTypeSelectedRef.current === "All" || botTypeSelectedRef.current === item.botID.botType;
             const checkBot = botSelectedRef.current === "All" || botSelectedRef.current === item.botID._id;
             const checkPosition = positionSideSelectedRef.current === "All" || positionSideSelectedRef.current === item.PositionSide;
-            const checkMarket = marketSelectedRef.current === "All" || marketSelectedRef.current === item.Market;
+            const checkFrame = frameSelectedRef.current === "All" || frameSelectedRef.current === item.Frame;
+            const checkCandle = candleSelectedRef.current === "All" || candleSelectedRef.current === item.Candle;
             const checkSearch = searchDebounce === "" || item.Label.toUpperCase().includes(searchDebounce.toUpperCase().trim());
             const checkBookmark = bookmarkCheckRef.current ? item.IsBookmark : true
 
-            return checkBotType && checkBot && checkPosition && checkMarket && checkSearch && checkBookmark;
+            return checkBotType && checkBot && checkPosition && checkCandle && checkFrame && checkSearch && checkBookmark;
         });
 
 
@@ -561,7 +562,7 @@ function Scanner() {
         botTypeSelectedRef.current = "All"
         botSelectedRef.current = "All"
         positionSideSelectedRef.current = "All"
-        marketSelectedRef.current = "All"
+        candleSelectedRef.current = "All"
         bookmarkCheckRef.current = false
         setSearchKey("")
     }
@@ -669,25 +670,6 @@ function Scanner() {
                     </FormControl>
 
                     <FormControl className={styles.strategiesHeaderItem}>
-                        <FormLabel className={styles.formLabel}>Market</FormLabel>
-                        <Select
-                            value={marketSelectedRef.current}
-                            size="small"
-                            onChange={e => {
-                                const value = e.target.value;
-                                marketSelectedRef.current = value
-                                handleFilterAll()
-                            }}
-                        >
-                            {
-                                marketList.map(item => (
-                                    <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
-                                ))
-                            }
-                        </Select>
-                    </FormControl>
-
-                    <FormControl className={styles.strategiesHeaderItem}>
                         <FormLabel className={styles.formLabel}>Position</FormLabel>
                         <Select
                             value={positionSideSelectedRef.current}
@@ -705,6 +687,45 @@ function Scanner() {
                             }
                         </Select>
                     </FormControl>
+
+                    <FormControl className={styles.strategiesHeaderItem}>
+                        <FormLabel className={styles.formLabel}>Frame</FormLabel>
+                        <Select
+                            value={frameSelectedRef.current}
+                            size="small"
+                            onChange={e => {
+                                const value = e.target.value;
+                                frameSelectedRef.current = value
+                                handleFilterAll()
+                            }}
+                        >
+                            {
+                                candlestickList.map(item => (
+                                    <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
+                                ))
+                            }
+                        </Select>
+                    </FormControl>
+                    <FormControl className={styles.strategiesHeaderItem}>
+                        <FormLabel className={styles.formLabel}>Candle</FormLabel>
+                        <Select
+                            value={candleSelectedRef.current}
+                            size="small"
+                            onChange={e => {
+                                const value = e.target.value;
+                                candleSelectedRef.current = value
+                                handleFilterAll()
+                            }}
+                        >
+                            {
+                                candlestickList.map(item => (
+                                    <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
+                                ))
+                            }
+                        </Select>
+                    </FormControl>
+
+                   
 
                 </div>
 
@@ -925,7 +946,7 @@ function Scanner() {
                         onSubmit={async () => {
                             const configID = openConfirmDeleteConfig.configID
                             try {
-                                const res = await deleteStrategiesMultipleScanner([{id:configID,Market:openConfirmDeleteConfig.Market}])
+                                const res = await deleteStrategiesMultipleScannerV3([{id:configID,Market:openConfirmDeleteConfig.Market}])
                                 const { data: resData, status, message } = res.data
 
                                 dispatch(addMessageToast({
@@ -956,4 +977,4 @@ function Scanner() {
     );
 }
 
-export default Scanner;
+export default ScannerV3;

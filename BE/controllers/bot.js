@@ -500,18 +500,13 @@ const BotController = {
                 syncTimeBeforePrivateRequests: true,
             });
 
-            await client.getWalletBalance({
-                accountType: "UNIFIED"
-            })
+            await client.getCollateralInfo()
                 .then((rescoin) => {
-                    const coinList = rescoin.result.list.flatMap(item => item.coin);
-
-                    coinList.forEach(coinData => {
-                        console.log(coinData);
-                        
-                        if (coinData.collateralSwitch) {
+                    rescoin.result.list.forEach(coinData => {
+                        const coin = coinData.currency
+                        if (coinData.marginCollateral && !["USDT","USDC"].includes(coin)) {
                             allSymbolMargin.push({
-                                coin: coinData.coin,
+                                coin,
                                 collateralSwitch: 'ON',
                             })
                         }
@@ -524,10 +519,10 @@ const BotController = {
                 const resSet = await client.batchSetCollateralCoin({ request: allSymbolMargin })
 
                 if (resSet.retCode == 0) {
-                    res.customResponse(200, "Set Margin Bot Successful", "");
+                    res.customResponse(200, "Set Margin Bot Successful", allSymbolMargin);
                 }
                 else {
-                    res.customResponse(400, resSet.retMsg, "");
+                    res.customResponse(400, resSet.retMsg, allSymbolMargin);
                 }
 
             } catch (error) {

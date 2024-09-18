@@ -1,13 +1,13 @@
 import { useForm } from "react-hook-form";
-import DialogCustom from "../../../../components/DialogCustom";
 import styles from "./CreateStrategy.module.scss"
 import { Autocomplete, Button, Checkbox, FormControl, FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, Select, Switch, TextField } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { createStrategies, getAllSymbol } from "../../../../services/dataCoinByBitService";
 import { useDispatch } from "react-redux";
-import { addMessageToast } from "../../../../store/slices/Toast";
-import { setStrategiesHistoryData } from "../../../../store/slices/StrategiesHistory";
+import DialogCustom from "../../../../../../components/DialogCustom";
+import { getAllSymbol, createStrategies } from "../../../../../../services/dataCoinByBitService";
+import { setStrategiesHistoryData } from "../../../../../../store/slices/StrategiesHistory";
+import { addMessageToast } from "../../../../../../store/slices/Toast";
 
 function CreateStrategy({
     botListInput,
@@ -476,7 +476,7 @@ function CreateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Max OC"
+                            label="Max OC (%)"
                             variant="outlined"
                             defaultValue={100}
                             size="medium"

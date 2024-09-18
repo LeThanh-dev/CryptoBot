@@ -42,6 +42,7 @@
         position: fixed;
         bottom: 32px;
         right: 32px;
+        z-index: 6;
 
         &Item {
             cursor: pointer;
@@ -80,10 +81,7 @@
         text-align: center;
     }
 }
-.icon {
-    color: #1976d2;
-    cursor: pointer;
-}
+
 @keyframes scrollDown {
     0% {
         transform: translateY(0);
@@ -101,6 +99,7 @@
 
 @media (max-width: 740px) {
     .strategies {
+        margin-top: 16px;
         &Header {
             margin: 0 -8px;
             margin-bottom: 16px;
@@ -108,11 +107,7 @@
             justify-content: space-between;
 
             &Item {
-                flex: 1;
-                &:nth-last-child(1)
-                {
-                    margin-right: 0 !important;
-                }
+                flex: 1
             }
         }
 

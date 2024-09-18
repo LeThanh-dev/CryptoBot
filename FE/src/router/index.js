@@ -1,5 +1,5 @@
 import Bot from "../pages/Bot"
-import Strategies from "../pages/Strategies"
+import Strategies from "../pages/StrategiesV3Tab/tabComponents/StrategiesV3"
 import Coin from "../pages/Coin"
 import Order from "../pages/Order"
 import MainLayout from "../layout/Mainlayout"
@@ -20,6 +20,8 @@ import PositionV3 from "../pages/Position/Position-V3"
 import PositionV1 from "../pages/Position/Position-V1"
 import StrategiesHistory from "../pages/StrategiesHistory"
 import InstrumentsInfo from "../pages/InstrumentsInfo"
+import StrategiesV3Tab from "../pages/StrategiesV3Tab"
+import ScannerV3 from "../pages/StrategiesV3Tab/tabComponents/ScannerV3"
 
 
 const routeList = [
@@ -53,7 +55,19 @@ const routeList = [
             },
             {
                 path: "Strategies",
-                element: <Strategies />,
+                element:
+                    <>
+                        <StrategiesV3Tab />
+                        <Strategies />
+                    </>,
+            },
+            {
+                path: "ScannerV3",
+                element:
+                    <>
+                        <StrategiesV3Tab />
+                        <ScannerV3 />
+                    </>,
             },
             {
                 path: "StrategiesHistory",
