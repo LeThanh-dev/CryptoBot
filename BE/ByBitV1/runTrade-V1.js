@@ -2858,8 +2858,6 @@ socketRealtime.on('update', async (newData = []) => {
 socketRealtime.on('scanner-add', async (newData = []) => {
     console.log("[...] Add Scanner From Realtime", newData.length);
 
-    updatingAllMain = true
-
     newData.forEach(scannerData => {
 
         const scannerID = scannerData._id
@@ -2872,13 +2870,11 @@ socketRealtime.on('scanner-add', async (newData = []) => {
                     newScannerData.ExpirePre = new Date()
                     newScannerData.OrderConfig = false
                     allScannerDataObject[symbol][scannerID] = newScannerData
-
                 }
             })
         }
     })
 
-    updatingAllMain = false
 });
 
 socketRealtime.on('scanner-update', async (newData = []) => {

@@ -6,13 +6,21 @@ const strategiesSchema = new mongoose.Schema({
     ref: 'Bot',
   },
   Label: String,
+
   Frame: String,
+  OCLength: Number,
+  
   Candle: String,
   OnlyPairs	: [String],
   Blacklist	: [String],
 
   OrderChange: Number,
+  Adjust: Number,
+  
+  Longest: String,
   Elastic: String,
+  Ratio: String,
+
   Amount: Number,
   PositionSide: String,
   Expire: Number,

@@ -6,8 +6,9 @@ const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
-const { getAllStrategiesActive, getAllSymbolBE, getFutureBE } = require('./controllers/dataCoinByBit');
+const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE } = require('./controllers/dataCoinByBit');
 const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbol } = require('./controllers/position');
+const { getAllStrategiesActiveScannerV3BE } = require('./controllers/scannerV3');
 
 const wsConfig = {
     market: 'v5',
@@ -16,6 +17,8 @@ const wsConfig = {
 }
 
 const wsSymbol = new WebsocketClient(wsConfig);
+
+const limitNen = 50;
 const LIST_ORDER = ["order", "position"]
 const MAX_ORDER_LIMIT = 10
 
@@ -24,6 +27,7 @@ const clientDigit = new RestClientV5({
 });
 
 // ----------------------------------------------------------------------------------
+var allScannerDataObject = {}
 let missTPDataBySymbol = {}
 
 var blockContinueOrderOCByStrategiesID = {}
@@ -60,6 +64,8 @@ var botListTelegram = {}
 // -------  ------------
 
 var listOCByCandleBot = {}
+var listConfigIDOrderOCByScanner = {}
+
 // ----------------------------------------------------------------------------------
 
 const roundPrice = (
@@ -128,6 +134,7 @@ const cancelAllListOrderOC = async (listOCByCandleBotInput) => {
     await handleCancelAllOrderOC(Object.values(allData || {}))
 
 }
+
 const Digit = async () => {// proScale
     let PScale = []
     await clientDigit.getInstrumentsInfo({
@@ -457,8 +464,8 @@ const handleMoveOrderTP = async ({
 
     }
 }
-
 const handleCancelOrderOC = async ({
+    strategy,
     strategyID,
     symbol,
     candle = "",
@@ -484,23 +491,19 @@ const handleCancelOrderOC = async ({
                 if (response.retCode == 0) {
                     console.log(`[V] Cancel order ( ${botName} - ${side} -  ${symbol} - ${candle} ) successful `);
                     cancelAll({ strategyID, botID })
+                    delete listOCByCandleBot[candle][botID].listOC[strategyID]
+                    delete listConfigIDOrderOCByScanner[strategy.scannerID]?.listConFigID?.[strategyID]
 
-                    // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
                 }
                 else {
                     console.log(changeColorConsole.yellowBright(`[!] Cancel order ( ${botName} - ${side} -  ${symbol} - ${candle} ) failed `, response.retMsg))
-                    allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
                 }
             })
             .catch((error) => {
                 console.log(`[!] Cancel order ( ${botName} - ${side} -  ${symbol} - ${candle} ) error `, error)
-                allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = ""
-
             });
 
 }
-
-
 const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
 
     if (items.length > 0) {
@@ -560,6 +563,8 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 strategyID: strategyIDTemp,
                             })
                             delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
+                            delete listConfigIDOrderOCByScanner[data.scannerID]?.listConFigID?.[strategyIDTemp]
+
                         }
                         else {
                             console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) failed `, codeData.msg));
@@ -1488,7 +1493,513 @@ const checkConditionBot = (botData) => {
     return botData.botID?.Status === "Running" && botData.botID?.ApiKey && botData.botID?.SecretKey
 }
 
+const handleSocketAddNew = async (newData = []) => {
+    console.log("[...] Add New Strategies From Realtime", newData.length);
+
+    const newBotApiList = {}
+
+    await Promise.allSettled(newData.map(async newStrategiesData => {
+
+        if (checkConditionBot(newStrategiesData)) {
+
+            delete newStrategiesData.TimeTemp
+
+            const symbol = newStrategiesData.symbol
+
+            const strategyID = newStrategiesData.value
+
+            const botID = newStrategiesData.botID._id
+            const botName = newStrategiesData.botID.botName
+            const Candlestick = newStrategiesData.Candlestick.split("")[0]
+
+            const ApiKey = newStrategiesData.botID.ApiKey
+            const SecretKey = newStrategiesData.botID.SecretKey
+
+
+            if (!botApiList[botID]) {
+                botApiList[botID] = {
+                    id: botID,
+                    botName,
+                    ApiKey,
+                    SecretKey,
+                    telegramID: newStrategiesData.botID.telegramID,
+                    telegramToken: newStrategiesData.botID.telegramToken,
+                    IsActive: true
+                }
+                newBotApiList[botID] = {
+                    id: botID,
+                    botName,
+                    ApiKey,
+                    SecretKey,
+                    telegramID: newStrategiesData.botID.telegramID,
+                    telegramToken: newStrategiesData.botID.telegramToken,
+                    IsActive: true
+                }
+
+
+            }
+
+
+
+            !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
+            !allStrategiesByCandleAndSymbol[symbol][Candlestick] && (allStrategiesByCandleAndSymbol[symbol][Candlestick] = {});
+            allStrategiesByCandleAndSymbol[symbol][Candlestick][strategyID] = newStrategiesData;
+
+            cancelAll({ strategyID, botID })
+
+        }
+
+    }))
+
+    await handleSocketBotApiList(newBotApiList)
+}
+const handleSocketUpdate = async (newData = []) => {
+    console.log("[...] Update Strategies From Realtime", newData.length);
+
+    const newBotApiList = {}
+
+    const listOrderOC = {}
+    const listOrderTP = []
+
+    await Promise.allSettled(newData.map((strategiesData) => {
+
+        if (checkConditionBot(strategiesData)) {
+
+            const ApiKey = strategiesData.botID.ApiKey
+            const SecretKey = strategiesData.botID.SecretKey
+            const botID = strategiesData.botID._id
+            const botName = strategiesData.botID.botName
+
+            const symbol = strategiesData.symbol
+            const strategyID = strategiesData.value
+            const IsActive = strategiesData.IsActive
+            const Candlestick = strategiesData.Candlestick.split("")[0]
+
+            blockContinueOrderOCByStrategiesID[strategyID] = false
+
+            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+
+            const botSymbolMissID = `${botID}-${symbol}`
+
+            !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
+            !allStrategiesByCandleAndSymbol[symbol][Candlestick] && (allStrategiesByCandleAndSymbol[symbol][Candlestick] = {});
+            allStrategiesByCandleAndSymbol[symbol][Candlestick][strategyID] = strategiesData
+            allStrategiesByCandleAndSymbol[symbol][Candlestick][strategyID].OrderChangeOld = strategiesData.OrderChange
+
+
+            !allStrategiesByBotIDAndOrderID[botID] && (allStrategiesByBotIDAndOrderID[botID] = {});
+            !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
+
+
+            if (IsActive) {
+                if (!botApiList[botID]) {
+                    botApiList[botID] = {
+                        id: botID,
+                        botName,
+                        ApiKey,
+                        SecretKey,
+                        telegramID: strategiesData.botID.telegramID,
+                        telegramToken: strategiesData.botID.telegramToken,
+                        IsActive: true
+                    }
+
+                    newBotApiList[botID] = {
+                        id: botID,
+                        botName,
+                        ApiKey,
+                        SecretKey,
+                        telegramID: strategiesData.botID.telegramID,
+                        telegramToken: strategiesData.botID.telegramToken,
+                        IsActive: true
+                    }
+
+
+                }
+            }
+
+
+            const cancelDataObject = {
+                ApiKey,
+                SecretKey,
+                strategyID,
+                symbol: symbol,
+                candle: strategiesData.Candlestick,
+                side,
+                botName,
+                botID
+            }
+
+            !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
+            !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
+            !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
+                listOC: {},
+                ApiKey,
+                SecretKey,
+            });
+
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
+                strategyID,
+                candle: strategiesData.Candlestick,
+                symbol,
+                side,
+                botName,
+                botID,
+                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
+            });
+
+            if (!strategiesData.IsActive) {
+
+                allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
+                    ...cancelDataObject,
+                    orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
+                    gongLai: true
+                })
+
+
+            }
+
+        }
+
+    }))
+
+
+    const cancelAllOC = cancelAllListOrderOC(listOrderOC)
+
+    const cancelAllTP = handleCancelAllOrderTP({
+        items: listOrderTP
+    })
+
+    await Promise.allSettled([cancelAllOC, cancelAllTP])
+
+    await handleSocketBotApiList(newBotApiList)
+}
+// ------------------------------ SCANNER ----------------------------------------------------
+
+
+var allHistoryByCandleSymbol = {}
+
+const roundNumber = (number) => {
+    return Math.round(number * 10000) / 100
+}
+
+
+async function ListSymbol() {
+    let data = []
+    await clientDigit.getTickers({ category: 'linear' })
+        .then((rescoin) => {
+            rescoin.result.list.forEach((e) => {
+                if (e.symbol.indexOf("USDT") > 0) {
+                    data.push(e.symbol)
+                }
+            })
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    return data
+}
+
+async function TimeS0(interval) {
+    let TimeStart = []
+    await clientDigit.getKline({
+        category: 'linear',
+        symbol: "BTCUSDT",
+        interval,
+    })
+        .then((response) => {
+            TimeStart.push(response.result.list[0][0])
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    return TimeStart
+}
+
+const sortListReverse = (arr) => {
+    arr.sort((a, b) => Math.abs(b.OC) - Math.abs(a.OC));
+    return arr
+}
+
+const history = async ({
+    symbol,
+    OpenTime,
+    limitNen = 50,
+    interval
+}) => {
+
+    const TimeStart = OpenTime - limitNen * 60000 * interval
+    const TimeSop = OpenTime - 60000 * interval
+
+    await clientDigit.getKline({
+        category: 'linear',
+        symbol,
+        interval,
+        start: TimeStart,
+        end: TimeSop,
+        limit: limitNen,
+    })
+        .then((response) => {
+            const listOC = [];
+            const listOCLong = [];
+
+            let index = 0
+            for (let i = limitNen - 1; i >= 0; i--) {
+                const dataCoin = response.result.list[i]
+
+                const Open = dataCoin[1]
+                const Highest = dataCoin[2]
+                const Lowest = dataCoin[3]
+                const Close = dataCoin[4]
+
+                const startTime = new Date(+dataCoin[0]).toLocaleString("vi-vn")
+
+                let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+
+                let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+
+
+                let TPCheck = TP
+                let TPCheckLong = TPLong
+
+                if (index > 0) {
+                    if (Lowest < Open) {
+                        const dataPre = listOC[index - 1].dataCoin
+                        const OpenPre = +dataPre[1]
+                        const HighestPre = +dataPre[2]
+                        TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
+                    }
+                    if (Highest > Open) {
+                        const dataPre = listOCLong[index - 1].dataCoin
+                        const OpenPre = +dataPre[1]
+                        const LowestPre = +dataPre[3]
+                        TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
+                    }
+                }
+
+                if (TP == "Infinity") {
+                    TP = 0
+                    TPCheck = 0
+                }
+                if (TPLong == "Infinity") {
+                    TPLong = 0
+                    TPCheckLong = 0
+                }
+                listOC.push({
+                    OC: roundNumber((Highest - Open) / Open),
+                    TP: roundNumber(TP),
+                    TPCheck: roundNumber(TPCheck),
+                    startTime,
+                    dataCoin
+                })
+                listOCLong.push({
+                    OC: roundNumber((Lowest - Open) / Open),
+                    TP: roundNumber(TPLong),
+                    TPCheckLong: roundNumber(TPCheckLong),
+                    startTime,
+                    dataCoin
+                })
+                index++
+            }
+
+            allHistoryByCandleSymbol[interval][symbol] = {
+                listOC: (listOC),
+                listOCLong: (listOCLong),
+            }
+
+
+        })
+        .catch((error) => {
+            console.error(error, symbol);
+        });
+}
+
+async function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+async function getHistoryAllCoin({ coinList, limitNen, interval }) {
+    console.log(`[...] Processing history candle ( ${interval}m )`);
+
+    await Promise.allSettled(coinList.map(async (coin) => {
+        const OpenTime = await TimeS0(interval);
+        await history({
+            OpenTime,
+            limitNen,
+            symbol: coin.value,
+            interval
+        });
+    }))
+    console.log(`[V] Process history candle ( ${interval}m ) finished`);
+
+}
+
+const handleStatistic = async (coinList = allSymbol) => {
+
+
+    await Promise.allSettled([1, 3, 5, 15].map(async interval => {
+        await getHistoryAllCoin({
+            coinList,
+            limitNen,
+            interval
+        })
+    }))
+
+}
+
+// ---
+const handleScannerDataList = async ({
+    candle,
+    symbol,
+    OCLength,
+    OCLongLength
+}) => {
+
+    // console.log(changeColorConsole.cyanBright(`[...] Handle history scanner ( ${symbol} - ${candle}m )`));
+
+
+    const allScannerData = allScannerDataObject[candle]?.[symbol]
+
+    allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
+
+        const Frame = scannerData.Frame.split("m")[0]
+        const scannerID = scannerData._id
+        const botData = scannerData.botID
+        const Candlestick = scannerData.Candle
+        const botName = botData.botName
+        const botID = botData._id
+
+        const PositionSide = scannerData.PositionSide
+
+        const allHistory = allHistoryByCandleSymbol[Frame][symbol]
+
+        const OCLengthCheck = PositionSide === "Long" ? OCLongLength : OCLength
+        const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
+
+        if (Math.abs(OCLengthCheck) >= scannerData.OCLength) {
+
+            const Longest = Math.round(allHistoryList.length * scannerData.Longest / 100)
+            const Ratio = Math.round(Longest * scannerData.Elastic / 100)
+            const Elastic = scannerData.Elastic
+            const Adjust = scannerData.Adjust
+
+            const allHistoryListSort = sortListReverse(allHistoryList)
+            // remove top max 
+            allHistoryListSort.shift()
+
+            const allHistoryListSlice = allHistoryListSort.slice(0, Longest).filter(allHistory => allHistory.TP >= Elastic)
+
+            const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
+
+            // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
+
+            if (allHistoryListSlice.length >= Ratio) {
+
+                // console.log("TRUE", allHistoryListSlice, symbol);
+
+                const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
+                    return pre + Math.abs(cur.OC)
+                }, 0)
+
+                const OCAvg = (OCTotal / allHistoryListLongestTop3.length).toFixed(3)
+
+                // console.log("OCAvg", OCAvg, symbol, candle);
+
+                if (OCAvg >= scannerData.OrderChange) {
+
+                    const newOC = (OCAvg * Adjust).toFixed(3)
+                    const OCAdjust = `${OCAvg} x ${Adjust}`
+
+                    if (scannerData.OrderConfig) {
+                        const res = await updateStrategiesMultipleStrategyBE({
+                            scannerID,
+                            newOC,
+                            Candlestick,
+                            botName,
+                            symbol,
+                            PositionSide,
+                            OCAdjust
+                        })
+
+                        console.log(res.message);
+
+                        const newData = res.data
+
+                        if (newData.length > 0) {
+                            handleSocketUpdate(newData)
+                        }
+                    } else {
+                        const res = await createStrategiesMultipleStrategyBE({
+                            userID: scannerData.userID,
+                            botID,
+                            botName,
+                            symbol,
+                            scannerID,
+                            OCAdjust,
+                            dataInput: {
+                                PositionSide,
+                                Amount: scannerData.Amount,
+                                OrderChange: newOC,
+                                Candlestick,
+                                TakeProfit: 50,
+                                ReduceTakeProfit: 45,
+                                ExtendedOCPercent: 80,
+                                Ignore: 85,
+                                EntryTrailing: 20,
+                                StopLose: 100,
+                                IsActive: true,
+                            },
+                        })
+
+                        console.log(res.message);
+
+                        const newData = res.data
+
+                        if (newData.length > 0) {
+                            scannerData.OrderConfig = true
+                            listConfigIDOrderOCByScanner[scannerID] = {
+                                listConFigID: {},
+                            }
+
+                            newData.forEach(data => {
+                                listConfigIDOrderOCByScanner[scannerID].listConFigID[data.value] = data
+                            })
+
+                            await handleSocketAddNew(newData)
+                        }
+                    }
+
+                }
+            }
+        }
+
+        // Check expire 
+        if (+scannerData.Expire && new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
+
+            // Delete all config
+            
+            const listConfig = listConfigIDOrderOCByScanner[scannerID]?.listConFigID || {}
+            const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
+
+            if (listConfig && Object.values(listConfig).length > 0 && !(listOCObject && Object.values(listOCObject).length > 0)) {
+                scannerData.OrderConfig = false
+                deleteStrategiesMultipleStrategyBE({
+                    botName,
+                    Candlestick,
+                    PositionSide,
+                    scannerID,
+                    symbol
+                })
+            }
+            allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
+        }
+
+    }))
+}
+
+
 // ----------------------------------------------------------------------------------
+
 
 
 const Main = async () => {
@@ -1496,11 +2007,15 @@ const Main = async () => {
 
     let allStrategiesActiveBE = getAllStrategiesActive()
     let allSymbolBE = getAllSymbolBE()
+    const getAllConfigScanner = getAllStrategiesActiveScannerV3BE()
 
-    const result = await Promise.all([allStrategiesActiveBE, allSymbolBE])
 
-    const allStrategiesActiveObject = result[0]
-    allSymbol = result[1]
+    const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner])
+
+    const allStrategiesActiveObject = result[0].value || []
+    allSymbol = result[1].value || []
+    const getAllConfigScannerRes = result[2].value || []
+
 
     allStrategiesActiveObject.forEach(strategyItem => {
         if (checkConditionBot(strategyItem)) {
@@ -1573,14 +2088,40 @@ const Main = async () => {
                 minPrice: [],
                 prePrice: 0,
             }
+
+            getAllConfigScannerRes.forEach(scannerData => {
+                const scannerID = scannerData._id
+                const setBlacklist = new Set(scannerData.Blacklist)
+                const setOnlyPairs = new Set(scannerData.OnlyPairs)
+                if (scannerData.Frame == `${candle}m` && checkConditionBot(scannerData) && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
+
+                    allScannerDataObject[candle] = allScannerDataObject[candle] || {}
+                    allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
+
+                    const newScannerData = scannerData.toObject()
+
+                    newScannerData.ExpirePre = new Date()
+                    newScannerData.OrderConfig = false
+
+                    allScannerDataObject[candle][symbol][scannerID] = newScannerData
+                }
+            })
+
+            allHistoryByCandleSymbol[candle] = {}
         })
     })
+
+    await handleStatistic([{ value: "NEIROETHUSDT" }, { value: "MEWUSDT" }, { value: "REEFUSDT" }])
+    // await handleStatistic()
 
     await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(listKline)
 
+
 }
+
+
 
 try {
     Main()
@@ -1595,6 +2136,7 @@ try {
 
     wsSymbol.on('update', async (dataCoin) => {
 
+
         const [_, candle, symbol] = dataCoin.topic.split(".");
 
         const symbolCandleID = `${symbol}-${candle}`
@@ -1603,8 +2145,6 @@ try {
         const coinOpen = +dataMain.open;
         const coinCurrent = +dataMain.close;
         const dataConfirm = dataMain.confirm
-
-
 
         if (symbol === "BTCUSDT" && candle == 1) {
             const BTCPricePercent = Math.abs(coinCurrent - coinOpen) / coinOpen * 100
@@ -2125,11 +2665,16 @@ try {
         // Coin CLosed
         if (dataConfirm == true) {
 
+            const Open = coinOpen
+            const Highest = +dataMain.high
+            const Lowest = +dataMain.low
+            const Close = coinCurrent
+
             listPricePreOne[symbolCandleID] = {
-                open: coinOpen,
-                close: coinCurrent,
-                high: +dataMain.high,
-                low: +dataMain.low,
+                open: Open,
+                close: Close,
+                high: Highest,
+                low: Lowest,
             }
 
             if (!cancelingAll[candle].canceling) {
@@ -2153,6 +2698,43 @@ try {
                 coinColor: [],
                 curTime: 0,
                 preTime: 0,
+            }
+
+            // HANDLE SCANNER
+
+            if (allHistoryByCandleSymbol[candle]?.[symbol]) {
+
+                const startTime = new Date(+dataMain.start).toLocaleString("vi-vn")
+
+                const OC = roundNumber((Highest - Open) / Open)
+                let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+
+                const OCLong = roundNumber((Lowest - Open) / Open)
+                let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+
+                if (TP == "Infinity") {
+                    TP = 0
+                }
+                if (TPLong == "Infinity") {
+                    TPLong = 0
+                }
+
+                allHistoryByCandleSymbol[candle][symbol].listOC.pop()
+                allHistoryByCandleSymbol[candle][symbol].listOC.unshift({
+                    OC,
+                    TP: roundNumber(TP),
+                    startTime,
+                })
+
+                allHistoryByCandleSymbol[candle][symbol].listOCLong.pop()
+                allHistoryByCandleSymbol[candle][symbol].listOCLong.unshift({
+                    OC: OCLong,
+                    TP: roundNumber(TPLong),
+                    startTime,
+                })
+
+                handleScannerDataList({ candle, symbol, OCLength: OC, OCLongLength: OCLong })
+
             }
 
         }
@@ -2186,12 +2768,12 @@ try {
             wsSymbol.connectAll()
         }
     });
+
     setTimeout(() => {
         cron.schedule('*/15 * * * *', () => {
             getMoneyFuture(botApiList)
         });
     }, 1000)
-
 
 }
 
@@ -2210,186 +2792,13 @@ socketRealtime.on('connect', () => {
 });
 
 socketRealtime.on('add', async (newData = []) => {
-    console.log("[...] Add New Strategies From Realtime", newData.length);
-
-    const newBotApiList = {}
-
-    await Promise.allSettled(newData.map(async newStrategiesData => {
-
-        if (checkConditionBot(newStrategiesData)) {
-
-            delete newStrategiesData.TimeTemp
-
-            const symbol = newStrategiesData.symbol
-
-            const strategyID = newStrategiesData.value
-
-            const botID = newStrategiesData.botID._id
-            const botName = newStrategiesData.botID.botName
-            const Candlestick = newStrategiesData.Candlestick.split("")[0]
-
-            const ApiKey = newStrategiesData.botID.ApiKey
-            const SecretKey = newStrategiesData.botID.SecretKey
-
-
-            if (!botApiList[botID]) {
-                botApiList[botID] = {
-                    id: botID,
-                    botName,
-                    ApiKey,
-                    SecretKey,
-                    telegramID: newStrategiesData.botID.telegramID,
-                    telegramToken: newStrategiesData.botID.telegramToken,
-                    IsActive: true
-                }
-                newBotApiList[botID] = {
-                    id: botID,
-                    botName,
-                    ApiKey,
-                    SecretKey,
-                    telegramID: newStrategiesData.botID.telegramID,
-                    telegramToken: newStrategiesData.botID.telegramToken,
-                    IsActive: true
-                }
-
-
-            }
-
-
-
-            !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
-            !allStrategiesByCandleAndSymbol[symbol][Candlestick] && (allStrategiesByCandleAndSymbol[symbol][Candlestick] = {});
-            allStrategiesByCandleAndSymbol[symbol][Candlestick][strategyID] = newStrategiesData;
-
-            cancelAll({ strategyID, botID })
-
-        }
-
-    }))
-
-    await handleSocketBotApiList(newBotApiList)
+    await handleSocketAddNew(newData)
 
 });
 
 socketRealtime.on('update', async (newData = []) => {
-    console.log("[...] Update Strategies From Realtime", newData.length);
 
-    const newBotApiList = {}
-
-    const listOrderOC = {}
-    const listOrderTP = []
-
-    await Promise.allSettled(newData.map((strategiesData) => {
-
-        if (checkConditionBot(strategiesData)) {
-
-            const ApiKey = strategiesData.botID.ApiKey
-            const SecretKey = strategiesData.botID.SecretKey
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
-
-            const symbol = strategiesData.symbol
-            const strategyID = strategiesData.value
-            const IsActive = strategiesData.IsActive
-            const Candlestick = strategiesData.Candlestick.split("")[0]
-
-            blockContinueOrderOCByStrategiesID[strategyID] = false
-
-            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
-
-            const botSymbolMissID = `${botID}-${symbol}`
-
-            !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
-            !allStrategiesByCandleAndSymbol[symbol][Candlestick] && (allStrategiesByCandleAndSymbol[symbol][Candlestick] = {});
-            allStrategiesByCandleAndSymbol[symbol][Candlestick][strategyID] = strategiesData
-            allStrategiesByCandleAndSymbol[symbol][Candlestick][strategyID].OrderChangeOld = strategiesData.OrderChange
-
-
-            !allStrategiesByBotIDAndOrderID[botID] && (allStrategiesByBotIDAndOrderID[botID] = {});
-            !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
-
-
-            if (IsActive) {
-                if (!botApiList[botID]) {
-                    botApiList[botID] = {
-                        id: botID,
-                        botName,
-                        ApiKey,
-                        SecretKey,
-                        telegramID: strategiesData.botID.telegramID,
-                        telegramToken: strategiesData.botID.telegramToken,
-                        IsActive: true
-                    }
-
-                    newBotApiList[botID] = {
-                        id: botID,
-                        botName,
-                        ApiKey,
-                        SecretKey,
-                        telegramID: strategiesData.botID.telegramID,
-                        telegramToken: strategiesData.botID.telegramToken,
-                        IsActive: true
-                    }
-
-
-                }
-            }
-
-
-            const cancelDataObject = {
-                ApiKey,
-                SecretKey,
-                strategyID,
-                symbol: symbol,
-                candle: strategiesData.Candlestick,
-                side,
-                botName,
-                botID
-            }
-
-            !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
-            !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
-            !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
-                listOC: {},
-                ApiKey,
-                SecretKey,
-            });
-
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
-                strategyID,
-                candle: strategiesData.Candlestick,
-                symbol,
-                side,
-                botName,
-                botID,
-                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
-            });
-
-            if (!strategiesData.IsActive) {
-
-                allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
-                    ...cancelDataObject,
-                    orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
-                    gongLai: true
-                })
-
-
-            }
-
-        }
-
-    }))
-
-
-    const cancelAllOC = cancelAllListOrderOC(listOrderOC)
-
-    const cancelAllTP = handleCancelAllOrderTP({
-        items: listOrderTP
-    })
-
-    await Promise.allSettled([cancelAllOC, cancelAllTP])
-
-    await handleSocketBotApiList(newBotApiList)
+    await handleSocketUpdate(newData)
 
 
 });
@@ -2894,11 +3303,10 @@ socketRealtime.on('sync-symbol', async (newData) => {
 
     })
 
+    await handleStatistic(newData)
     await handleSocketListKline(newListKline)
 
 });
-
-
 
 socketRealtime.on('closeAllPosition', (botListData = []) => {
 
@@ -2915,9 +3323,24 @@ socketRealtime.on('closeAllPosition', (botListData = []) => {
             listObject && Object.values(listObject).map(strategyData => {
                 const symbolItem = strategyData.symbol
                 const strategyID = strategyData.strategyID
+                const side = strategyData.side
+                const candle = strategyData.candle
+                const botName = strategyData.botName
+
                 if (symbolList.includes(symbolItem)) {
-                    console.log(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                    console.log(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${side} - ${candle} - Bot: ${botName}`);
                     blockContinueOrderOCByStrategiesID[strategyID] = true
+                    handleCancelOrderOC({
+                        strategy: strategyData,
+                        ApiKey: botData.ApiKey,
+                        botID,
+                        botName,
+                        SecretKey: botData.SecretKey,
+                        side,
+                        strategyID,
+                        symbol,
+                        candle
+                    })
                 }
             })
         })
@@ -2942,3 +3365,87 @@ socketRealtime.on('disconnect', () => {
     console.log('[V] Disconnected from socket realtime');
 });
 
+// ------- Scanner --------------------------------
+
+socketRealtime.on('scanner-add', async (newData = []) => {
+    console.log("[...] Add Scanner From Realtime", newData.length);
+
+    newData.forEach(scannerData => {
+
+        const scannerID = scannerData._id
+        const candle = scannerData.Candle
+
+        const setBlacklist = new Set(scannerData.Blacklist)
+        if (checkConditionBot(scannerData)) {
+            scannerData.OnlyPairs.forEach(symbol => {
+                if (!setBlacklist.has(symbol)) {
+
+                    allScannerDataObject[candle] = allScannerDataObject[candle] || {}
+                    allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
+
+                    const newScannerData = { ...scannerData }
+                    newScannerData.ExpirePre = new Date()
+                    newScannerData.OrderConfig = false
+
+                    allScannerDataObject[candle][symbol][scannerID] = newScannerData
+
+                }
+            })
+        }
+    })
+
+});
+
+socketRealtime.on('scanner-update', async (newData = []) => {
+    console.log("[...] Update Scanner From Realtime", newData.length);
+
+    newData.forEach(scannerData => {
+        const scannerID = scannerData._id
+        const IsActive = scannerData.IsActive
+        const candle = scannerData.Candle
+
+        const setOnlyPairs = new Set(scannerData.OnlyPairs)
+        const setBlacklist = new Set(scannerData.Blacklist)
+        if (checkConditionBot(scannerData)) {
+            allSymbol.forEach(symbolData => {
+
+                const symbol = symbolData.value
+                if (IsActive && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
+
+                    allScannerDataObject[candle] = allScannerDataObject[candle] || {}
+                    allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
+
+                    const newScannerData = { ...scannerData }
+
+                    newScannerData.OrderChange = +newScannerData.OrderChange
+                    newScannerData.Elastic = +newScannerData.Elastic
+                    newScannerData.Turnover = +newScannerData.Turnover
+                    newScannerData.Numbs = +newScannerData.Numbs
+                    newScannerData.Amount = +newScannerData.Amount
+                    newScannerData.Limit = +newScannerData.Limit
+                    newScannerData.Expire = +newScannerData.Expire
+                    newScannerData.ExpirePre = new Date()
+                    newScannerData.OrderConfig = allScannerDataObject[candle][symbol][scannerID]
+                    allScannerDataObject[candle][symbol][scannerID] = newScannerData
+                }
+                else {
+                    delete allScannerDataObject[candle]?.[symbol]?.[scannerID]
+                }
+            })
+        }
+    })
+});
+
+socketRealtime.on('scanner-delete', async (newData = []) => {
+    console.log("[...] Delete Scanner From Realtime", newData.length);
+
+
+    newData.forEach(scannerData => {
+        const scannerID = scannerData._id
+        const candle = scannerData.Candle
+        allSymbol.forEach(symbol => {
+            delete allScannerDataObject[candle]?.[symbol.value]?.[scannerID]
+        })
+    })
+
+});

@@ -1,7 +1,6 @@
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 const ScannerV3Model = require('../models/scannerV3.model')
-const SpotModel = require('../models/spot.model');
-const MarginModel = require('../models/margin.model');
+const StrategiesModel = require('../models/strategies.model');
 const BotModel = require('../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
@@ -263,7 +262,6 @@ const dataCoinByBitController = {
 
             const bulkOperations = []
             const spotDeleteID = []
-            const marginDeleteID = []
 
             dataList.forEach((data) => {
                 bulkOperations.push({
@@ -279,28 +277,21 @@ const dataCoinByBitController = {
                 })
                 if (!data.UpdatedFields.IsActive) {
                     const id = new mongoose.Types.ObjectId(data.id)
-                    data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
+                    spotDeleteID.push(id)
                 }
             });
 
             const bulkOperationsRes = ScannerV3Model.bulkWrite(bulkOperations);
 
-            const bulkOperationsDelSpotRes = SpotModel.updateMany(
+            const bulkOperationsDelSpotRes = StrategiesModel.updateMany(
                 { "children.scannerID": { $in: spotDeleteID } },
                 { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
             );
 
 
-            const bulkOperationsDelMarginRes = MarginModel.updateMany(
-                { "children.scannerID": { $in: marginDeleteID } },
-                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
-            );
-
-
-
             // handle get all config by scannerID
 
-            const resultFilterSpot = await SpotModel.aggregate([
+            const resultFilterSpot = await StrategiesModel.aggregate([
                 {
                     $match: {
                         "children.scannerID": { $in: spotDeleteID }
@@ -324,56 +315,18 @@ const dataCoinByBitController = {
                 }
             ]);
 
-            const resultGetSpot = await SpotModel.populate(resultFilterSpot, {
+            const resultGetSpot = await StrategiesModel.populate(resultFilterSpot, {
                 path: 'children.botID',
             }) || []
 
 
-            const handleResultSpot = resultGetSpot.flatMap((data) => data.children.map(child => {
+            const handleResultDelete = resultGetSpot.flatMap((data) => data.children.map(child => {
                 child.symbol = data.value
-                child.value = `SPOT-${data._id}-${child._id}`
+                child.value = `${data._id}-${child._id}`
                 return child
             })) || []
 
-
-            const resultFilterMargin = await MarginModel.aggregate([
-                {
-                    $match: {
-                        "children.scannerID": { $in: marginDeleteID }
-                    }
-                },
-                {
-                    $project: {
-                        label: 1,
-                        value: 1,
-                        volume24h: 1,
-                        children: {
-                            $filter: {
-                                input: "$children",
-                                as: "child",
-                                cond: {
-                                    $in: ["$$child.scannerID", marginDeleteID]
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
-
-            const resultGetMargin = await MarginModel.populate(resultFilterMargin, {
-                path: 'children.botID',
-            }) || []
-
-            const handleResultMargin = resultGetMargin.flatMap((data) => data.children.map(child => {
-                child.symbol = data.value
-                child.value = `MARGIN-${data._id}-${child._id}`
-                return child
-            })) || []
-
-
-            const handleResultDelete = handleResultMargin.concat(handleResultSpot)
-
-            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
+            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes])
 
             const handleResult = await ScannerV3Model.find({
                 TimeTemp
@@ -458,13 +411,10 @@ const dataCoinByBitController = {
             const strategiesIDList = req.body
 
             const listScanner = []
-            const spotDeleteID = []
-            const marginDeleteID = []
 
             strategiesIDList.forEach(item => {
                 const id = new mongoose.Types.ObjectId(item.id)
                 listScanner.push(id)
-                item.Market == "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
             })
 
 
@@ -474,10 +424,10 @@ const dataCoinByBitController = {
                 }
             )
 
-            const resultFilterSpot = await SpotModel.aggregate([
+            const resultFilterSpot = await StrategiesModel.aggregate([
                 {
                     $match: {
-                        "children.scannerID": { $in: spotDeleteID }
+                        "children.scannerID": { $in: listScanner }
                     }
                 },
                 {
@@ -490,7 +440,7 @@ const dataCoinByBitController = {
                                 input: "$children",
                                 as: "child",
                                 cond: {
-                                    $in: ["$$child.scannerID", spotDeleteID]
+                                    $in: ["$$child.scannerID", listScanner]
                                 }
                             }
                         }
@@ -498,54 +448,16 @@ const dataCoinByBitController = {
                 }
             ]);
 
-            const resultGetSpot = await SpotModel.populate(resultFilterSpot, {
+            const resultGetSpot = await StrategiesModel.populate(resultFilterSpot, {
                 path: 'children.botID',
             }) || []
 
 
-            const handleResultSpot = resultGetSpot.flatMap((data) => data.children.map(child => {
+            const handleResultDelete = resultGetSpot.flatMap((data) => data.children.map(child => {
                 child.symbol = data.value
-                child.value = `SPOT-${data._id}-${child._id}`
+                child.value = `${data._id}-${child._id}`
                 return child
             })) || []
-
-
-            const resultFilterMargin = await MarginModel.aggregate([
-                {
-                    $match: {
-                        "children.scannerID": { $in: marginDeleteID }
-                    }
-                },
-                {
-                    $project: {
-                        label: 1,
-                        value: 1,
-                        volume24h: 1,
-                        children: {
-                            $filter: {
-                                input: "$children",
-                                as: "child",
-                                cond: {
-                                    $in: ["$$child.scannerID", marginDeleteID]
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
-
-            const resultGetMargin = await MarginModel.populate(resultFilterMargin, {
-                path: 'children.botID',
-            }) || []
-
-            const handleResultMargin = resultGetMargin.flatMap((data) => data.children.map(child => {
-                child.symbol = data.value
-                child.value = `MARGIN-${data._id}-${child._id}`
-                return child
-            })) || []
-
-
-            const handleResultDelete = handleResultMargin.concat(handleResultSpot)
 
 
             const bulkOperationsRes = ScannerV3Model.deleteMany(
@@ -554,20 +466,14 @@ const dataCoinByBitController = {
                 }
             )
 
-            const bulkOperationsDelSpotRes = SpotModel.updateMany(
-                { "children.scannerID": { $in: spotDeleteID } },
-                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
-            );
-
-
-            const bulkOperationsDelMarginRes = MarginModel.updateMany(
-                { "children.scannerID": { $in: marginDeleteID } },
-                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
+            const bulkOperationsDelSpotRes = StrategiesModel.updateMany(
+                { "children.scannerID": { $in: listScanner } },
+                { $pull: { children: { scannerID: { $in: listScanner } } } }
             );
 
             // if (result.acknowledged && result.deletedCount !== 0) {
 
-            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
+            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes])
 
             handleResultDelete.length > 0 && dataCoinByBitController.sendDataRealtime({
                 type: "delete",
@@ -954,7 +860,7 @@ const dataCoinByBitController = {
         }
     },
 
-    getAllStrategiesActiveScannerBE: async () => {
+    getAllStrategiesActiveScannerV3BE: async () => {
         try {
             require("../models/bot.model")
 
