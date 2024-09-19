@@ -1981,10 +1981,6 @@ const handleScannerDataList = async ({
             const listConfig = listConfigIDOrderOCByScanner[scannerID]?.listConFigID || {}
             const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
 
-            console.log("listConfig",listConfig);
-            console.log("listOCObject",listOCObject);
-            
-
             if (listConfig && Object.values(listConfig).length > 0 && !(listOCObject && Object.values(listOCObject).length > 0)) {
                 scannerData.OrderConfig = false
                 deleteStrategiesMultipleStrategyBE({
@@ -1994,6 +1990,7 @@ const handleScannerDataList = async ({
                     scannerID,
                     symbol
                 })
+                delete listConfigIDOrderOCByScanner[scannerID]
             }
             allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
         }
