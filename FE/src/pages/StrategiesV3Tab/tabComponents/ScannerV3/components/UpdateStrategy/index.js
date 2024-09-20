@@ -112,6 +112,12 @@ function UpdateStrategy({
                 reset()
                 dataChangeRef.current = true
 
+                newData.Condition = `${newData.Longest} - ${newData.Elastic} - ${newData.Ratio}`
+                newData.OrderChangeAdjust = `${newData.OrderChange} x ${newData.Adjust}`
+                newData.FrameOCLength = `${newData.Frame} - ${newData.OCLength}%`
+
+
+
                 setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
                     if (item._id === configID) {
                         return newData
@@ -323,19 +329,39 @@ function UpdateStrategy({
                 </FormControl>
 
                 <div className={styles.formMainData}>
-                    <FormControl
-                        className={clsx(styles.formControl, styles.formMainDataItem)}
-                    >
-                        <TextField
-                            label="Frame"
-                            variant="outlined"
-                            size="medium"
-                            value={dataInput.Frame}
-                            disabled
-                        >
-                          
-                        </TextField>
-                    </FormControl>
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Frame"
+                                variant="outlined"
+                                size="medium"
+                                value={dataInput.Frame}
+                                disabled
+                            >
+                            </TextField>
+                        </FormControl>
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Pre-OC"
+                                type='number'
+                                variant="outlined"
+                                defaultValue={dataInput.OCLength}
+                                size="medium"
+                                {...register("OCLength", )}
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>,
+                                }}
+                            >
+
+
+                            </TextField>
+                        </FormControl>
+
+                    </div>
 
                     <FormControl
                         className={clsx(styles.formControl, styles.formMainDataItem)}
@@ -365,48 +391,112 @@ function UpdateStrategy({
                     </FormControl>
 
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            type='number'
-                            label="OC"
-                            variant="outlined"
-                            defaultValue={dataInput.OrderChange}
-                            size="medium"
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">
-                                    %
-                                </InputAdornment>,
-                            }}
-                            {...register("OrderChange", { required: true, min: formControlMinValue })}
-                        />
-                        {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
-                        {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
-                    </FormControl>
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            label="Elastic"
-                            placeholder='qty-percent_qty-TP'
-                            variant="outlined"
-                            defaultValue={dataInput.Elastic}
-                            size="medium"
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">
-                                    %
-                                </InputAdornment>
-                            }}
-                            {...register("Elastic", {
-                                required: true,
-                                pattern: {
-                                    value: /^\d+-\d+-\d+$/,
-                                    message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
-                                }
-                            })}
-                        />
-                        {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic field is required.</p>}
-                        {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>}
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                type='number'
+                                label="OC Min"
+                                variant="outlined"
+                                defaultValue={dataInput.OrderChange}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>,
+                                }}
+                                {...register("OrderChange", { required: true, min: formControlMinValue })}
+                            />
+                            {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
+                            {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
+                        </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                type='number'
+                                label="Adjust"
+                                variant="outlined"
+                                defaultValue={dataInput.Adjust}
+                                size="medium"
+                                InputProps={{
+                                    startAdornment: <InputAdornment position="start">
+                                        x
+                                    </InputAdornment>,
+                                }}
+                                {...register("Adjust", { required: true, min: formControlMinValue })}
+                            />
+                            {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust field is required.</p>}
+                            {errors.Adjust?.type === "min" && <p className="formControlErrorLabel">The Adjust must bigger 0.01.</p>}
+                        </FormControl>
+                    </div>
 
-                    </FormControl>
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Longest"
+                                variant="outlined"
+                                defaultValue={dataInput.Longest}
+                                size="medium"
+                                sx={{
+                                    '&.Mui-focused': {
+                                        borderColor: 'red',
+                                    },
+                                }}
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Longest", {
+                                    required: true,
+                                    // pattern: {
+                                    //     value: /^\d+-\d+-\d+$/,
+                                    //     message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
+                                    // }
+                                })}
+                            />
+                            {errors.Longest?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {/* {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>} */}
+
+                        </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Elastic"
+                                variant="outlined"
+                                defaultValue={dataInput.Elastic}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Elastic", {
+                                    required: true,
+                                })}
+                            />
+                            {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+
+                        </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Ratio"
+                                variant="outlined"
+                                defaultValue={dataInput.Ratio}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Ratio", {
+                                    required: true,
+                                })}
+                            />
+                            {errors.Ratio?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+
+                        </FormControl>
+
+                    </div>
 
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
@@ -418,7 +508,7 @@ function UpdateStrategy({
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
-                                    USDT
+                                    %
                                 </InputAdornment>
                             }}
                             {...register("Amount", { required: true, min: formControlMinValue })}
@@ -433,11 +523,11 @@ function UpdateStrategy({
                             type='number'
                             label="Expire"
                             variant="outlined"
-                            defaultValue={dataInput.Expire}
+                            defaultValue={dataInput.Expire || 0}
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
-                                    min
+                                    h
                                 </InputAdornment>
                             }}
                             {...register("Expire")}
@@ -451,17 +541,15 @@ function UpdateStrategy({
                             type='number'
                             label="Turnover"
                             variant="outlined"
-                            defaultValue={dataInput.Turnover}
+                            defaultValue={dataInput.Turnover || 0}
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover", { required: true, min: formControlMinValue })}
+                            {...register("Turnover", )}
                         />
-                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover field is required.</p>}
-                        {errors.Turnover?.type === "min" && <p className="formControlErrorLabel">The Turnover must bigger 0.01.</p>}
 
                     </FormControl>
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>

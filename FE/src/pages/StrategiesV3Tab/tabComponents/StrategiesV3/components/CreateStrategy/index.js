@@ -466,6 +466,7 @@ function CreateStrategy({
                             type='number'
                             label="Entry Trailing"
                             variant="outlined"
+                            defaultValue={40}
                             size="medium"
                             {...register("EntryTrailing", { min: formControlMinValue })}
                         />

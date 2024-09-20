@@ -278,9 +278,9 @@ function ScannerV3() {
             }
         },
         {
-            field: 'Frame',
+            field: 'FrameOCLength',
             headerName: 'Frame',
-            minWidth: window.innerWidth <= 740 ? 130 : 100,
+            minWidth: window.innerWidth <= 740 ? 130 : 110,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -290,15 +290,15 @@ function ScannerV3() {
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
-            field: 'OrderChange',
+            field: 'OrderChangeAdjust',
             headerName: 'OC (%)',
             minWidth: window.innerWidth <= 740 ? 130 : 100,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
-            field: 'Elastic',
-            headerName: 'Elastic (%)',
-            minWidth: window.innerWidth <= 740 ? 170 : 100,
+            field: 'Condition',
+            headerName: 'Condition (%)',
+            minWidth: window.innerWidth <= 740 ? 170 : 130,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -307,12 +307,12 @@ function ScannerV3() {
             minWidth: window.innerWidth <= 740 ? 170 : 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
-                return <p >{formatNumberString(params.row['Turnover'])}</p>
+                return <p >{formatNumberString(params.row['Turnover'] || 0)}</p>
             }
         },
         {
             field: 'Amount',
-            headerName: 'Amount ($)',
+            headerName: 'Amount (%)',
             minWidth: window.innerWidth <= 740 ? 160 : 130,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
@@ -493,6 +493,10 @@ function ScannerV3() {
                 return ({
                     id,
                     ...item,
+                    Expire:item.Expire || 0,
+                    Condition:`${item.Longest} - ${item.Elastic} - ${item.Ratio}`,
+                    FrameOCLength:`${item.Frame} - ${item.OCLength}%`,
+                    OrderChangeAdjust:`${item.OrderChange} x ${item.Adjust}`,
                     BotName: item.botID.botName
                 })
             })

@@ -447,24 +447,24 @@ function Strategies() {
                 </div>
 
                 <div className={styles.strategiesHeader}>
-                    {/* <FormControl className={styles.strategiesHeaderItem}>
-                        <FormLabel className={styles.formLabel}>Bot Type</FormLabel>
+                <FormControl className={styles.strategiesHeaderItem}>
+                        <FormLabel className={styles.formLabel}>Bookmark</FormLabel>
                         <Select
-                            value={botTypeSelectedRef.current}
+                            value={bookmarkSelectedRef.current}
                             size="small"
                             onChange={e => {
                                 const value = e.target.value;
-                                botTypeSelectedRef.current = value
+                                bookmarkSelectedRef.current = value
                                 handleFilterAll()
                             }}
                         >
                             {
-                                botTypeList.map(item => (
+                                bookmarkListDefault.map(item => (
                                     <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
                                 ))
                             }
                         </Select>
-                    </FormControl> */}
+                    </FormControl>
 
                     <FormControl className={styles.strategiesHeaderItem}>
                         <FormLabel className={styles.formLabel}>Bot</FormLabel>
@@ -517,25 +517,6 @@ function Strategies() {
                         >
                             {
                                 candlestickList.map(item => (
-                                    <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
-                                ))
-                            }
-                        </Select>
-                    </FormControl>
-
-                    <FormControl className={styles.strategiesHeaderItem}>
-                        <FormLabel className={styles.formLabel}>Bookmark</FormLabel>
-                        <Select
-                            value={bookmarkSelectedRef.current}
-                            size="small"
-                            onChange={e => {
-                                const value = e.target.value;
-                                bookmarkSelectedRef.current = value
-                                handleFilterAll()
-                            }}
-                        >
-                            {
-                                bookmarkListDefault.map(item => (
                                     <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
                                 ))
                             }

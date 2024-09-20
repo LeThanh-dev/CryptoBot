@@ -4,7 +4,7 @@ const UserModel = require('../models/user.model');
 const StrategiesModel = require('../models/strategies.model');
 const SpotModel = require('../models/spot.model');
 const MarginModel = require('../models/margin.model');
-const ScannerModel = require('../models/scanner.model');
+const ScannerModel = require('../models/scannerV3.model');
 const { default: mongoose } = require('mongoose');
 
 // ByBitV3
@@ -303,8 +303,6 @@ const BotController = {
                                         botID,
                                     })
 
-                                    console.log("newDataSocketWithBotData", newDataSocketWithBotData.length);
-
                                     newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
                                         type: "bot-update",
                                         data: {
@@ -393,6 +391,8 @@ const BotController = {
 
             const result = await BotModel.deleteOne({ _id: botID })
 
+            await ScannerModel.deleteMany({ botID })
+
             if (result.deletedCount !== 0) {
 
                 switch (botType) {
@@ -402,7 +402,6 @@ const BotController = {
                             { "children.botID": botID },
                             { $pull: { children: { botID: botID } } }
                         );
-
                         break
                     case "ByBitV1":
 
@@ -414,14 +413,12 @@ const BotController = {
                             { "children.botID": botID },
                             { $pull: { children: { botID: botID } } }
                         );
-                        const deleteAllScanner = ScannerModel.deleteMany(
-                            {
-                                "botID": botID
-                            }
-                        )
-                        await Promise.allSettled([deleteAllSpot, deleteAllMargin, deleteAllScanner])
+
+                        await Promise.allSettled([deleteAllSpot, deleteAllMargin])
                         break
                 }
+
+
                 res.customResponse(200, "Delete Bot Successful");
             }
             else {
@@ -504,7 +501,7 @@ const BotController = {
                 .then((rescoin) => {
                     rescoin.result.list.forEach(coinData => {
                         const coin = coinData.currency
-                        if (coinData.marginCollateral && !["USDT","USDC"].includes(coin)) {
+                        if (coinData.marginCollateral && !["USDT", "USDC"].includes(coin)) {
                             allSymbolMargin.push({
                                 coin,
                                 collateralSwitch: 'ON',

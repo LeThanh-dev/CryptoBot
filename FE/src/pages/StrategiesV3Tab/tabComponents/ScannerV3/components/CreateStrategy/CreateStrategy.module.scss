@@ -21,6 +21,19 @@
             flex-basis: 48%;
         }
     }
+
+    .formMainDataSmall {
+        display: flex;
+        justify-content: space-between;
+
+        &Item {
+            flex: 1;
+
+            &:nth-child(n+2) {
+                margin-left: 12px;
+            }
+        }
+    }
 }
 
 @media (max-width:740px) {

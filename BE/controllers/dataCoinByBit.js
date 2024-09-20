@@ -1300,21 +1300,19 @@ const dataCoinByBitController = {
 
     createStrategiesMultipleStrategyBE: async ({
         dataInput,
-        userID,
         botID,
         botName,
         symbol,
         scannerID,
-        OCAdjust
+        OCAdjust,
     }) => {
 
         try {
 
-            const TimeTemp = new Date().toString()
 
             const result = await StrategiesModel.updateMany(
                 { "value": symbol },
-                { "$push": { "children": { ...dataInput, botID, userID, TimeTemp, scannerID } } },
+                { "$push": { "children": { ...dataInput, botID, scannerID } } },
             );
 
             const resultFilter = await StrategiesModel.aggregate([
@@ -1323,10 +1321,10 @@ const dataCoinByBitController = {
                         children: {
                             $elemMatch: {
                                 IsActive: true,
-                                userID: new mongoose.Types.ObjectId(userID),
-                                TimeTemp: TimeTemp
+                                scannerID: new mongoose.Types.ObjectId(scannerID),
                             }
-                        }
+                        },
+                        value: symbol
                     }
                 },
                 {
@@ -1341,92 +1339,6 @@ const dataCoinByBitController = {
                                 cond: {
                                     $and: [
                                         { $eq: ["$$child.IsActive", true] },
-                                        { $eq: ["$$child.userID", new mongoose.Types.ObjectId(userID)] },
-                                        { $eq: ["$$child.TimeTemp", TimeTemp] }
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
-
-            const resultGet = await StrategiesModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
-
-            const handleResult = resultGet.flatMap((data) => data.children.map(child => {
-                child.symbol = data.value
-                child.value = `${data._id}-${child._id}`
-                return child
-            })) || []
-
-            if (result.acknowledged && result.matchedCount !== 0) {
-
-                return {
-                    message: `[Mongo] Add New Mul-Config Strategies ( ${botName} - ${symbol} - ${dataInput.PositionSide} - ${dataInput.Candlestick} ) Successful: OCAdjust: ${OCAdjust}`,
-                    data: handleResult || []
-                }
-            }
-            else {
-                return {
-                    message: `[Mongo] Add New Mul-Config Strategies ( ${botName} - ${symbol} - ${dataInput.PositionSide} - ${dataInput.Candlestick} ) Failed: OCAdjust: ${OCAdjust}`,
-                    data: []
-                }
-            }
-
-        }
-
-        catch (error) {
-            return {
-                message: `[Mongo] Add New Mul-Config Strategies ( ${botName} - ${symbol} - ${dataInput.PositionSide} - ${dataInput.Candlestick} ) Error: ${error.message}`,
-                data: []
-            }
-        }
-
-    },
-    updateStrategiesMultipleStrategyBE: async ({
-        scannerID,
-        newOC,
-        symbol,
-        Candlestick,
-        PositionSide,
-        botName,
-        OCAdjust
-    }) => {
-
-        try {
-            const result = await StrategiesModel.updateMany(
-                {
-                    "children.scannerID": scannerID,
-                    "value": symbol
-                },
-                { $set: { "children.$.OrderChange": newOC } }
-            );
-
-
-            const resultFilter = await StrategiesModel.aggregate([
-                {
-                    $match: {
-                        children: {
-                            $elemMatch: {
-                                IsActive: true,
-                                scannerID: new mongoose.Types.ObjectId(scannerID),
-                            }
-                        }
-                    }
-                },
-                {
-                    $project: {
-                        label: 1,
-                        value: 1,
-                        volume24h: 1,
-                        children: {
-                            $filter: {
-                                input: "$children",
-                                as: "child",
-                                cond: {
-                                    $and: [
                                         { $eq: ["$$child.scannerID", new mongoose.Types.ObjectId(scannerID)] },
                                     ]
                                 }
@@ -1449,13 +1361,100 @@ const dataCoinByBitController = {
             if (result.acknowledged && result.matchedCount !== 0) {
 
                 return {
-                    message: `[Mongo] Update Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Successful: OCAdjust: ${OCAdjust}`,
+                    message: `[Mongo] Add New Mul-Config Strategies ( ${botName} - ${symbol} - ${dataInput.PositionSide} - ${dataInput.Candlestick} ) Successful: OCAdjust: ${OCAdjust} = ${dataInput.OrderChange}`,
                     data: handleResult || []
                 }
             }
             else {
                 return {
-                    message: `[Mongo] Update Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Failed: OCAdjust: ${OCAdjust}`,
+                    message: `[Mongo] Add New Mul-Config Strategies ( ${botName} - ${symbol} - ${dataInput.PositionSide} - ${dataInput.Candlestick} ) Failed: OCAdjust: ${OCAdjust} = ${dataInput.OrderChange}`,
+                    data: []
+                }
+            }
+
+        }
+
+        catch (error) {
+            return {
+                message: `[Mongo] Add New Mul-Config Strategies ( ${botName} - ${symbol} - ${dataInput.PositionSide} - ${dataInput.Candlestick} ) Error: ${error.message}`,
+                data: []
+            }
+        }
+
+    },
+    updateStrategiesMultipleStrategyBE: async ({
+        scannerID,
+        newOC,
+        symbol,
+        Candlestick,
+        PositionSide,
+        botName,
+        OCAdjust,
+    }) => {
+
+        try {
+            const result = await StrategiesModel.updateMany(
+                {
+                    "children.scannerID": scannerID,
+                    "value": symbol
+                },
+                { $set: { "children.$.OrderChange": newOC } }
+            );
+
+
+            const resultFilter = await StrategiesModel.aggregate([
+                {
+                    $match: {
+                        children: {
+                            $elemMatch: {
+                                IsActive: true,
+                                scannerID: new mongoose.Types.ObjectId(scannerID),
+                            }
+                        },
+                        "value": symbol
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $and: [
+                                        { $eq: ["$$child.IsActive", true] },
+                                        { $eq: ["$$child.scannerID", new mongoose.Types.ObjectId(scannerID)] },
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGet = await StrategiesModel.populate(resultFilter, {
+                path: 'children.botID',
+            })
+
+            const handleResult = resultGet.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `${data._id}-${child._id}`
+                return child
+            })) || []
+
+            if (result.acknowledged && result.matchedCount !== 0) {
+
+                return {
+                    message: `[Mongo] Update Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Successful: OCAdjust: ${OCAdjust} = ${newOC}`,
+                    data: handleResult || []
+                }
+            }
+            else {
+                return {
+                    message: `[Mongo] Update Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Failed: OCAdjust: ${OCAdjust} = ${newOC}`,
                     data: []
                 }
             }
@@ -1523,7 +1522,10 @@ const dataCoinByBitController = {
             })) || []
 
             const result = await StrategiesModel.updateMany(
-                { "children.scannerID": scannerID },
+                {
+                    "children.scannerID": scannerID,
+                    "value": symbol
+                },
                 { $pull: { "children": { scannerID } } }
             );
 
@@ -1535,14 +1537,16 @@ const dataCoinByBitController = {
                 })
 
                 console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Successful`);
+                return true
             }
             else {
                 console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Failed`);
-
+                return false
             }
 
         } catch (error) {
             console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Error: ${error.message} `)
+            return false
         }
     },
 

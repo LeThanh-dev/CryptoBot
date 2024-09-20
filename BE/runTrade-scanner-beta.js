@@ -64,7 +64,7 @@ var botListTelegram = {}
 // -------  ------------
 
 var listOCByCandleBot = {}
-var listConfigIDOrderOCByScanner = {}
+var listConfigIDByScanner = {}
 
 // ----------------------------------------------------------------------------------
 
@@ -210,6 +210,7 @@ const handleSubmitOrder = async ({
             botName,
             botID,
             orderLinkId,
+            scannerID: strategy.scannerID
         }
 
         const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
@@ -465,7 +466,6 @@ const handleMoveOrderTP = async ({
     }
 }
 const handleCancelOrderOC = async ({
-    strategy,
     strategyID,
     symbol,
     candle = "",
@@ -492,7 +492,6 @@ const handleCancelOrderOC = async ({
                     console.log(`[V] Cancel order ( ${botName} - ${side} -  ${symbol} - ${candle} ) successful `);
                     cancelAll({ strategyID, botID })
                     delete listOCByCandleBot[candle][botID].listOC[strategyID]
-                    delete listConfigIDOrderOCByScanner[strategy.scannerID]?.listConFigID?.[strategyID]
 
                 }
                 else {
@@ -563,7 +562,6 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 strategyID: strategyIDTemp,
                             })
                             delete listOCByCandleBot[candleTemp][botIDTemp].listOC[strategyIDTemp]
-                            delete listConfigIDOrderOCByScanner[data.scannerID]?.listConFigID?.[strategyIDTemp]
 
                         }
                         else {
@@ -1573,6 +1571,7 @@ const handleSocketUpdate = async (newData = []) => {
             const symbol = strategiesData.symbol
             const strategyID = strategiesData.value
             const IsActive = strategiesData.IsActive
+            const CandlestickMain = strategiesData.Candlestick
             const Candlestick = strategiesData.Candlestick.split("")[0]
 
             blockContinueOrderOCByStrategiesID[strategyID] = false
@@ -1623,23 +1622,23 @@ const handleSocketUpdate = async (newData = []) => {
                 SecretKey,
                 strategyID,
                 symbol: symbol,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 side,
                 botName,
                 botID
             }
 
-            !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
-            !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
-            !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
+            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
                 listOC: {},
                 ApiKey,
                 SecretKey,
             });
 
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
                 strategyID,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 symbol,
                 side,
                 botName,
@@ -1852,147 +1851,144 @@ const handleScannerDataList = async ({
     candle,
     symbol,
     OCLength,
-    OCLongLength
+    OCLongLength,
+    turnoverPre
 }) => {
 
     // console.log(changeColorConsole.cyanBright(`[...] Handle history scanner ( ${symbol} - ${candle}m )`));
-
 
     const allScannerData = allScannerDataObject[candle]?.[symbol]
 
     allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
 
-        const Frame = scannerData.Frame.split("m")[0]
-        const scannerID = scannerData._id
-        const botData = scannerData.botID
-        const Candlestick = scannerData.Candle
-        const botName = botData.botName
-        const botID = botData._id
+        if (scannerData.IsActive) {
+            const Frame = scannerData.Frame.split("m")[0]
+            const scannerID = scannerData._id
+            const botData = scannerData.botID
+            const Candlestick = scannerData.Candle
+            const botName = botData.botName
+            const botID = botData._id
 
-        const PositionSide = scannerData.PositionSide
+            const PositionSide = scannerData.PositionSide
 
-        const allHistory = allHistoryByCandleSymbol[Frame][symbol]
+            const allHistory = allHistoryByCandleSymbol[Frame][symbol]
 
-        const OCLengthCheck = PositionSide === "Long" ? OCLongLength : OCLength
-        const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
+            const OCLengthCheck = PositionSide === "Long" ? OCLongLength : OCLength
+            const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
 
-        if (Math.abs(OCLengthCheck) >= scannerData.OCLength) {
+            // Check expire 
+            if (+scannerData.Expire && new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 60 * 1000) {
+                // console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
 
-            const Longest = Math.round(allHistoryList.length * scannerData.Longest / 100)
-            const Ratio = Math.round(Longest * scannerData.Elastic / 100)
-            const Elastic = scannerData.Elastic
-            const Adjust = scannerData.Adjust
+                // Delete all config
+                const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
 
-            const allHistoryListSort = sortListReverse(allHistoryList)
-            // remove top max 
-            allHistoryListSort.shift()
+                const checkListOC = listOCObject && Object.values(listOCObject).filter(OCData => {
+                    return OCData.symbol === symbol && scannerID == OCData.scannerID
+                })
 
-            const allHistoryListSlice = allHistoryListSort.slice(0, Longest).filter(allHistory => allHistory.TP >= Elastic)
+                if (listConfigIDByScanner[scannerID]?.[symbol] && !checkListOC?.length) {
+                    const deleteSuccess = await deleteStrategiesMultipleStrategyBE({
+                        botName,
+                        Candlestick,
+                        PositionSide,
+                        scannerID,
+                        symbol
+                    })
+                    deleteSuccess && delete listConfigIDByScanner[scannerID]?.[symbol]
+                }
+                allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
+            }
 
-            const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
+            if (Math.abs(OCLengthCheck) >= scannerData.OCLength && turnoverPre >= scannerData.Turnover) {
 
-            // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
+                const Longest = Math.round(allHistoryList.length * scannerData.Longest / 100)
+                const Ratio = Math.round(Longest * scannerData.Elastic / 100)
+                const Elastic = scannerData.Elastic
+                const Adjust = scannerData.Adjust
 
-            if (allHistoryListSlice.length >= Ratio) {
+                const allHistoryListSort = sortListReverse(allHistoryList)
+                // remove top max 
+                allHistoryListSort.shift()
 
-                // console.log("TRUE", allHistoryListSlice, symbol);
+                const allHistoryListSlice = allHistoryListSort.slice(0, Longest).filter(allHistory => allHistory.TP >= Elastic)
 
-                const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
-                    return pre + Math.abs(cur.OC)
-                }, 0)
+                const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
 
-                const OCAvg = (OCTotal / allHistoryListLongestTop3.length).toFixed(3)
+                // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
 
-                // console.log("OCAvg", OCAvg, symbol, candle);
+                if (allHistoryListSlice.length >= Ratio) {
 
-                if (OCAvg >= scannerData.OrderChange) {
+                    // console.log("TRUE", allHistoryListSlice, symbol);
 
-                    const newOC = (OCAvg * Adjust).toFixed(3)
-                    const OCAdjust = `${OCAvg} x ${Adjust}`
+                    const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
+                        return pre + Math.abs(cur.OC)
+                    }, 0)
 
-                    if (scannerData.OrderConfig) {
-                        const res = await updateStrategiesMultipleStrategyBE({
-                            scannerID,
-                            newOC,
-                            Candlestick,
-                            botName,
-                            symbol,
-                            PositionSide,
-                            OCAdjust
-                        })
+                    const OCAvg = (OCTotal / allHistoryListLongestTop3.length).toFixed(3)
 
-                        console.log(res.message);
+                    // console.log("OCAvg", OCAvg, symbol, candle);
 
-                        const newData = res.data
+                    if (OCAvg >= scannerData.OrderChange) {
 
-                        if (newData.length > 0) {
-                            handleSocketUpdate(newData)
-                        }
-                    } else {
-                        const res = await createStrategiesMultipleStrategyBE({
-                            userID: scannerData.userID,
-                            botID,
-                            botName,
-                            symbol,
-                            scannerID,
-                            OCAdjust,
-                            dataInput: {
-                                PositionSide,
-                                Amount: scannerData.Amount,
-                                OrderChange: newOC,
+                        const newOC = (OCAvg * Adjust).toFixed(3)
+                        const OCAdjust = `${OCAvg} x ${Adjust}`
+
+                        if (listConfigIDByScanner[scannerID]?.[symbol]) {
+                            const res = await updateStrategiesMultipleStrategyBE({
+                                scannerID,
+                                newOC,
                                 Candlestick,
-                                TakeProfit: 50,
-                                ReduceTakeProfit: 45,
-                                ExtendedOCPercent: 80,
-                                Ignore: 85,
-                                EntryTrailing: 20,
-                                StopLose: 100,
-                                IsActive: true,
-                            },
-                        })
-
-                        console.log(res.message);
-
-                        const newData = res.data
-
-                        if (newData.length > 0) {
-                            scannerData.OrderConfig = true
-                            listConfigIDOrderOCByScanner[scannerID] = {
-                                listConFigID: {},
-                            }
-
-                            newData.forEach(data => {
-                                listConfigIDOrderOCByScanner[scannerID].listConFigID[data.value] = data
+                                botName,
+                                symbol,
+                                PositionSide,
+                                OCAdjust,
+                                newOC
                             })
 
-                            await handleSocketAddNew(newData)
-                        }
-                    }
+                            console.log("\n", res.message);
 
+                            const newData = res.data
+
+                            if (newData.length > 0) {
+                                handleSocketUpdate(newData)
+                            }
+                        } else {
+                            const res = await createStrategiesMultipleStrategyBE({
+                                botID,
+                                botName,
+                                symbol,
+                                scannerID,
+                                OCAdjust,
+                                dataInput: {
+                                    PositionSide,
+                                    Amount: scannerData.Amount,
+                                    OrderChange: newOC,
+                                    Candlestick,
+                                    TakeProfit: 50,
+                                    ReduceTakeProfit: 45,
+                                    ExtendedOCPercent: 80,
+                                    Ignore: 85,
+                                    EntryTrailing: 20,
+                                    StopLose: 100,
+                                    IsActive: true,
+                                },
+                            })
+
+                            console.log("\n", res.message);
+
+                            const newData = res.data
+
+                            if (newData.length > 0) {
+                                listConfigIDByScanner[scannerID] = {}
+                                listConfigIDByScanner[scannerID][symbol] = true
+                                await handleSocketAddNew(newData)
+                            }
+                        }
+
+                    }
                 }
             }
-        }
-
-        // Check expire 
-        if (+scannerData.Expire && new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 1000) {
-
-            // Delete all config
-            
-            const listConfig = listConfigIDOrderOCByScanner[scannerID]?.listConFigID || {}
-            const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
-
-            if (listConfig && Object.values(listConfig).length > 0 && !(listOCObject && Object.values(listOCObject).length > 0)) {
-                scannerData.OrderConfig = false
-                deleteStrategiesMultipleStrategyBE({
-                    botName,
-                    Candlestick,
-                    PositionSide,
-                    scannerID,
-                    symbol
-                })
-                delete listConfigIDOrderOCByScanner[scannerID]
-            }
-            allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
         }
 
     }))
@@ -2102,7 +2098,6 @@ const Main = async () => {
                     const newScannerData = scannerData.toObject()
 
                     newScannerData.ExpirePre = new Date()
-                    newScannerData.OrderConfig = false
 
                     allScannerDataObject[candle][symbol][scannerID] = newScannerData
                 }
@@ -2189,8 +2184,8 @@ try {
 
                 const botID = strategy.botID._id
 
+                
                 if (checkConditionBot(strategy) && botApiList[botID]?.IsActive) {
-
                     const strategyID = strategy.value
 
                     strategy.digit = digitAllCoinObject[strategy.symbol]
@@ -2204,7 +2199,7 @@ try {
 
                     const side = strategy.PositionSide === "Long" ? "Buy" : "Sell"
 
-                    if (dataConfirm == false && strategy.IsActive && !updatingAllMain && !blockContinueOrderOCByStrategiesID[strategyID]) {
+                    if (dataConfirm == false  && strategy.IsActive && !updatingAllMain && !blockContinueOrderOCByStrategiesID[strategyID]) {
 
                         if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.ordering) {
 
@@ -2670,6 +2665,7 @@ try {
             const Highest = +dataMain.high
             const Lowest = +dataMain.low
             const Close = coinCurrent
+            const turnoverPre = +dataMain.turnover
 
             listPricePreOne[symbolCandleID] = {
                 open: Open,
@@ -2686,7 +2682,7 @@ try {
                     cancelingAll[candle].canceling = false
                 }, 10 * 1000)
 
-                console.log(`[...] Kline ( ${candle}m ) closed`);
+                console.log(`[V] Kline ( ${candle}m ) closed`);
 
                 handleCancelAllOrderOC(Object.values(listOCByCandleBot[`${candle}m`] || {}))
 
@@ -2734,7 +2730,7 @@ try {
                     startTime,
                 })
 
-                handleScannerDataList({ candle, symbol, OCLength: OC, OCLongLength: OCLong })
+                handleScannerDataList({ candle, symbol, OCLength: OC, OCLongLength: OCLong, turnoverPre })
 
             }
 
@@ -2820,7 +2816,9 @@ socketRealtime.on('delete', async (newData) => {
             const strategyID = strategiesData.value
             const botID = strategiesData.botID._id
             const botName = strategiesData.botID.botName
+            const CandlestickMain = strategiesData.Candlestick
             const Candlestick = strategiesData.Candlestick.split("")[0]
+            const scannerID = strategiesData.scannerID
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
@@ -2831,22 +2829,22 @@ socketRealtime.on('delete', async (newData) => {
                 SecretKey,
                 strategyID,
                 symbol: symbol,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 side,
                 botName,
                 botID
             }
 
-            !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
-            !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
-            !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
+            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
                 listOC: {},
                 ApiKey,
                 SecretKey,
             });
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
                 strategyID,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 symbol,
                 side,
                 botName,
@@ -2860,11 +2858,9 @@ socketRealtime.on('delete', async (newData) => {
                 gongLai: true
             })
 
-
-
-
             delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
             delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
+            scannerID && delete listConfigIDByScanner[scannerID]?.[symbol]
         }
     }))
 
@@ -2890,6 +2886,9 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     const botApiData = botApiList[botIDMain]
 
+    if (botApiData) {
+        botApiList[botIDMain].IsActive = botActive;
+    }
 
     const listOrderOC = {}
     const listOrderTP = []
@@ -2903,13 +2902,13 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
         const symbol = strategiesData.symbol
         const strategyID = strategiesData.value
-        const IsActive = strategiesData.IsActive
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+        const CandlestickMain = strategiesData.Candlestick
         const Candlestick = strategiesData.Candlestick.split("")[0]
+        const scannerID = strategiesData.scannerID
 
         blockContinueOrderOCByStrategiesID[strategyID] = false
 
-        const botSymbolMissID = `${botID}-${symbol}`
 
         !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
         !allStrategiesByCandleAndSymbol[symbol][Candlestick] && (allStrategiesByCandleAndSymbol[symbol][Candlestick] = {});
@@ -2918,9 +2917,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
         !allStrategiesByBotIDAndOrderID[botID] && (allStrategiesByBotIDAndOrderID[botID] = {});
         !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
 
-
-
-        if (IsActive) {
+        if (botActive) {
             if (!botApiList[botID]) {
 
                 botApiList[botID] = {
@@ -2953,31 +2950,29 @@ socketRealtime.on('bot-update', async (data = {}) => {
             }
         }
 
-
-
         const cancelDataObject = {
             ApiKey,
             SecretKey,
             strategyID,
             symbol: symbol,
-            candle: strategiesData.Candlestick,
+            candle: CandlestickMain,
             side,
             botName,
             botID
         }
 
 
-        !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
-        !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
-        !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
+        !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+        !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+        !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
             listOC: {},
             ApiKey,
             SecretKey,
         });
 
-        allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
+        allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
             strategyID,
-            candle: strategiesData.Candlestick,
+            candle: CandlestickMain,
             symbol,
             side,
             botName,
@@ -2985,19 +2980,17 @@ socketRealtime.on('bot-update', async (data = {}) => {
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
         });
 
-        if (!strategiesData.IsActive) {
+        if (!botActive) {
 
             allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
                 ...cancelDataObject,
                 orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
                 gongLai: true
             })
-            // handleCancelOrderTP({
-            //     ...cancelDataObject,
-            //     orderId: missTPDataBySymbol[botSymbolMissID]?.orderID,
-            //     gongLai: true
-            // })
-
+            scannerID && (allScannerDataObject[CandlestickMain][symbol][scannerID].IsActive = false);
+        }
+        else {
+            scannerID && (allScannerDataObject[CandlestickMain][symbol][scannerID].IsActive = true);
         }
 
     }))
@@ -3015,16 +3008,17 @@ socketRealtime.on('bot-update', async (data = {}) => {
     }
     else {
 
-        botApiList[botIDMain].IsActive = botActive;
-
         if (!botActive) {
             ["1m", "3m", "5m", "15m"].forEach(candle => {
-                const listObject = listOCByCandleBot?.[candle]?.[botIDMain]?.listOC
+                const listOCByBot = listOCByCandleBot?.[candle]?.[botIDMain]
+                const listObject = listOCByBot?.listOC
+                listOCByBot &&  handleCancelAllOrderOC([listOCByBot])
+                
                 listObject && Object.values(listObject).map(strategyData => {
                     const strategyID = strategyData.strategyID
-                    console.log(`[V] RESET | ${strategyData.symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
                     cancelAll({ botID: botIDMain, strategyID })
                     delete listOCByCandleBot[candle][botIDMain].listOC[strategyID]
+                    console.log(`[V] RESET | ${strategyData.symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
                 })
             });
         }
@@ -3053,10 +3047,9 @@ socketRealtime.on('bot-api', async (data) => {
             const botID = strategiesData.botID._id
             const botName = strategiesData.botID.botName
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+            const CandlestickMain = strategiesData.Candlestick
             const Candlestick = strategiesData.Candlestick.split("")[0]
 
-
-            const botSymbolMissID = `${botID}-${symbol}`
 
             !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
             !allStrategiesByCandleAndSymbol[symbol][Candlestick] && (allStrategiesByCandleAndSymbol[symbol][Candlestick] = {});
@@ -3067,23 +3060,23 @@ socketRealtime.on('bot-api', async (data) => {
                 SecretKey,
                 strategyID,
                 symbol: symbol,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 side,
                 botName,
                 botID
             }
 
 
-            !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
-            !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
-            !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
+            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
                 listOC: {},
                 ApiKey,
                 SecretKey,
             });
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
                 strategyID,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 symbol,
                 side,
                 botName,
@@ -3152,6 +3145,12 @@ socketRealtime.on('bot-delete', async (data) => {
     const listOrderTP = []
     const botApiData = botApiList[botIDMain]
 
+    const ApiKeyBot = botApiData.ApiKey
+    const SecretKeyBot = botApiData.SecretKey
+
+    delete botApiList[botIDMain];
+
+
     await Promise.allSettled(newData.map(async (strategiesData, index) => {
         if (checkConditionBot(strategiesData)) {
 
@@ -3162,34 +3161,33 @@ socketRealtime.on('bot-delete', async (data) => {
             const strategyID = strategiesData.value
             const botID = strategiesData.botID._id
             const botName = strategiesData.botID.botName
+            const scannerID = strategiesData.scannerID
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+            const CandlestickMain = strategiesData.Candlestick
             const Candlestick = strategiesData.Candlestick.split("")[0]
-
-            const botSymbolMissID = `${botID}-${symbol}`
-
 
             const cancelDataObject = {
                 ApiKey,
                 SecretKey,
                 strategyID,
                 symbol: symbol,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 side,
                 botName,
                 botID
             }
 
-            !listOrderOC[strategiesData.Candlestick] && (listOrderOC[strategiesData.Candlestick] = {});
-            !listOrderOC[strategiesData.Candlestick][botID] && (listOrderOC[strategiesData.Candlestick][botID] = {});
-            !listOrderOC[strategiesData.Candlestick][botID].listOC && (listOrderOC[strategiesData.Candlestick][botID] = {
+            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
                 listOC: {},
                 ApiKey,
                 SecretKey,
             });
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[strategiesData.Candlestick][botID].listOC[strategyID] = {
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
                 strategyID,
-                candle: strategiesData.Candlestick,
+                candle: CandlestickMain,
                 symbol,
                 side,
                 botName,
@@ -3206,6 +3204,8 @@ socketRealtime.on('bot-delete', async (data) => {
 
             delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
             delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
+            delete allScannerDataObject[CandlestickMain]?.[symbol]?.[scannerID]
+
         }
     }))
 
@@ -3217,17 +3217,12 @@ socketRealtime.on('bot-delete', async (data) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-
-    const ApiKeyBot = botApiData.ApiKey
-    const SecretKeyBot = botApiData.SecretKey
-
     const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
 
     const wsOrder = new WebsocketClient(wsConfigOrder);
 
     await wsOrder.unsubscribeV5(LIST_ORDER, 'linear')
 
-    delete botApiList[botIDMain];
 
     ["1m", "3m", "5m", "15m"].forEach(candle => {
         delete listOCByCandleBot?.[candle]?.[botIDMain]
@@ -3332,14 +3327,13 @@ socketRealtime.on('closeAllPosition', (botListData = []) => {
                     console.log(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${side} - ${candle} - Bot: ${botName}`);
                     blockContinueOrderOCByStrategiesID[strategyID] = true
                     handleCancelOrderOC({
-                        strategy: strategyData,
                         ApiKey: botData.ApiKey,
                         botID,
                         botName,
                         SecretKey: botData.SecretKey,
                         side,
                         strategyID,
-                        symbol,
+                        symbol: symbolItem,
                         candle
                     })
                 }
@@ -3386,7 +3380,6 @@ socketRealtime.on('scanner-add', async (newData = []) => {
 
                     const newScannerData = { ...scannerData }
                     newScannerData.ExpirePre = new Date()
-                    newScannerData.OrderConfig = false
 
                     allScannerDataObject[candle][symbol][scannerID] = newScannerData
 
@@ -3426,7 +3419,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
                     newScannerData.Limit = +newScannerData.Limit
                     newScannerData.Expire = +newScannerData.Expire
                     newScannerData.ExpirePre = new Date()
-                    newScannerData.OrderConfig = allScannerDataObject[candle][symbol][scannerID]
                     allScannerDataObject[candle][symbol][scannerID] = newScannerData
                 }
                 else {

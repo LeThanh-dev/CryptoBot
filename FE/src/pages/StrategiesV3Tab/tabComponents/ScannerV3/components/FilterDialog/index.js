@@ -81,6 +81,15 @@ function FilterDialog({
                 compare: "=",
                 value: ""
             },
+            name: "Pre-OC",
+            value: "OCLength",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
             name: "Candle",
             value: "Candle",
             compareFilterList: ["="],
@@ -108,10 +117,36 @@ function FilterDialog({
                 compare: "=",
                 value: ""
             },
+            name: "Adjust",
+            value: "Adjust",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Longest",
+            value: "Longest",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
             name: "Elastic",
             value: "Elastic",
             compareFilterList: compareFilterListDefault,
-
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Ratio",
+            value: "Ratio",
+            compareFilterList: compareFilterListDefault,
         },
         {
             data: {

@@ -286,25 +286,48 @@ function CreateStrategy({
                 </FormControl>
 
                 <div className={styles.formMainData} style={{ marginTop: "12px" }}>
-                    <FormControl
-                        className={clsx(styles.formControl, styles.formMainDataItem)}
-                    >
-                        <TextField
-                            select
-                            label="Frame"
-                            variant="outlined"
-                            size="medium"
-                            defaultValue={"15m"}
-                            {...register("Frame", { required: true, })}
-                        >
-                            {
-                                candlestickList.map(item => (
-                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
-                                ))
-                            }
-                        </TextField>
-                        {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">The Frame field is required.</p>}
-                    </FormControl>
+
+
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                select
+                                label="Frame"
+                                variant="outlined"
+                                size="medium"
+                                defaultValue={"15m"}
+                                {...register("Frame", { required: true, })}
+                            >
+                                {
+                                    candlestickList.map(item => (
+                                        <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                    ))
+                                }
+                            </TextField>
+                            {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">The Frame field is required.</p>}
+                        </FormControl>
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Pre-OC"
+                                type='number'
+                                variant="outlined"
+                                defaultValue={15}
+                                size="medium"
+                                {...register("OCLength")}
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>,
+                                }}
+                            >
+
+
+                            </TextField>
+                        </FormControl>
+
+                    </div>
 
                     <FormControl
                         className={clsx(styles.formControl, styles.formMainDataItem)}
@@ -481,48 +504,112 @@ function CreateStrategy({
                         {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position field is required.</p>}
                     </FormControl>
 
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            type='number'
-                            label="OC"
-                            variant="outlined"
-                            defaultValue={1}
-                            size="medium"
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">
-                                    %
-                                </InputAdornment>,
-                            }}
-                            {...register("OrderChange", { required: true, min: formControlMinValue })}
-                        />
-                        {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
-                        {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
-                    </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                type='number'
+                                label="OC Min"
+                                variant="outlined"
+                                defaultValue={1}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>,
+                                }}
+                                {...register("OrderChange", { required: true, min: formControlMinValue })}
+                            />
+                            {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
+                            {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
+                        </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                type='number'
+                                label="Adjust"
+                                variant="outlined"
+                                defaultValue={1}
+                                size="medium"
+                                InputProps={{
+                                    startAdornment: <InputAdornment position="start">
+                                        x
+                                    </InputAdornment>,
+                                }}
+                                {...register("Adjust", { required: true, min: formControlMinValue })}
+                            />
+                            {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust field is required.</p>}
+                            {errors.Adjust?.type === "min" && <p className="formControlErrorLabel">The Adjust must bigger 0.01.</p>}
+                        </FormControl>
+                    </div>
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            label="Longest_% || Elastic || Ratio_%"
-                            variant="outlined"
-                            defaultValue={"20-80-30"}
-                            size="medium"
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">
-                                    %
-                                </InputAdornment>
-                            }}
-                            {...register("Elastic", {
-                                required: true,
-                                pattern: {
-                                    value: /^\d+-\d+-\d+$/,
-                                    message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
-                                }
-                            })}
-                        />
-                        {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic field is required.</p>}
-                        {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>}
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
-                    </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Longest"
+                                variant="outlined"
+                                defaultValue={"20"}
+                                size="medium"
+                                sx={{
+                                    '&.Mui-focused': {
+                                        borderColor: 'red',
+                                    },
+                                }}
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Longest", {
+                                    required: true,
+                                    // pattern: {
+                                    //     value: /^\d+-\d+-\d+$/,
+                                    //     message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
+                                    // }
+                                })}
+                            />
+                            {errors.Longest?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {/* {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>} */}
+
+                        </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Elastic"
+                                variant="outlined"
+                                defaultValue={"40"}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Elastic", {
+                                    required: true,
+                                })}
+                            />
+                            {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+
+                        </FormControl>
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                label="Ratio"
+                                variant="outlined"
+                                defaultValue={"30"}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Ratio", {
+                                    required: true,
+                                })}
+                            />
+                            {errors.Ratio?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+
+                        </FormControl>
+
+                    </div>
 
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
@@ -550,11 +637,11 @@ function CreateStrategy({
                             type='number'
                             label="Expire"
                             variant="outlined"
-                            defaultValue={20}
+                            defaultValue={1}
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
-                                    min
+                                    h
                                 </InputAdornment>
                             }}
                             {...register("Expire")}
@@ -575,10 +662,8 @@ function CreateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover", { required: true, min: formControlMinValue })}
+                            {...register("Turnover" )}
                         />
-                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover Avg field is required.</p>}
-                        {errors.Turnover?.type === "min" && <p className="formControlErrorLabel">The Turnover Avg must bigger 0.01.</p>}
 
                     </FormControl>
 

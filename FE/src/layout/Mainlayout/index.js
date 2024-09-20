@@ -22,9 +22,10 @@ function MainLayout({ children }) {
     const ROLE_LIST_DEFAULT = [
         "Bots",
         "Strategies",
-        "Spot",
-        "Margin",
-        "Scanner",
+        // "ScannerV3",
+        // "Spot",
+        // "Margin",
+        // "Scanner",
         "Coin",
         "Order",
         "StrategiesHistory",
@@ -138,7 +139,6 @@ function MainLayout({ children }) {
             const { data: resUserData } = resUser.data
             if (resUserData) {
 
-                dispatch(setUserDataLocal(resUserData))
                 setUserData(resUserData)
 
                 const res = await getByRoleName(resUserData?.roleName || "")
@@ -147,11 +147,16 @@ function MainLayout({ children }) {
                 const newRoleList = resData.roleList.concat(ROLE_LIST_DEFAULT)
 
                 const routeCurrent = location.pathname.replace("/", "")
-                
+
                 if (!newRoleList.includes(routeCurrent) && routeCurrent) {
                     navigate("/")
                 }
                 setRoleList(newRoleList || [])
+                dispatch(setUserDataLocal({
+                    ...resUserData,
+                    roleList: newRoleList
+                }))
+
             }
 
         } catch (error) {

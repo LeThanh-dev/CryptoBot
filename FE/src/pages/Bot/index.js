@@ -6,7 +6,7 @@ import { useState, memo, useEffect, useRef } from "react";
 import AddBreadcrumbs from "../../components/BreadcrumbsCutom";
 import DataGridCustom from "../../components/DataGridCustom";
 import AddBot from "./components/AddBot";
-import { deleteBot, deleteMultipleBot, getAllBot, getAllBotBySameGroup, getAllBotByUserID, setMargin, updateBot } from "../../services/botService";
+import { deleteBot, getAllBot, getAllBotBySameGroup, getAllBotByUserID, setMargin, updateBot } from "../../services/botService";
 import styles from "./Bot.module.scss"
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';

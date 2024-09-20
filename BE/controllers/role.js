@@ -73,11 +73,11 @@ const RoleController = {
     addMore: async () => {
         try {
             const result = await RoleModel.updateMany(
-                { name: "SuperAdmin" },
+                { name: { $in: ["SuperAdmin", "Admin"] } },
                 {
                     "$addToSet": {
                         roleList: [
-                            "InstrumentsInfo"
+                            "ScannerV3"
                         ]
                     }
                 },

@@ -165,7 +165,9 @@ function TreeChild({
 
     return (
         <>
-            <TableRow className={styles.treeChild} key={treeNode.value} >
+            <TableRow className={styles.treeChild} key={treeNode.value} style={{
+                backgroundColor: treeNode.scannerID ? "#b3ccfb3b" : undefined
+            }} >
                 <TableCell
                     style={{
                         lineHeight: "100%"
@@ -235,7 +237,7 @@ function TreeChild({
                                             }
                                         })
                                     }}
-                                    
+
                                 />
                             )
                         }
@@ -254,11 +256,11 @@ function TreeChild({
                                         symbolValue: treeData.value
                                     }
                                 })
-                            }} 
+                            }}
                             style={{
                                 marginLeft: "3px"
                             }}
-                            />
+                        />
                     </div>
                 </TableCell>
                 <TableCell

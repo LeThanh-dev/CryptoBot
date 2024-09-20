@@ -44,8 +44,35 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
+            name: "Pre-OC",
+            value: "OCLength",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
             name: "OC",
             value: "OrderChange",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Adjust",
+            value: "Adjust",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Longest",
+            value: "Longest",
             compareFilterList: compareFilterListDefault,
         },
         {
@@ -56,7 +83,15 @@ function EditMulTreeItem({
             name: "Elastic",
             value: "Elastic",
             compareFilterList: compareFilterListDefault,
-
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Ratio",
+            value: "Ratio",
+            compareFilterList: compareFilterListDefault,
         },
         {
             data: {
@@ -304,7 +339,7 @@ function EditMulTreeItem({
                     id: dataCheckTreeItem._id,
                     UpdatedFields: filterDataRowList.map(filterRow => {
                         let valueHandle = filterRow.value != "Label" ? handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number") {
+                        if (typeof (valueHandle) === "number" && !["Expire","Turnover","OCLength"].includes(filterRow.value)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false

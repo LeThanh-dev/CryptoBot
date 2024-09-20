@@ -7,6 +7,7 @@ const userDataSlice = createSlice({
             "_id": "",
             "userName": "",
             "roleName": "",
+            "roleList": [],
             "isActive": false,
         },
     },
