@@ -1808,7 +1808,7 @@ const history = async ({
 
         })
         .catch((error) => {
-            console.error(error, symbol);
+            console.error(`[!] Error get history ( ${symbol} - ${interval} )`,error);
         });
 }
 
@@ -1820,7 +1820,7 @@ async function delay(ms) {
 async function getHistoryAllCoin({ coinList, limitNen, interval }) {
     console.log(`[...] Processing history candle ( ${interval}m )`);
 
-    await Promise.allSettled(coinList.map(async (coin) => {
+    await Promise.allSettled(coinList.map(async (coin,index) => {
         const OpenTime = await TimeS0(interval);
         await history({
             OpenTime,
@@ -1828,6 +1828,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
             symbol: coin.value,
             interval
         });
+        index % 50 == 0 && await delay(1000);
     }))
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
 
@@ -1842,6 +1843,7 @@ const handleStatistic = async (coinList = allSymbol) => {
             limitNen,
             interval
         })
+        await delay(1000)
     }))
 
 }
