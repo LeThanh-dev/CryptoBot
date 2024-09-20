@@ -1743,61 +1743,63 @@ const history = async ({
 
             let index = 0
             for (let i = limitNen - 1; i >= 0; i--) {
-                const dataCoin = response.result.list[i]
+                const dataCoin = response.result.list?.[i]
 
-                const Open = dataCoin[1]
-                const Highest = dataCoin[2]
-                const Lowest = dataCoin[3]
-                const Close = dataCoin[4]
+                if (dataCoin) {
+                    const Open = dataCoin[1]
+                    const Highest = dataCoin[2]
+                    const Lowest = dataCoin[3]
+                    const Close = dataCoin[4]
 
-                const startTime = new Date(+dataCoin[0]).toLocaleString("vi-vn")
+                    const startTime = new Date(+dataCoin[0]).toLocaleString("vi-vn")
 
-                let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+                    let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
 
-                let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                    let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
 
 
-                let TPCheck = TP
-                let TPCheckLong = TPLong
+                    let TPCheck = TP
+                    let TPCheckLong = TPLong
 
-                if (index > 0) {
-                    if (Lowest < Open) {
-                        const dataPre = listOC[index - 1].dataCoin
-                        const OpenPre = +dataPre[1]
-                        const HighestPre = +dataPre[2]
-                        TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
+                    if (index > 0) {
+                        if (Lowest < Open) {
+                            const dataPre = listOC[index - 1].dataCoin
+                            const OpenPre = +dataPre[1]
+                            const HighestPre = +dataPre[2]
+                            TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
+                        }
+                        if (Highest > Open) {
+                            const dataPre = listOCLong[index - 1].dataCoin
+                            const OpenPre = +dataPre[1]
+                            const LowestPre = +dataPre[3]
+                            TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
+                        }
                     }
-                    if (Highest > Open) {
-                        const dataPre = listOCLong[index - 1].dataCoin
-                        const OpenPre = +dataPre[1]
-                        const LowestPre = +dataPre[3]
-                        TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
-                    }
-                }
 
-                if (TP == "Infinity") {
-                    TP = 0
-                    TPCheck = 0
+                    if (TP == "Infinity") {
+                        TP = 0
+                        TPCheck = 0
+                    }
+                    if (TPLong == "Infinity") {
+                        TPLong = 0
+                        TPCheckLong = 0
+                    }
+                    listOC.push({
+                        OC: roundNumber((Highest - Open) / Open),
+                        TP: roundNumber(TP),
+                        TPCheck: roundNumber(TPCheck),
+                        startTime,
+                        dataCoin
+                    })
+                    listOCLong.push({
+                        OC: roundNumber((Lowest - Open) / Open),
+                        TP: roundNumber(TPLong),
+                        TPCheckLong: roundNumber(TPCheckLong),
+                        startTime,
+                        dataCoin
+                    })
+                    index++
                 }
-                if (TPLong == "Infinity") {
-                    TPLong = 0
-                    TPCheckLong = 0
-                }
-                listOC.push({
-                    OC: roundNumber((Highest - Open) / Open),
-                    TP: roundNumber(TP),
-                    TPCheck: roundNumber(TPCheck),
-                    startTime,
-                    dataCoin
-                })
-                listOCLong.push({
-                    OC: roundNumber((Lowest - Open) / Open),
-                    TP: roundNumber(TPLong),
-                    TPCheckLong: roundNumber(TPCheckLong),
-                    startTime,
-                    dataCoin
-                })
-                index++
             }
 
             allHistoryByCandleSymbol[interval][symbol] = {
@@ -1808,7 +1810,7 @@ const history = async ({
 
         })
         .catch((error) => {
-            console.error(`[!] Error get history ( ${symbol} - ${interval} )`,error);
+            console.error(`[!] Error get history ( ${symbol} - ${interval} )`, error);
         });
 }
 
@@ -1820,7 +1822,7 @@ async function delay(ms) {
 async function getHistoryAllCoin({ coinList, limitNen, interval }) {
     console.log(`[...] Processing history candle ( ${interval}m )`);
 
-    await Promise.allSettled(coinList.map(async (coin,index) => {
+    await Promise.allSettled(coinList.map(async (coin, index) => {
         const OpenTime = await TimeS0(interval);
         await history({
             OpenTime,
@@ -2183,7 +2185,7 @@ try {
 
                 const botID = strategy.botID._id
 
-                
+
                 if (checkConditionBot(strategy) && botApiList[botID]?.IsActive) {
                     const strategyID = strategy.value
 
@@ -2198,7 +2200,7 @@ try {
 
                     const side = strategy.PositionSide === "Long" ? "Buy" : "Sell"
 
-                    if (dataConfirm == false  && strategy.IsActive && !updatingAllMain && !blockContinueOrderOCByStrategiesID[strategyID]) {
+                    if (dataConfirm == false && strategy.IsActive && !updatingAllMain && !blockContinueOrderOCByStrategiesID[strategyID]) {
 
                         if (!allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderID && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.ordering) {
 
@@ -3011,8 +3013,8 @@ socketRealtime.on('bot-update', async (data = {}) => {
             ["1m", "3m", "5m", "15m"].forEach(candle => {
                 const listOCByBot = listOCByCandleBot?.[candle]?.[botIDMain]
                 const listObject = listOCByBot?.listOC
-                listOCByBot &&  handleCancelAllOrderOC([listOCByBot])
-                
+                listOCByBot && handleCancelAllOrderOC([listOCByBot])
+
                 listObject && Object.values(listObject).map(strategyData => {
                     const strategyID = strategyData.strategyID
                     cancelAll({ botID: botIDMain, strategyID })
