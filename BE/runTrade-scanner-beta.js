@@ -2107,13 +2107,12 @@ const Main = async () => {
         })
     })
 
-    await handleStatistic([{ value: "NEIROETHUSDT" }, { value: "MEWUSDT" }, { value: "REEFUSDT" }])
-    // await handleStatistic()
+    // await handleStatistic([{ value: "NEIROETHUSDT" }, { value: "MEWUSDT" }, { value: "REEFUSDT" }])
+    await handleStatistic()
 
     await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(listKline)
-
 
 }
 
