@@ -178,7 +178,10 @@ function CreateStrategy({
 
         try {
             const res = await createConfigScannerV3({
-                data: data,
+                data: {
+                    ...data,
+                    Frame: `${data.Frame}${data.Time}`
+                },
                 botListId: botList.map(item => item.value),
                 Blacklist: blackListSelected.map(item => item.value),
                 OnlyPairs: onlyPairsSelected.map(item => item.value)
