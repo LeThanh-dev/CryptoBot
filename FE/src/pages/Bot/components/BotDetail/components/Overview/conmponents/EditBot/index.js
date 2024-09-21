@@ -92,7 +92,7 @@ function EditBot({
                         {...register("botName", { required: true, pattern: /\S/ })}
                         size="small"
                     />
-                    {errors.botName && <p className="formControlErrorLabel">The Bot Name field is required.</p>}
+                    {errors.botName && <p className="formControlErrorLabel">The Bot Name Required.</p>}
 
                 </FormControl>
                 <FormControl className={styles.formControl}>
@@ -103,7 +103,7 @@ function EditBot({
 
                         size="small"
                     />
-                    {/* {errors.note?.type === 'required' && <p className="formControlErrorLabel">The Bot Note field is required.</p>} */}
+                    {/* {errors.note?.type === 'required' && <p className="formControlErrorLabel">The Bot Note Required.</p>} */}
 
                 </FormControl>
 

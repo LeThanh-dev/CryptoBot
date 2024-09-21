@@ -80,7 +80,7 @@ function AddBot({
 
                         size="small"
                     />
-                    {errors.botName && <p className="formControlErrorLabel">The Bot Name field is required.</p>}
+                    {errors.botName && <p className="formControlErrorLabel">The Bot Name Required.</p>}
 
                 </FormControl>
                 <FormControl className={styles.formControl}>
@@ -95,7 +95,7 @@ function AddBot({
                             ))
                         }
                     </Select>
-                    {errors.botType && <p className="formControlErrorLabel">The Bot Type field is required.</p>}
+                    {errors.botType && <p className="formControlErrorLabel">The Bot Type Required.</p>}
                 </FormControl>
                 <FormControl className={styles.formControl}>
                     <FormLabel className={styles.label}>Note</FormLabel>

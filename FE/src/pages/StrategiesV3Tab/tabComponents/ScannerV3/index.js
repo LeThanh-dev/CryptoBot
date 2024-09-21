@@ -255,7 +255,7 @@ function ScannerV3() {
         {
             field: 'Label',
             headerName: 'Label',
-            minWidth: 100,
+            minWidth: 120,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -298,7 +298,7 @@ function ScannerV3() {
         {
             field: 'Condition',
             headerName: 'Condition (%)',
-            minWidth: window.innerWidth <= 740 ? 170 : 130,
+            minWidth: window.innerWidth <= 740 ? 200 : 130,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -313,7 +313,7 @@ function ScannerV3() {
         {
             field: 'Amount',
             headerName: 'Amount (%)',
-            minWidth: window.innerWidth <= 740 ? 160 : 130,
+            minWidth: window.innerWidth <= 740 ? 180 : 130,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 return <p >{formatNumberString(params.row['Amount'])}</p>
@@ -321,14 +321,14 @@ function ScannerV3() {
         },
         {
             field: 'Expire',
-            headerName: 'Expire (min)',
+            headerName: 'Expire (h)',
             minWidth: window.innerWidth <= 740 ? 160 : 120,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
             field: 'OnlyPairs',
             headerName: 'Only Pairs',
-            minWidth: window.innerWidth <= 740 ? 150 : 110,
+            minWidth: window.innerWidth <= 740 ? 170 : 110,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 const list = params.row["OnlyPairs"]

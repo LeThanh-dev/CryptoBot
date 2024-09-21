@@ -112,7 +112,7 @@ function Transfer({
                         type="number"
                         size="small"
                     />
-                    {errors.TransferAmount?.type === 'required' && <p className="formControlErrorLabel">The TransferAmount field is required.</p>}
+                    {errors.TransferAmount?.type === 'required' && <p className="formControlErrorLabel">The TransferAmount Required.</p>}
                     {errors.TransferAmount?.type === 'max' && <p className="formControlErrorLabel">The TransferAmount field is not bigger {formatNumber(limitMaxSpotAvailable)}.</p>}
 
                 </FormControl>

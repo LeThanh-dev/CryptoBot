@@ -52,7 +52,7 @@ function Savings({
                          
                         size="small"
                     />
-                    {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount field is required.</p>}
+                    {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
 
                 </FormControl>
 

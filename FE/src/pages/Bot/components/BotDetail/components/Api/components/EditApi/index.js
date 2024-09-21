@@ -87,7 +87,7 @@ function EditApi({
                         {...register("ApiKey", { required: true })}
                         size="small"
                     />
-                    {errors.ApiKey?.type === 'required' && <p className="formControlErrorLabel">The ApiKey field is required.</p>}
+                    {errors.ApiKey?.type === 'required' && <p className="formControlErrorLabel">The ApiKey Required.</p>}
 
                 </FormControl>
 
@@ -98,7 +98,7 @@ function EditApi({
                         {...register("SecretKey", { required: true })}
                         size="small"
                     />
-                    {errors.SecretKey?.type === 'required' && <p className="formControlErrorLabel">The SecretKey field is required.</p>}
+                    {errors.SecretKey?.type === 'required' && <p className="formControlErrorLabel">The SecretKey Required.</p>}
 
                 </FormControl>
 

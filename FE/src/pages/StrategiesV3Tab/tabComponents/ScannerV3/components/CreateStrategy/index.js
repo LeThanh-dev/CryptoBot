@@ -53,6 +53,18 @@ function CreateStrategy({
         },
     ]
 
+    const timeList = [
+        {
+            name: "h",
+            value: "h",
+        },
+        {
+            name: "D",
+            value: "D",
+        },
+
+    ]
+
 
 
     const {
@@ -131,7 +143,10 @@ function CreateStrategy({
 
             try {
                 const res = await createConfigScannerV3({
-                    data: data,
+                    data: {
+                        ...data,
+                        Frame:`${data.Frame}${data.Time}`
+                    },
                     botListId: botList.map(item => item.value),
                     Blacklist: blackListSelected.map(item => item.value),
                     OnlyPairs: onlyPairsSelected.map(item => item.value)
@@ -267,8 +282,8 @@ function CreateStrategy({
 
 
                     </Autocomplete>
-                    {errors.botID?.type === 'required' && <p className="formControlErrorLabel">The Bot field is required.</p>}
-                    {isSubmitted && !botList.length && <p className="formControlErrorLabel">The Bot field is required.</p>}
+                    {errors.botID?.type === 'required' && <p className="formControlErrorLabel">The Bot Required.</p>}
+                    {isSubmitted && !botList.length && <p className="formControlErrorLabel">The Bot Required.</p>}
 
                 </FormControl>
 
@@ -282,7 +297,7 @@ function CreateStrategy({
                         {...register("Label", { required: true, })}
                     >
                     </TextField>
-                    {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label field is required.</p>}
+                    {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label Required.</p>}
                 </FormControl>
 
                 <div className={styles.formMainData} style={{ marginTop: "12px" }}>
@@ -290,23 +305,43 @@ function CreateStrategy({
 
                     <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
-                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
-                            <TextField
-                                select
-                                label="Frame"
-                                variant="outlined"
-                                size="medium"
-                                defaultValue={"15m"}
-                                {...register("Frame", { required: true, })}
-                            >
-                                {
-                                    candlestickList.map(item => (
-                                        <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
-                                    ))
-                                }
-                            </TextField>
-                            {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">The Frame field is required.</p>}
-                        </FormControl>
+                        <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} style={{ flexBasis: "60%", marginRight: "16px" }} >
+
+                            <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                                <TextField
+                                    type='number'
+                                    label="Frame"
+                                    variant="outlined"
+                                    size="medium"
+                                    defaultValue={1}
+                                    {...register("Frame", { required: true, max: 9, min:0.25 })}
+                                >
+                                </TextField>
+                                {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                                {errors.Frame?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
+                                {errors.Frame?.type === "max" && <p className="formControlErrorLabel">Max: 9</p>}
+
+                            </FormControl>
+
+                            <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                                <TextField
+                                    select
+                                    label="Time"
+                                    variant="outlined"
+                                    size="medium"
+                                    defaultValue={timeList[0].value}
+                                    {...register("Time", { required: true, })}
+                                >
+                                    {
+                                        timeList.map(item => (
+                                            <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                        ))
+                                    }
+                                </TextField>
+                                {errors.Time?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            </FormControl>
+
+                        </div>
 
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
@@ -345,7 +380,7 @@ function CreateStrategy({
                                 ))
                             }
                         </TextField>
-                        {errors.Candle?.type === 'required' && <p className="formControlErrorLabel">The Candle field is required.</p>}
+                        {errors.Candle?.type === 'required' && <p className="formControlErrorLabel">The Candle Required.</p>}
                     </FormControl>
 
                 </div>
@@ -420,7 +455,7 @@ function CreateStrategy({
 
 
                     </Autocomplete>
-                    {isSubmitted && !onlyPairsSelected.length && <p className="formControlErrorLabel">The Only pairs field is required.</p>}
+                    {isSubmitted && !onlyPairsSelected.length && <p className="formControlErrorLabel">The Only pairs Required.</p>}
 
                 </FormControl>
 
@@ -479,7 +514,7 @@ function CreateStrategy({
 
 
                     </Autocomplete>
-                    {/* {isSubmitted && !blackListSelected.length && <p className="formControlErrorLabel">The Blacklist field is required.</p>} */}
+                    {/* {isSubmitted && !blackListSelected.length && <p className="formControlErrorLabel">The Blacklist Required.</p>} */}
 
                 </FormControl>
 
@@ -501,7 +536,7 @@ function CreateStrategy({
                                 ))
                             }
                         </TextField>
-                        {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position field is required.</p>}
+                        {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position Required.</p>}
                     </FormControl>
 
                     <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
@@ -520,7 +555,7 @@ function CreateStrategy({
                                 }}
                                 {...register("OrderChange", { required: true, min: formControlMinValue })}
                             />
-                            {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
+                            {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC Required.</p>}
                             {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
@@ -537,7 +572,7 @@ function CreateStrategy({
                                 }}
                                 {...register("Adjust", { required: true, min: formControlMinValue })}
                             />
-                            {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust field is required.</p>}
+                            {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust Required.</p>}
                             {errors.Adjust?.type === "min" && <p className="formControlErrorLabel">The Adjust must bigger 0.01.</p>}
                         </FormControl>
                     </div>
@@ -626,7 +661,7 @@ function CreateStrategy({
                             }}
                             {...register("Amount", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount field is required.</p>}
+                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
                         {errors.Amount?.type === "min" && <p className="formControlErrorLabel">The Amount must bigger 0.01.</p>}
 
                     </FormControl>
@@ -653,7 +688,7 @@ function CreateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Turnover Avg"
+                            label="Turnover"
                             variant="outlined"
                             defaultValue={4000}
                             size="medium"
@@ -662,7 +697,7 @@ function CreateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover" )}
+                            {...register("Turnover")}
                         />
 
                     </FormControl>

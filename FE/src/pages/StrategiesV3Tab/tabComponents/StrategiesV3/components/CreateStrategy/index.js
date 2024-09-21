@@ -261,8 +261,8 @@ function CreateStrategy({
 
 
                     </Autocomplete>
-                    {errors.botID?.type === 'required' && <p className="formControlErrorLabel">The Bot field is required.</p>}
-                    {isSubmitted && !botList.length && <p className="formControlErrorLabel">The Bot field is required.</p>}
+                    {errors.botID?.type === 'required' && <p className="formControlErrorLabel">The Bot Required.</p>}
+                    {isSubmitted && !botList.length && <p className="formControlErrorLabel">The Bot Required.</p>}
 
                 </FormControl>
 
@@ -336,7 +336,7 @@ function CreateStrategy({
 
 
                     </Autocomplete>
-                    {isSubmitted && !symbolGroupData.length && <p className="formControlErrorLabel">The {symbolGroupDataList.label} field is required.</p>}
+                    {isSubmitted && !symbolGroupData.length && <p className="formControlErrorLabel">The {symbolGroupDataList.label} Required.</p>}
 
                 </FormControl>
 
@@ -386,7 +386,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("OrderChange", { required: true, min: formControlMinValue })}
                         />
-                        {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
+                        {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC Required.</p>}
                         {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.1.</p>}
 
                     </FormControl>
@@ -400,7 +400,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("ExtendedOCPercent", { required: true, min: formControlMinValue })}
                         />
-                        {errors.ExtendedOCPercent?.type === 'required' && <p className="formControlErrorLabel">The Extended field is required.</p>}
+                        {errors.ExtendedOCPercent?.type === 'required' && <p className="formControlErrorLabel">The Extended Required.</p>}
                         {errors.ExtendedOCPercent?.type === "min" && <p className="formControlErrorLabel">The Extended must bigger 0.1.</p>}
 
                     </FormControl>
@@ -414,7 +414,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("TakeProfit", { required: true, min: formControlMinValue })}
                         />
-                        {errors.TakeProfit?.type === 'required' && <p className="formControlErrorLabel">The TP field is required.</p>}
+                        {errors.TakeProfit?.type === 'required' && <p className="formControlErrorLabel">The TP Required.</p>}
                         {errors.TakeProfit?.type === "min" && <p className="formControlErrorLabel">The TP must bigger 0.1.</p>}
 
                     </FormControl>
@@ -428,7 +428,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("ReduceTakeProfit", { required: true, min: formControlMinValue })}
                         />
-                        {errors.ReduceTakeProfit?.type === 'required' && <p className="formControlErrorLabel">The Reduce TP field is required.</p>}
+                        {errors.ReduceTakeProfit?.type === 'required' && <p className="formControlErrorLabel">The Reduce TP Required.</p>}
                         {errors.ReduceTakeProfit?.type === "min" && <p className="formControlErrorLabel">The Reduce TP must bigger 0.1.</p>}
 
                     </FormControl>
@@ -442,7 +442,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("Amount", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount field is required.</p>}
+                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
                         {errors.Amount?.type === "min" && <p className="formControlErrorLabel">The Amount must bigger 0.1.</p>}
 
                     </FormControl>
@@ -456,7 +456,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("Ignore", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Ignore?.type === 'required' && <p className="formControlErrorLabel">The Ignore field is required.</p>}
+                        {errors.Ignore?.type === 'required' && <p className="formControlErrorLabel">The Ignore Required.</p>}
                         {errors.Ignore?.type === "min" && <p className="formControlErrorLabel">The Ignore must bigger 0.1.</p>}
 
                     </FormControl>
@@ -470,7 +470,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("EntryTrailing", { min: formControlMinValue })}
                         />
-                        {/* {errors.EntryTrailing?.type === 'required' && <p className="formControlErrorLabel">The Entry Trailing field is required.</p>} */}
+                        {/* {errors.EntryTrailing?.type === 'required' && <p className="formControlErrorLabel">The Entry Trailing Required.</p>} */}
 
                     </FormControl>
 
@@ -483,7 +483,7 @@ function CreateStrategy({
                             size="medium"
                             {...register("StopLose", { required: true, min: 0.1 })}
                         />
-                        {errors.StopLose?.type === 'required' && <p className="formControlErrorLabel">The Max OC field is required.</p>}
+                        {errors.StopLose?.type === 'required' && <p className="formControlErrorLabel">The Max OC Required.</p>}
                         {errors.StopLose?.type === "min" && <p className="formControlErrorLabel">The Max OC must bigger 0.1.</p>}
 
                     </FormControl>

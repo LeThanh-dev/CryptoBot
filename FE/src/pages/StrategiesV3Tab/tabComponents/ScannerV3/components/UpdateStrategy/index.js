@@ -191,7 +191,7 @@ function UpdateStrategy({
                         {...register("Label",)}
                     >
                     </TextField>
-                    {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label field is required.</p>}
+                    {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label Required.</p>}
                 </FormControl>
 
                 <FormControl className={styles.formControl}>
@@ -265,7 +265,7 @@ function UpdateStrategy({
 
 
                     </Autocomplete>
-                    {isSubmitted && !onlyPairsSelected.length && <p className="formControlErrorLabel">The Only pairs field is required.</p>}
+                    {isSubmitted && !onlyPairsSelected.length && <p className="formControlErrorLabel">The Only pairs Required.</p>}
 
                 </FormControl>
                 <FormControl className={styles.formControl}>
@@ -324,7 +324,7 @@ function UpdateStrategy({
 
 
                     </Autocomplete>
-                    {/* {isSubmitted && !blackListSelected.length && <p className="formControlErrorLabel">The Blacklist field is required.</p>} */}
+                    {/* {isSubmitted && !blackListSelected.length && <p className="formControlErrorLabel">The Blacklist Required.</p>} */}
 
                 </FormControl>
 
@@ -407,7 +407,7 @@ function UpdateStrategy({
                                 }}
                                 {...register("OrderChange", { required: true, min: formControlMinValue })}
                             />
-                            {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
+                            {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC Required.</p>}
                             {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
@@ -424,7 +424,7 @@ function UpdateStrategy({
                                 }}
                                 {...register("Adjust", { required: true, min: formControlMinValue })}
                             />
-                            {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust field is required.</p>}
+                            {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust Required.</p>}
                             {errors.Adjust?.type === "min" && <p className="formControlErrorLabel">The Adjust must bigger 0.01.</p>}
                         </FormControl>
                     </div>
@@ -513,7 +513,7 @@ function UpdateStrategy({
                             }}
                             {...register("Amount", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount field is required.</p>}
+                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
                         {errors.Amount?.type === "min" && <p className="formControlErrorLabel">The Amount must bigger 0.01.</p>}
 
                     </FormControl>

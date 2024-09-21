@@ -619,7 +619,7 @@ function EditMulTreeItem({
                         }}
                     >
                     </Autocomplete>
-                    {!symbolListSelected.length && <p className="formControlErrorLabel">The {copyType} field is required.</p>}
+                    {!symbolListSelected.length && <p className="formControlErrorLabel">The {copyType} Required.</p>}
                 </div>
             case "Bot":
                 return <div>
@@ -674,7 +674,7 @@ function EditMulTreeItem({
                         }}
                     >
                     </Autocomplete>
-                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} field is required.</p>}
+                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} Required.</p>}
                 </div>
             case "BotVip":
                 return roleNameMainVIP && <div>
@@ -729,7 +729,7 @@ function EditMulTreeItem({
                         }}
                     >
                     </Autocomplete>
-                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} field is required.</p>}
+                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} Required.</p>}
                 </div>
         }
     }

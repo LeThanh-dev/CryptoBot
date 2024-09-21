@@ -70,7 +70,7 @@ function AddBotType({
 
                         size="small"
                     />
-                    {errors.name && <p className="formControlErrorLabel">The Name field is required.</p>}
+                    {errors.name && <p className="formControlErrorLabel">The Name Required.</p>}
 
                 </FormControl>
 

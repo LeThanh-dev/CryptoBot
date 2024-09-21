@@ -110,7 +110,7 @@ function MyProfile() {
 
                                             size="small"
                                         />
-                                        {errors.OldPassword?.type === 'required' && <p className="formControlErrorLabel">The OldPassword field is required.</p>}
+                                        {errors.OldPassword?.type === 'required' && <p className="formControlErrorLabel">The OldPassword Required.</p>}
 
                                     </FormControl>
                                 </div>
@@ -125,7 +125,7 @@ function MyProfile() {
 
                                             size="small"
                                         />
-                                        {errors.NewPassword?.type === 'required' && <p className="formControlErrorLabel">The NewPassword field is required.</p>}
+                                        {errors.NewPassword?.type === 'required' && <p className="formControlErrorLabel">The NewPassword Required.</p>}
                                         {errors.NewPassword?.type === 'minLength' && <p className="formControlErrorLabel">Minimum length is 5 characters.</p>}
 
                                     </FormControl>
@@ -147,7 +147,7 @@ function MyProfile() {
 
                                             size="small"
                                         />
-                                        {errors.ConfirmPassword?.type === 'required' && <p className="formControlErrorLabel">The ConfirmPassword field is required.</p>}
+                                        {errors.ConfirmPassword?.type === 'required' && <p className="formControlErrorLabel">The ConfirmPassword Required.</p>}
                                         {errors.ConfirmPassword?.type === 'validate' && <p className="formControlErrorLabel">{errors.ConfirmPassword.message}</p>}
                                         {errors.ConfirmPassword?.type === 'minLength' && <p className="formControlErrorLabel">Minimum length is 5 characters.</p>}
 

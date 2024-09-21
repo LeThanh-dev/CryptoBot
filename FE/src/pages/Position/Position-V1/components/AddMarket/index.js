@@ -76,7 +76,7 @@ function AddMarket({
                         type="number"
                         size="small"
                     />
-                    {errors.Price && <p className="formControlErrorLabel">The Price field is required.</p>}
+                    {errors.Price && <p className="formControlErrorLabel">The Price Required.</p>}
 
                 </FormControl> */}
                 <FormControl className={styles.formControl}>
@@ -87,7 +87,7 @@ function AddMarket({
                         size="small"
                         defaultValue={positionData.MaxQty}
                     />
-                    {errors.Quantity && <p className="formControlErrorLabel">The Quantity field is required.</p>}
+                    {errors.Quantity && <p className="formControlErrorLabel">The Quantity Required.</p>}
 
                 </FormControl>
 

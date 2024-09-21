@@ -84,7 +84,7 @@ function LoginPage() {
                                 size="small"
                                 {...register("userName", { required: true, minLength: 5 })}
                             />
-                            {errors.userName?.type === 'required' && <p className="formControlErrorLabel">The Username field is required.</p>}
+                            {errors.userName?.type === 'required' && <p className="formControlErrorLabel">The Username Required.</p>}
                             {errors.userName?.type === 'minLength' && <p className="formControlErrorLabel">Minimum length is 5 characters.</p>}
 
                         </FormControl>
@@ -112,7 +112,7 @@ function LoginPage() {
                                         </InputAdornment>
                                 }}
                             />
-                            {errors.password?.type === 'required' && <p className="formControlErrorLabel">The Password field is required.</p>}
+                            {errors.password?.type === 'required' && <p className="formControlErrorLabel">The Password Required.</p>}
                             {errors.password?.type === 'minLength' && <p className="formControlErrorLabel">Minimum length is 5 characters.</p>}
 
                         </FormControl>

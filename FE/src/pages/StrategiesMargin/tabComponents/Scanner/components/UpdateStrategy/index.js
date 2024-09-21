@@ -265,7 +265,7 @@ function UpdateStrategy({
                         {...register("Label",)}
                     >
                     </TextField>
-                    {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label field is required.</p>}
+                    {errors.Label?.type === 'required' && <p className="formControlErrorLabel">The Label Required.</p>}
                 </FormControl>
 
                 <FormControl className={styles.formControl}>
@@ -339,7 +339,7 @@ function UpdateStrategy({
 
 
                     </Autocomplete>
-                    {isSubmitted && !onlyPairsSelected.length && <p className="formControlErrorLabel">The Only pairs field is required.</p>}
+                    {isSubmitted && !onlyPairsSelected.length && <p className="formControlErrorLabel">The Only pairs Required.</p>}
 
                 </FormControl>
                 <FormControl className={styles.formControl}>
@@ -398,7 +398,7 @@ function UpdateStrategy({
 
 
                     </Autocomplete>
-                    {/* {isSubmitted && !blackListSelected.length && <p className="formControlErrorLabel">The Blacklist field is required.</p>} */}
+                    {/* {isSubmitted && !blackListSelected.length && <p className="formControlErrorLabel">The Blacklist Required.</p>} */}
 
                 </FormControl>
 
@@ -445,7 +445,7 @@ function UpdateStrategy({
                             }}
                             {...register("OrderChange", { required: true, min: formControlMinValue })}
                         />
-                        {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC field is required.</p>}
+                        {errors.OrderChange?.type === 'required' && <p className="formControlErrorLabel">The OC Required.</p>}
                         {errors.OrderChange?.type === "min" && <p className="formControlErrorLabel">The OC must bigger 0.01.</p>}
                     </FormControl>
 
@@ -463,7 +463,7 @@ function UpdateStrategy({
                             }}
                             {...register("Elastic", { required: true })}
                         />
-                        {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic field is required.</p>}
+                        {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic Required.</p>}
 
                     </FormControl>
 
@@ -482,7 +482,7 @@ function UpdateStrategy({
                             }}
                             {...register("Amount", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount field is required.</p>}
+                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
                         {errors.Amount?.type === "min" && <p className="formControlErrorLabel">The Amount must bigger 0.01.</p>}
 
                     </FormControl>
@@ -501,7 +501,7 @@ function UpdateStrategy({
                             // }}
                             {...register("Numbs", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Numbs?.type === 'required' && <p className="formControlErrorLabel">The Numbs field is required.</p>}
+                        {errors.Numbs?.type === 'required' && <p className="formControlErrorLabel">The Numbs Required.</p>}
                         {errors.Numbs?.type === "min" && <p className="formControlErrorLabel">The Numbs must bigger 0.01.</p>}
 
                     </FormControl>
@@ -537,7 +537,7 @@ function UpdateStrategy({
                             }}
                             {...register("Limit", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Limit?.type === 'required' && <p className="formControlErrorLabel">The Limit field is required.</p>}
+                        {errors.Limit?.type === 'required' && <p className="formControlErrorLabel">The Limit Required.</p>}
                         {errors.Limit?.type === "min" && <p className="formControlErrorLabel">The Limit must bigger 0.01.</p>}
 
                     </FormControl>
@@ -558,7 +558,7 @@ function UpdateStrategy({
                             }}
                             {...register("Turnover", { required: true, min: formControlMinValue })}
                         />
-                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover field is required.</p>}
+                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover Required.</p>}
                         {errors.Turnover?.type === "min" && <p className="formControlErrorLabel">The Turnover must bigger 0.01.</p>}
 
                     </FormControl>

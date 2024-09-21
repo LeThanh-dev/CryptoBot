@@ -81,7 +81,7 @@ function EditBotType({
 
                         size="small"
                     />
-                    {errors.name && <p className="formControlErrorLabel">The Group Name field is required.</p>}
+                    {errors.name && <p className="formControlErrorLabel">The Group Name Required.</p>}
 
                 </FormControl>
 

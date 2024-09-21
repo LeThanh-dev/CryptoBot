@@ -109,7 +109,7 @@ function AddLimit({
                                 setPriceCurrent(e.target.value.toString())
                             }}
                         />
-                        {errors.Price && <p className="formControlErrorLabel">The Price field is required.</p>}
+                        {errors.Price && <p className="formControlErrorLabel">The Price Required.</p>}
 
                     </FormControl>
                     <FormControl className={styles.formControl}>
@@ -121,7 +121,7 @@ function AddLimit({
                             value={Math.abs(positionData.Quantity)}
                             disabled
                         />
-                        {errors.Quantity && <p className="formControlErrorLabel">The Quantity field is required.</p>}
+                        {errors.Quantity && <p className="formControlErrorLabel">The Quantity Required.</p>}
 
                     </FormControl>
                 </form>
