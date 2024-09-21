@@ -1824,18 +1824,17 @@ async function delay(ms) {
 }
 
 
-async function getHistoryAllCoin({ coinList, limitNen, interval }) {
+async function getHistoryAllCoin({ coinList, limitNen, interval, OpenTime }) {
     console.log(`[...] Processing history candle ( ${interval}m )`);
 
     for (let index = 0; index < coinList.length; index++) {
-        const OpenTime = await TimeS0(interval);
         await history({
             OpenTime,
             limitNen,
             symbol: coinList[index].value,
             interval
         });
-        index % 100 === 0 && await delay(1000);
+         await delay(1000);
     }
 
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
@@ -1843,12 +1842,13 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
 }
 
 const handleStatistic = async (coinList = Object.values(allSymbol)) => {
-
+    const OpenTime = await TimeS0(interval);
     for (const interval of [1, 3, 5, 15]) {
         await getHistoryAllCoin({
             coinList,
             limitNen,
-            interval
+            interval,
+            OpenTime
         });
         await delay(1000);
     }
