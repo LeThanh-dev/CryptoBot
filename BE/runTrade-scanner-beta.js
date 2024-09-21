@@ -1835,7 +1835,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
             symbol: coin.value,
             interval
         });
-        await delay(100);  // Delay giữa mỗi request
+        await delay(10);  // Delay giữa mỗi request
     }
 
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
