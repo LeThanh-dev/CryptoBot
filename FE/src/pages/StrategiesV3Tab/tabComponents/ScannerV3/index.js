@@ -407,6 +407,7 @@ function ScannerV3() {
     const [dataCheckTree, setDataCheckTree] = useState([]);
 
     const [searchKey, setSearchKey] = useState("");
+    
     // Filter
 
     const filterQuantityRef = useRef([])
@@ -494,7 +495,7 @@ function ScannerV3() {
                     id,
                     ...item,
                     Expire:item.Expire || 0,
-                    Condition:`${item.Longest} - ${item.Elastic} - ${item.Ratio}`,
+                    Condition:`${item.Longest} - ${item.Elastic || 0} - ${item.Ratio}`,
                     FrameOCLength:`${item.Frame} - ${item.OCLength}%`,
                     OrderChangeAdjust:`${item.OrderChange} x ${item.Adjust}`,
                     BotName: item.botID.botName
@@ -843,6 +844,7 @@ function ScannerV3() {
                     dataInput={openUpdateStrategy.data}
                     setDataCheckTree={setDataCheckTree}
                     dataCheckTreeDefaultRef={dataCheckTreeDefaultRef}
+                    dataCheckTreeDefaultObject={dataCheckTreeDefaultObject}
                 />
 
             }

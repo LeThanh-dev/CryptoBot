@@ -339,7 +339,7 @@ function EditMulTreeItem({
                     id: dataCheckTreeItem._id,
                     UpdatedFields: filterDataRowList.map(filterRow => {
                         let valueHandle = filterRow.value != "Label" ? handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number" && !["Expire","Turnover","OCLength"].includes(filterRow.value)) {
+                        if (typeof (valueHandle) === "number" && !["Expire","Turnover","OCLength","Elastic"].includes(filterRow.value)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false
@@ -619,7 +619,7 @@ function EditMulTreeItem({
                         }}
                     >
                     </Autocomplete>
-                    {!symbolListSelected.length && <p className="formControlErrorLabel">The {copyType} Required.</p>}
+                    {!symbolListSelected.length && <p className="formControlErrorLabel">The {copyType} field is required.</p>}
                 </div>
             case "Bot":
                 return <div>
@@ -674,7 +674,7 @@ function EditMulTreeItem({
                         }}
                     >
                     </Autocomplete>
-                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} Required.</p>}
+                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} field is required.</p>}
                 </div>
             case "BotVip":
                 return roleNameMainVIP && <div>
@@ -729,7 +729,7 @@ function EditMulTreeItem({
                         }}
                     >
                     </Autocomplete>
-                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} Required.</p>}
+                    {!botLisSelected.length && <p className="formControlErrorLabel">The {copyType} field is required.</p>}
                 </div>
         }
     }

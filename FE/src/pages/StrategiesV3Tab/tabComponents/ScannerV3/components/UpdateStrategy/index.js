@@ -14,7 +14,8 @@ function UpdateStrategy({
     onClose,
     dataInput,
     setDataCheckTree,
-    dataCheckTreeDefaultRef
+    dataCheckTreeDefaultRef,
+    dataCheckTreeDefaultObject
 }) {
 
     const formControlMinValue = 0.01
@@ -88,57 +89,58 @@ function UpdateStrategy({
     }
 
     const handleSubmitCreate = async data => {
+        if (onlyPairsSelected.length > 0) {
 
-        const configID = dataInput._id
-        const newData = {
-            ...dataInput,
-            ...data,
-            Blacklist: [... new Set(blackListSelected.map(item => item.value))],
-            OnlyPairs: [... new Set(onlyPairsSelected.map(item => item.value))]
-        }
-        try {
-            const res = await updateConfigByIDV3({
-                newData,
-                configID
-            })
-            const { status, message, data: symbolListDataRes } = res.data
-
-            dispatch(addMessageToast({
-                status: status,
-                message: message
-            }))
-
-            if (status === 200) {
-                reset()
-                dataChangeRef.current = true
-
-                newData.Condition = `${newData.Longest} - ${newData.Elastic} - ${newData.Ratio}`
-                newData.OrderChangeAdjust = `${newData.OrderChange} x ${newData.Adjust}`
-                newData.FrameOCLength = `${newData.Frame} - ${newData.OCLength}%`
-
-
-
-                setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
-                    if (item._id === configID) {
-                        return newData
-                    }
-                    return item
-                }))
-                dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
-                    if (item._id === configID) {
-                        return newData
-                    }
-                    return item
-                })
+            const configID = dataInput._id
+            const newData = {
+                ...dataInput,
+                ...data,
+                Blacklist: [... new Set(blackListSelected.map(item => item.value))],
+                OnlyPairs: [... new Set(onlyPairsSelected.map(item => item.value))]
             }
+            try {
+                const res = await updateConfigByIDV3({
+                    newData,
+                    configID
+                })
+                const { status, message, data: symbolListDataRes } = res.data
+
+                dispatch(addMessageToast({
+                    status: status,
+                    message: message
+                }))
+
+                if (status === 200) {
+                    reset()
+                    dataChangeRef.current = true
+
+                    newData.Condition = `${newData.Longest} - ${newData.Elastic} - ${newData.Ratio}`
+                    newData.OrderChangeAdjust = `${newData.OrderChange} x ${newData.Adjust}`
+                    newData.FrameOCLength = `${newData.Frame} - ${newData.OCLength}%`
+
+                    setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
+                        if (item._id === configID) {
+                            return newData
+                        }
+                        return item
+                    }))
+                    dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
+                        if (item._id === configID) {
+                            dataCheckTreeDefaultObject.current[configID] = newData
+                            return newData
+                        }
+                        return item
+                    })
+                }
+            }
+            catch (err) {
+                dispatch(addMessageToast({
+                    status: 500,
+                    message: "Add New Error",
+                }))
+            }
+            closeDialog()
         }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Add New Error",
-            }))
-        }
-        closeDialog()
     }
 
 
@@ -349,7 +351,7 @@ function UpdateStrategy({
                                 variant="outlined"
                                 defaultValue={dataInput.OCLength}
                                 size="medium"
-                                {...register("OCLength", )}
+                                {...register("OCLength",)}
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">
                                         %
@@ -449,6 +451,7 @@ function UpdateStrategy({
                                 }}
                                 {...register("Longest", {
                                     required: true,
+                                    min: formControlMinValue
                                     // pattern: {
                                     //     value: /^\d+-\d+-\d+$/,
                                     //     message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
@@ -456,6 +459,8 @@ function UpdateStrategy({
                                 })}
                             />
                             {errors.Longest?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Longest?.type === "min" && <p className="formControlErrorLabel">{">=  0.01"}</p>}
+
                             {/* {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>} */}
 
                         </FormControl>
@@ -490,9 +495,12 @@ function UpdateStrategy({
                                 }}
                                 {...register("Ratio", {
                                     required: true,
+                                    min: formControlMinValue
+
                                 })}
                             />
                             {errors.Ratio?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Ratio?.type === "min" && <p className="formControlErrorLabel">{">=  0.01"}</p>}
 
                         </FormControl>
 
@@ -548,7 +556,7 @@ function UpdateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover", )}
+                            {...register("Turnover",)}
                         />
 
                     </FormControl>

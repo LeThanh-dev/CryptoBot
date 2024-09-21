@@ -1704,14 +1704,14 @@ async function ListSymbol() {
 }
 
 async function TimeS0(interval) {
-    let TimeStart = []
+    let TimeStart = ""
     await clientDigit.getKline({
         category: 'linear',
         symbol: "BTCUSDT",
         interval,
     })
         .then((response) => {
-            TimeStart.push(response.result.list[0][0])
+            TimeStart = Math.abs(response.result.list[0][0])
         })
         .catch((error) => {
             console.error(error);
@@ -1850,7 +1850,7 @@ const handleStatistic = async (coinList = Object.values(allSymbol)) => {
             limitNen,
             interval
         })
-        await delay(1000)
+        await delay(3000)
     }))
 
 }
@@ -1920,25 +1920,24 @@ const handleScannerDataList = async ({
                     }
                     allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
                 }
-
                 if (OCLengthCheck && Math.abs(allSymbol[symbol].volume24h || 0) >= Math.abs(scannerData.Turnover)) {
 
-                    const Longest = Math.round(allHistoryListLimit50.length * scannerData.Longest / 100)
-                    const Ratio = Math.round(Longest * scannerData.Elastic / 100)
-                    const Elastic = Math.abs(scannerData.Elastic)
+                    const LongestQty = Math.round(allHistoryListLimit50.length * scannerData.Longest / 100)
+                    const RatioQty = Math.round(LongestQty * scannerData.Ratio / 100)
+                    const Elastic = Math.abs(scannerData.Elastic || 0)
                     const Adjust = Math.abs(scannerData.Adjust)
 
                     const allHistoryListSort = sortListReverse(allHistoryListLimit50)
                     // remove top max 
                     allHistoryListSort.shift()
 
-                    const allHistoryListSlice = allHistoryListSort.slice(0, Longest).filter(allHistory => Math.abs(allHistory.TP) >= Elastic)
+                    const allHistoryListSlice = allHistoryListSort.slice(0, LongestQty).filter(allHistory => Math.abs(allHistory.TP) >= Elastic)
 
                     const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
 
                     // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
 
-                    if (allHistoryListSlice.length >= Ratio) {
+                    if (allHistoryListSlice.length >= RatioQty) {
 
                         // console.log("TRUE", allHistoryListSlice, symbol);
 

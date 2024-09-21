@@ -75,6 +75,7 @@ function CreateStrategy({
         setValue
     } = useForm();
 
+    const [maxFrame, setMaxFrame] = useState(undefined);
     const [onlyPairsSelected, setOnlyPairsSelected] = useState([])
     const [blackListSelected, setBlackListSelected] = useState([])
     const [botList, setBotList] = useState([])
@@ -145,7 +146,7 @@ function CreateStrategy({
                 const res = await createConfigScannerV3({
                     data: {
                         ...data,
-                        Frame:`${data.Frame}${data.Time}`
+                        Frame: `${data.Frame}${data.Time}`
                     },
                     botListId: botList.map(item => item.value),
                     Blacklist: blackListSelected.map(item => item.value),
@@ -314,12 +315,12 @@ function CreateStrategy({
                                     variant="outlined"
                                     size="medium"
                                     defaultValue={1}
-                                    {...register("Frame", { required: true, max: 9, min:0.25 })}
+                                    {...register("Frame", { required: true, max: maxFrame, min: 0.25 })}
                                 >
                                 </TextField>
                                 {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
                                 {errors.Frame?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
-                                {errors.Frame?.type === "max" && <p className="formControlErrorLabel">Max: 9</p>}
+                                {errors.Frame?.type === "max" && <p className="formControlErrorLabel">Max: {maxFrame}</p>}
 
                             </FormControl>
 
@@ -331,6 +332,9 @@ function CreateStrategy({
                                     size="medium"
                                     defaultValue={timeList[0].value}
                                     {...register("Time", { required: true, })}
+                                    onChange={e => {
+                                        setMaxFrame(e.target.value == "h" ? undefined : 9)
+                                    }}
                                 >
                                     {
                                         timeList.map(item => (
@@ -597,6 +601,7 @@ function CreateStrategy({
                                 }}
                                 {...register("Longest", {
                                     required: true,
+                                    min: formControlMinValue
                                     // pattern: {
                                     //     value: /^\d+-\d+-\d+$/,
                                     //     message: 'Input must match the pattern a-b-c where a, b, and c are numbers',
@@ -604,6 +609,7 @@ function CreateStrategy({
                                 })}
                             />
                             {errors.Longest?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Longest?.type === "min" && <p className="formControlErrorLabel">{">=  0.01"}</p>}
                             {/* {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>} */}
 
                         </FormControl>
@@ -638,9 +644,11 @@ function CreateStrategy({
                                 }}
                                 {...register("Ratio", {
                                     required: true,
+                                    min: formControlMinValue
                                 })}
                             />
                             {errors.Ratio?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Ratio?.type === "min" && <p className="formControlErrorLabel">{">=  0.01"}</p>}
 
                         </FormControl>
 
@@ -690,7 +698,7 @@ function CreateStrategy({
                             type='number'
                             label="Turnover"
                             variant="outlined"
-                            defaultValue={4000}
+                            defaultValue={5000000}
                             size="medium"
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">
