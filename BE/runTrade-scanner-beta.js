@@ -1835,7 +1835,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
             symbol: coinList[index].value,
             interval
         });
-        index % 50 === 0 && await delay(1000);
+        index % 100 === 0 && await delay(1000);
     }
 
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
@@ -1850,7 +1850,7 @@ const handleStatistic = async (coinList = Object.values(allSymbol)) => {
             limitNen,
             interval
         });
-        await delay(3000);
+        await delay(1000);
     }
 
 }
