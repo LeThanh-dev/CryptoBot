@@ -1827,7 +1827,7 @@ async function delay(ms) {
 async function getHistoryAllCoin({ coinList, limitNen, interval }) {
     console.log(`[...] Processing history candle ( ${interval}m )`);
 
-    await Promise.allSettled(coinList.map(async (coin, index) => {
+    for (const coin of coinList) {
         const OpenTime = await TimeS0(interval);
         await history({
             OpenTime,
@@ -1835,8 +1835,8 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
             symbol: coin.value,
             interval
         });
-        index % 20 == 0 && await delay(1000);
-    }))
+        await delay(100);  // Delay giữa mỗi request
+    }
 
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
 
@@ -1844,14 +1844,14 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
 
 const handleStatistic = async (coinList = Object.values(allSymbol)) => {
 
-    await Promise.allSettled([1, 3, 5, 15].map(async interval => {
+    for (const interval of [1, 3, 5, 15]) {
         await getHistoryAllCoin({
             coinList,
             limitNen,
             interval
-        })
-        await delay(3000)
-    }))
+        });
+        await delay(3000);  
+    }
 
 }
 
