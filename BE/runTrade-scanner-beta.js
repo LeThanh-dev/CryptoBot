@@ -3503,7 +3503,7 @@ socketRealtime.on('close-upcode', async () => {
     await cancelAllListOrderOC(listOCByCandleBot)
 
     console.log("PM2 Kill Successful");
-    exec("pm2 stop runTrade-dev-beta")
+    exec("pm2 stop runTrade-scanner-beta")
 
 });
 
