@@ -1870,8 +1870,6 @@ const handleScannerDataList = async ({
 
     allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
 
-        console.log(scannerData.OrderChange);
-        
         try {
             if (scannerData.IsActive) {
                 const scannerID = scannerData._id
