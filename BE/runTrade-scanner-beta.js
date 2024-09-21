@@ -6,7 +6,7 @@ const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
-const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE } = require('./controllers/dataCoinByBit');
+const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, getFutureSpotBE, balanceWalletBE, syncSymbolBE } = require('./controllers/dataCoinByBit');
 const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbol } = require('./controllers/position');
 const { getAllStrategiesActiveScannerV3BE } = require('./controllers/scannerV3');
 
@@ -29,10 +29,11 @@ const clientDigit = new RestClientV5({
 // ----------------------------------------------------------------------------------
 var allScannerDataObject = {}
 let missTPDataBySymbol = {}
+var botBalance = {}
 
 var blockContinueOrderOCByStrategiesID = {}
 var listKline = []
-var allSymbol = []
+var allSymbol = {}
 var updatingAllMain = false
 var connectKlineError = false
 var connectByBotError = {}
@@ -1423,37 +1424,40 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                     });
 
                     wsOrder.on('reconnected', () => {
-                        const telegramID = botApiList[botID]?.telegramID
-                        const telegramToken = botApiList[botID]?.telegramToken
-
                         if (connectByBotError[botID]) {
-                            const text = `🔰 Bot ( ${botName} ) khôi phục kết nối thành công`
+                            const telegramID = botApiList[botID]?.telegramID
+                            const telegramToken = botApiList[botID]?.telegramToken
+
+                            const text = `🔰 ${botName} khôi phục kết nối thành công`
                             console.log(text);
+                            console.log(`[V] Reconnected Bot ( ${botName} ) successful`)
+                            connectByBotError[botID] = false
                             sendMessageWithRetry({
                                 messageText: text,
                                 telegramID,
                                 telegramToken
                             })
-                            console.log(`[V] Reconnected Bot ( ${botName} ) successful`)
-                            connectByBotError[botID] = false
                         }
                     });
 
                     wsOrder.on('error', (err) => {
-                        const telegramID = botApiList[botID]?.telegramID
-                        const telegramToken = botApiList[botID]?.telegramToken
+
                         if (!connectByBotError[botID]) {
-                            const text = `🚫 [ Cảnh báo ] Bot ( ${botName} ) đang bị gián đoạn kết nối`
+                            const telegramID = botApiList[botID]?.telegramID
+                            const telegramToken = botApiList[botID]?.telegramToken
+
+                            const text = `🚫 [ Cảnh báo ] ${botName} đang bị gián đoạn kết nối`
                             console.log(text);
+                            console.log(`[!] Connection bot ( ${botName} ) error`);
+                            console.log(err);
+                            connectByBotError[botID] = true
+                            wsOrder.connectAll()
+
                             sendMessageWithRetry({
                                 messageText: text,
                                 telegramID,
                                 telegramToken
                             })
-                            console.log(`[!] Connection bot ( ${botName} ) error`);
-                            console.log(err);
-                            connectByBotError[botID] = true
-                            wsOrder.connectAll()
                         }
                     });
                 }).catch(err => {
@@ -1735,7 +1739,7 @@ const history = async ({
         interval,
         start: TimeStart,
         end: TimeSop,
-        limit: limitNen,
+        limit: interval != 15 ? limitNen : 900,
     })
         .then((response) => {
             const listOC = [];
@@ -1830,13 +1834,13 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
             symbol: coin.value,
             interval
         });
-        index % 50 == 0 && await delay(1000);
+        index % 10 == 0 && await delay(1000);
     }))
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
 
 }
 
-const handleStatistic = async (coinList = allSymbol) => {
+const handleStatistic = async (coinList = Object.values(allSymbol)) => {
 
 
     await Promise.allSettled([1, 3, 5, 15].map(async interval => {
@@ -1865,139 +1869,239 @@ const handleScannerDataList = async ({
 
     allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
 
-        if (scannerData.IsActive) {
-            const Frame = scannerData.Frame.split("m")[0]
-            const scannerID = scannerData._id
-            const botData = scannerData.botID
-            const Candlestick = scannerData.Candle
-            const botName = botData.botName
-            const botID = botData._id
+        try {
+            if (scannerData.IsActive) {
+                const scannerID = scannerData._id
+                const botData = scannerData.botID
+                const Candlestick = scannerData.Candle
+                const PositionSide = scannerData.PositionSide
+                const Expire = Math.abs(scannerData.Expire)
+                const CandlestickOnlyNumber = scannerData.Candle.split("m")[0]
+                const botName = botData.botName
+                const botID = botData._id
 
-            const PositionSide = scannerData.PositionSide
+                const Frame = scannerData.Frame.split("")
 
-            const allHistory = allHistoryByCandleSymbol[Frame][symbol]
+                const TimeHandle = Frame[1] === "h" ? 60 : 24 * 60
 
-            const OCLengthCheck = PositionSide === "Long" ? OCLongLength : OCLength
-            const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
+                const candleQty = Math.round(Frame[0] * TimeHandle / 15)
 
-            // Check expire 
-            if (+scannerData.Expire && new Date() - scannerData.ExpirePre >= scannerData.Expire * 60 * 60 * 1000) {
-                // console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
+                const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
+                const allHistory15 = allHistoryByCandleSymbol["15"][symbol]
 
-                // Delete all config
-                const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
+                const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
+                const allHistoryList15 = PositionSide === "Long" ? allHistory15.listOC : allHistory15.listOCLong
 
-                const checkListOC = listOCObject && Object.values(listOCObject).filter(OCData => {
-                    return OCData.symbol === symbol && scannerID == OCData.scannerID
-                })
+                const OCLengthCheck = allHistoryList15.slice(0, candleQty).some(item => Math.abs(item.OC) >= scannerData.OCLength)
 
-                if (listConfigIDByScanner[scannerID]?.[symbol] && !checkListOC?.length) {
-                    const deleteSuccess = await deleteStrategiesMultipleStrategyBE({
-                        botName,
-                        Candlestick,
-                        PositionSide,
-                        scannerID,
-                        symbol
+                const allHistoryListLimit50 = allHistoryList.slice(0, 50)
+
+                // Check expire 
+                if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
+                    // console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
+
+                    // Delete all config
+                    const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
+
+                    const checkListOC = listOCObject && Object.values(listOCObject).filter(OCData => {
+                        return OCData.symbol === symbol && scannerID == OCData.scannerID
                     })
-                    deleteSuccess && delete listConfigIDByScanner[scannerID]?.[symbol]
+
+                    if (listConfigIDByScanner[scannerID]?.[symbol] && !checkListOC?.length) {
+                        const deleteSuccess = await deleteStrategiesMultipleStrategyBE({
+                            botName,
+                            Candlestick,
+                            PositionSide,
+                            scannerID,
+                            symbol
+                        })
+                        deleteSuccess && delete listConfigIDByScanner[scannerID]?.[symbol]
+                    }
+                    allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
                 }
-                allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
-            }
 
-            if (Math.abs(OCLengthCheck) >= scannerData.OCLength && turnoverPre >= scannerData.Turnover) {
+                if (OCLengthCheck && Math.abs(allSymbol[symbol].volume24h || 0) >= Math.abs(scannerData.Turnover)) {
 
-                const Longest = Math.round(allHistoryList.length * scannerData.Longest / 100)
-                const Ratio = Math.round(Longest * scannerData.Elastic / 100)
-                const Elastic = scannerData.Elastic
-                const Adjust = scannerData.Adjust
+                    const Longest = Math.round(allHistoryListLimit50.length * scannerData.Longest / 100)
+                    const Ratio = Math.round(Longest * scannerData.Elastic / 100)
+                    const Elastic = Math.abs(scannerData.Elastic)
+                    const Adjust = Math.abs(scannerData.Adjust)
 
-                const allHistoryListSort = sortListReverse(allHistoryList)
-                // remove top max 
-                allHistoryListSort.shift()
+                    const allHistoryListSort = sortListReverse(allHistoryListLimit50)
+                    // remove top max 
+                    allHistoryListSort.shift()
 
-                const allHistoryListSlice = allHistoryListSort.slice(0, Longest).filter(allHistory => allHistory.TP >= Elastic)
+                    const allHistoryListSlice = allHistoryListSort.slice(0, Longest).filter(allHistory => Math.abs(allHistory.TP) >= Elastic)
 
-                const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
+                    const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
 
-                // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
+                    // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
 
-                if (allHistoryListSlice.length >= Ratio) {
+                    if (allHistoryListSlice.length >= Ratio) {
 
-                    // console.log("TRUE", allHistoryListSlice, symbol);
+                        // console.log("TRUE", allHistoryListSlice, symbol);
 
-                    const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
-                        return pre + Math.abs(cur.OC)
-                    }, 0)
+                        const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
+                            return pre + Math.abs(cur.OC)
+                        }, 0)
 
-                    const OCAvg = (OCTotal / allHistoryListLongestTop3.length).toFixed(3)
+                        const OCAvg = Math.abs((OCTotal / allHistoryListLongestTop3.length).toFixed(3))
 
-                    // console.log("OCAvg", OCAvg, symbol, candle);
+                        // console.log("OCAvg", OCAvg, symbol, candle);
 
-                    if (OCAvg >= scannerData.OrderChange) {
+                        if (OCAvg >= Math.abs(scannerData.OrderChange)) {
 
-                        const newOC = (OCAvg * Adjust).toFixed(3)
-                        const OCAdjust = `${OCAvg} x ${Adjust}`
+                            const newOC = (OCAvg * Adjust).toFixed(3)
+                            const OCAdjust = `${OCAvg} x ${Adjust}`
 
-                        if (listConfigIDByScanner[scannerID]?.[symbol]) {
-                            const res = await updateStrategiesMultipleStrategyBE({
-                                scannerID,
-                                newOC,
-                                Candlestick,
-                                botName,
-                                symbol,
-                                PositionSide,
-                                OCAdjust,
-                                newOC
-                            })
-
-                            console.log("\n", res.message);
-
-                            const newData = res.data
-
-                            if (newData.length > 0) {
-                                handleSocketUpdate(newData)
-                            }
-                        } else {
-                            const res = await createStrategiesMultipleStrategyBE({
-                                botID,
-                                botName,
-                                symbol,
-                                scannerID,
-                                OCAdjust,
-                                dataInput: {
-                                    PositionSide,
-                                    Amount: scannerData.Amount,
-                                    OrderChange: newOC,
+                            if (listConfigIDByScanner[scannerID]?.[symbol]) {
+                                const res = await updateStrategiesMultipleStrategyBE({
+                                    scannerID,
+                                    newOC,
                                     Candlestick,
-                                    TakeProfit: 50,
-                                    ReduceTakeProfit: 45,
-                                    ExtendedOCPercent: 80,
-                                    Ignore: 85,
-                                    EntryTrailing: 20,
-                                    StopLose: 100,
-                                    IsActive: true,
-                                },
-                            })
+                                    botName,
+                                    symbol,
+                                    PositionSide,
+                                    OCAdjust,
+                                    newOC
+                                })
 
-                            console.log("\n", res.message);
+                                console.log(changeColorConsole.cyanBright("\n", res.message));
 
-                            const newData = res.data
+                                const newData = res.data
 
-                            if (newData.length > 0) {
-                                listConfigIDByScanner[scannerID] = {}
-                                listConfigIDByScanner[scannerID][symbol] = true
-                                await handleSocketAddNew(newData)
+                                if (newData.length > 0) {
+                                    handleSocketUpdate(newData)
+                                }
+                            } else {
+                                const res = await createStrategiesMultipleStrategyBE({
+                                    botID,
+                                    botName,
+                                    symbol,
+                                    scannerID,
+                                    OCAdjust,
+                                    dataInput: {
+                                        PositionSide,
+                                        Amount: scannerData.Amount,
+                                        OrderChange: newOC,
+                                        Candlestick,
+                                        TakeProfit: 50,
+                                        ReduceTakeProfit: 45,
+                                        ExtendedOCPercent: 80,
+                                        Ignore: 85,
+                                        EntryTrailing: 20,
+                                        StopLose: 100,
+                                        IsActive: true,
+                                    },
+                                })
+
+                                console.log(changeColorConsole.cyanBright("\n", res.message));
+
+                                const newData = res.data
+
+                                if (newData.length > 0) {
+                                    listConfigIDByScanner[scannerID] = {}
+                                    listConfigIDByScanner[scannerID][symbol] = true
+                                    await handleSocketAddNew(newData)
+                                }
                             }
-                        }
 
+                        }
                     }
                 }
             }
+        } catch (error) {
+            console.log(error);
+
         }
 
     }))
 }
 
+
+// BALANCE WALLET ----------------------------------------------------------------
+
+const handleWalletBalance = async () => {
+
+
+    const botListDataActiveRes = Object.values(botApiList)
+
+    if (botListDataActiveRes.length > 0) {
+        const botListDataActiveObject = await Promise.allSettled(botListDataActiveRes.map(async item => {
+            const botID = item._id
+
+            const result = await getFutureSpotBE(botID)
+
+            // Trả về đối tượng mới cho mỗi item trong mảng
+            return {
+                id: botID,
+                userID: item.userID,
+                botType: item.botType,
+                spotSavings: +item?.spotSavings || 0,
+                future: +result.future || 0,
+                spotTotal: +result.spotTotal || 0,
+                API_KEY: result.API_KEY,
+                SECRET_KEY: result.SECRET_KEY,
+                telegramID: item?.telegramID,
+                telegramToken: item?.telegramToken,
+                telegramToken: item?.telegramToken,
+                botName: item?.botName,
+            };
+
+        }))
+        botListDataActive = botListDataActiveObject.map(item => item.value)
+
+        await Promise.allSettled(botListDataActive.map(async botData => {
+
+            const newSpotAvailable = botData.spotTotal - botData.spotSavings
+            const average = (newSpotAvailable + botData.future) / 2
+
+            const balancePrice = botData.spotTotal + botData.future
+
+            const botID = `${botData.userID}-${botData.botType}`
+
+            if (Math.abs(botData.future - newSpotAvailable) >= 1) {
+                await balanceWalletBE({
+                    amount: Math.abs(newSpotAvailable - average),
+                    futureLarger: botData.future - newSpotAvailable > 0,
+                    API_KEY: botData.API_KEY,
+                    SECRET_KEY: botData.SECRET_KEY,
+                })
+
+                console.log(`\n[V] Saving ( ${botData.botName} ) Successful\n`);
+            }
+            else {
+                console.log(`\n[!] Saving ( ${botData.botName} ) Failed ( < 1 )\n`);
+            }
+
+            if (!botBalance[botID]) {
+                botBalance[botID] = {
+                    botType: "",
+                    totalBalanceAllBot: 0,
+                    telegramInfo: {
+                        telegramID: "",
+                        telegramToken: ""
+                    }
+                }
+            }
+            botBalance[botID] = {
+                botType: botData.botType,
+                totalBalanceAllBot: balancePrice + botBalance[botID].totalBalanceAllBot,
+                telegramInfo: {
+                    telegramID: botData.telegramID,
+                    telegramToken: botData.telegramToken,
+                }
+            }
+            sendMessageWithRetryByBot({
+                messageText: `<b>Bot:</b> ${botData.botName}\n💵 <b>Balance:</b> ${balancePrice.toFixed(3)}$`,
+                telegramID: botData.telegramID,
+                telegramToken: botData.telegramToken,
+                botName: botData.botName
+            })
+        }))
+    }
+
+}
 
 // ----------------------------------------------------------------------------------
 
@@ -2012,7 +2116,7 @@ const Main = async () => {
     const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner])
 
     const allStrategiesActiveObject = result[0].value || []
-    allSymbol = result[1].value || []
+    const allSymbolArray = result[1].value || []
     const getAllConfigScannerRes = result[2].value || []
 
 
@@ -2055,19 +2159,13 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
-    listKline = allSymbol.flatMap(symbolItem => ([
-        `kline.1.${symbolItem.value}`,
-        `kline.3.${symbolItem.value}`,
-        `kline.5.${symbolItem.value}`,
-        `kline.15.${symbolItem.value}`,
-    ]))
-
-    allSymbol.forEach(item => {
+    allSymbolArray.forEach(item => {
         const symbol = item.value
         const listKlineNumber = [1, 3, 5, 15]
         listKlineNumber.forEach(candle => {
             const symbolCandleID = `${symbol}-${candle}`
-
+            listKline.push(`kline.${candle}.${symbol}`)
+            allSymbol[symbol] = item
             listPricePreOne[symbolCandleID] = {
                 open: 0,
                 close: 0,
@@ -2088,28 +2186,34 @@ const Main = async () => {
                 prePrice: 0,
             }
 
-            getAllConfigScannerRes.forEach(scannerData => {
-                const scannerID = scannerData._id
-                const setBlacklist = new Set(scannerData.Blacklist)
-                const setOnlyPairs = new Set(scannerData.OnlyPairs)
-                if (scannerData.Frame == `${candle}m` && checkConditionBot(scannerData) && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
-
-                    allScannerDataObject[candle] = allScannerDataObject[candle] || {}
-                    allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
-
-                    const newScannerData = scannerData.toObject()
-
-                    newScannerData.ExpirePre = new Date()
-
-                    allScannerDataObject[candle][symbol][scannerID] = newScannerData
-                }
-            })
 
             allHistoryByCandleSymbol[candle] = {}
         })
+        getAllConfigScannerRes.forEach(scannerData => {
+            const scannerID = scannerData._id
+            const setBlacklist = new Set(scannerData.Blacklist)
+            const setOnlyPairs = new Set(scannerData.OnlyPairs)
+            if (checkConditionBot(scannerData) && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
+
+                [1, 3, 5, 15].forEach(candle => {
+
+                    if (scannerData.Candle === `${candle}m`) {
+
+                        allScannerDataObject[candle] = allScannerDataObject[candle] || {}
+                        allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
+
+                        const newScannerData = scannerData.toObject()
+
+                        newScannerData.ExpirePre = new Date()
+
+                        allScannerDataObject[candle][symbol][scannerID] = newScannerData
+                    }
+                })
+            }
+        })
     })
 
-    // await handleStatistic([{ value: "NEIROETHUSDT" }, { value: "MEWUSDT" }, { value: "REEFUSDT" }])
+    // await handleStatistic([{ value: "ARKUSDT" }])
     await handleStatistic()
 
     await handleSocketBotApiList(botApiList)
@@ -2609,7 +2713,7 @@ try {
 
 
             const nangAllOC = Promise.allSettled(
-                allSymbol.map(async symbolItem => {
+                Object.values(allSymbol).map(async symbolItem => {
                     const symbol = symbolItem.value
                     return Promise.allSettled([1, 3, 5, 15].map(candle => {
                         const listDataObject = allStrategiesByCandleAndSymbol?.[symbol]?.[candle]
@@ -2637,7 +2741,7 @@ try {
             haOCFunc = setTimeout(async () => {
                 console.log(changeColorConsole.greenBright("[...] START HẠ OC"));
                 await Promise.allSettled(
-                    allSymbol.map(async symbolItem => {
+                    Object.values(allSymbol).map(async symbolItem => {
                         const symbol = symbolItem.value
                         return Promise.allSettled([1, 3, 5, 15].map(candle => {
                             const listDataObject = allStrategiesByCandleAndSymbol?.[symbol]?.[candle]
@@ -2666,7 +2770,6 @@ try {
             const Highest = +dataMain.high
             const Lowest = +dataMain.low
             const Close = coinCurrent
-            const turnoverPre = +dataMain.turnover
 
             listPricePreOne[symbolCandleID] = {
                 open: Open,
@@ -2731,7 +2834,7 @@ try {
                     startTime,
                 })
 
-                handleScannerDataList({ candle, symbol, OCLength: OC, OCLongLength: OCLong, turnoverPre })
+                handleScannerDataList({ candle, symbol, OCLength: OC, OCLongLength: OCLong })
 
             }
 
@@ -2750,7 +2853,7 @@ try {
             const text = "🔰 Hệ thống khôi phục kết nối thành công"
             console.log(text);
             sendAllBotTelegram(text)
-            console.log('[V] Reconnected order successful')
+            console.log('[V] Reconnected kline successful')
             connectKlineError = false
         }
     });
@@ -2760,7 +2863,7 @@ try {
             const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
             console.log(text);
             sendAllBotTelegram(text)
-            console.log('[!] Connection listKline error');
+            console.log('[!] Connection kline error');
             console.log(err);
             connectKlineError = true
             wsSymbol.connectAll()
@@ -2773,6 +2876,55 @@ try {
         });
     }, 1000)
 
+    // BALANCE WALLET --------------------------------
+
+
+    try {
+
+        cron.schedule('0 */3 * * *', async () => {
+            const balanceWalletAll = handleWalletBalance();
+
+            const syncSymbolBEAll = syncSymbolBE()
+
+            const resultAll = await Promise.allSettled([balanceWalletAll, syncSymbolBEAll])
+
+            const listSymbolUpdate = resultAll[1].value || []
+            listSymbolUpdate.forEach(symbolData => {
+                const symbol = symbolData.value
+                allSymbol[symbol] = {
+                    value: symbol,
+                    volume24h: symbolData.volume24h
+                }
+            })
+            setTimeout(() => {
+                const list = Object.entries(botBalance)
+                if (list.length > 0) {
+                    Promise.allSettled(list.map(async item => {
+                        const key = item[0]
+                        const value = item[1]
+                        sendMessageWithRetryByBot({
+                            messageText: `<b>BotType:</b> ${value.botType}\n💰 <b>Total Balance:</b> ${(value.totalBalanceAllBot).toFixed(3)}$`,
+                            telegramID: value.telegramInfo.telegramID,
+                            telegramToken: value.telegramInfo.telegramToken,
+                            botName: "Total Bot"
+                        })
+
+                        botBalance[key] = {
+                            totalBalanceAllBot: 0,
+                            telegramInfo: {
+                                telegramID: "",
+                                telegramToken: ""
+                            }
+                        }
+                    }))
+                }
+            }, 500)
+        })
+    }
+
+    catch (e) {
+        console.log("[!] Error Balance:", e)
+    }
 }
 
 catch (e) {
@@ -3251,15 +3403,8 @@ socketRealtime.on('bot-telegram', async (data) => {
 socketRealtime.on('sync-symbol', async (newData) => {
     console.log("[...] Sync Symbol");
 
-    allSymbol = allSymbol.concat(newData)
 
-    const newListKline = newData.flatMap(symbolData => ([
-        `kline.1.${symbolData.value}`,
-        `kline.3.${symbolData.value}`,
-        `kline.5.${symbolData.value}`,
-        `kline.15.${symbolData.value}`,
-    ]))
-
+    const newListKline = []
 
     const resultDigitAll = await Digit()
     resultDigitAll?.length > 0 && (
@@ -3276,6 +3421,11 @@ socketRealtime.on('sync-symbol', async (newData) => {
         const listKline = [1, 3, 5, 15]
         listKline.forEach(candle => {
             const symbolCandleID = `${symbol}-${candle}`
+
+            newListKline.push(`kline.${candle}.${symbol}`)
+
+            allSymbol[symbol] = item
+
             listPricePreOne[symbolCandleID] = {
                 open: 0,
                 close: 0,
@@ -3402,7 +3552,7 @@ socketRealtime.on('scanner-update', async (newData = []) => {
         const setOnlyPairs = new Set(scannerData.OnlyPairs)
         const setBlacklist = new Set(scannerData.Blacklist)
         if (checkConditionBot(scannerData)) {
-            allSymbol.forEach(symbolData => {
+            Object.values(allSymbol).forEach(symbolData => {
 
                 const symbol = symbolData.value
                 if (IsActive && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
@@ -3437,7 +3587,7 @@ socketRealtime.on('scanner-delete', async (newData = []) => {
     newData.forEach(scannerData => {
         const scannerID = scannerData._id
         const candle = scannerData.Candle
-        allSymbol.forEach(symbol => {
+        Object.values(allSymbol).forEach(symbol => {
             delete allScannerDataObject[candle]?.[symbol.value]?.[scannerID]
         })
     })

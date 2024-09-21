@@ -223,9 +223,8 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
 
-        // if (OCRound >= 1 && TPRound > 60) {
         if (vol >= 2000) {
-            if (OCRound >= 1) {
+            if (OCRound >= 1 && TPRound > 0 ) {
                 // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
                 messageList.push(ht)
@@ -233,8 +232,7 @@ const tinhOC = (symbol, dataAll = []) => {
                 console.log(dataAll);
             }
 
-            // if (OCLongRound <= -1 && TPLongRound > 60) {
-            if (OCLongRound <= -1) {
+            if (OCLongRound <= -1 && TPLongRound > 0 ) {
                 // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
                 messageList.push(htLong)
@@ -275,7 +273,7 @@ let Main = async () => {
 
     listKline = await ListCoinFT()
 
-    wsSymbol.subscribeV5(listKline, 'spot').then(() => {
+   await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
         console.log("[V] Subscribe Kline Successful");
 
         wsSymbol.on('update', (dataCoin) => {
@@ -321,7 +319,7 @@ let Main = async () => {
                 trichMauDataArray[symbol].push(trichMauData[symbol])
                 trichMau[symbol].pre = new Date()
             }
-
+            
             trichMauData[symbol] = {
                 open: coinCurrent,
                 close: coinCurrent,
@@ -329,6 +327,8 @@ let Main = async () => {
                 low: coinCurrent,
                 turnover
             }
+
+
 
 
             // }
@@ -346,20 +346,6 @@ let Main = async () => {
 
         });
     }).catch((err) => { console.log(err) });
-
-
-
-
-
-    //Báo lỗi socket$ pm2 start app.js
-    wsSymbol.on('error', (err) => {
-        process.exit(1);
-    });
-
-};
-
-try {
-    Main()
 
     setInterval(() => {
 
@@ -380,6 +366,20 @@ try {
             trichMauDataArray[symbol] = []
         })
     }, 3000)
+
+
+
+    //Báo lỗi socket$ pm2 start app.js
+    wsSymbol.on('error', (err) => {
+        process.exit(1);
+    });
+
+};
+
+try {
+    Main()
+
+    
 
     setTimeout(() => {
         cron.schedule('0 */3 * * *', async () => {

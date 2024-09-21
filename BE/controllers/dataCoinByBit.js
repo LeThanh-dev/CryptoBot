@@ -1288,7 +1288,7 @@ const dataCoinByBitController = {
     },
     getAllSymbolBE: async (req, res) => {
         try {
-            const result = await StrategiesModel.find().select("value");
+            const result = await StrategiesModel.find().select("value volume24h");
             return result || []
 
         } catch (err) {
@@ -1547,6 +1547,33 @@ const dataCoinByBitController = {
         } catch (error) {
             console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Error: ${error.message} `)
             return false
+        }
+    },
+
+    syncSymbolBE: async () => {
+        try {
+
+            const listSymbolObject = await dataCoinByBitController.getSymbolFromCloud();
+
+            const listSymbolUpdate = []
+            if (listSymbolObject?.length) {
+
+
+                listSymbolObject.forEach((value) => {
+                    const symbol = value.symbol
+
+                    listSymbolUpdate.push({
+                        value: symbol,
+                        volume24h: value.volume24h,
+                    });
+                })
+                return listSymbolUpdate
+            }
+            else {
+                return []
+            }
+        } catch (error) {
+            return []
         }
     },
 
