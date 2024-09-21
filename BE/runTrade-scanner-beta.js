@@ -12,7 +12,7 @@ const { getAllStrategiesActiveScannerV3BE } = require('./controllers/scannerV3')
 
 const wsConfig = {
     market: 'v5',
-    // recvWindow: 100000,
+    recvWindow: 100000,
     // pongTimeout: 5000
 }
 
@@ -24,6 +24,7 @@ const MAX_ORDER_LIMIT = 10
 
 const clientDigit = new RestClientV5({
     testnet: false,
+    recv_window: 100000,
 });
 
 // ----------------------------------------------------------------------------------
@@ -1836,7 +1837,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval }) {
         });
         await delay(1000);
     }))
-    
+
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
 
 }

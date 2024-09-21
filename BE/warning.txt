@@ -48,3 +48,4 @@ git push
 
 
 pm2 start runTrade-scanner-beta.js --log-date-format 'DD-MM-YY HH:mm:ss'
+pm2 stop runTrade-scanner-beta.js
