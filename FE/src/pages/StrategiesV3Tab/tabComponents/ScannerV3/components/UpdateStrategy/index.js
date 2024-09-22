@@ -547,7 +547,7 @@ function UpdateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Turnover"
+                            label="Turnover 24h"
                             variant="outlined"
                             defaultValue={dataInput.Turnover || 0}
                             size="medium"

@@ -694,7 +694,7 @@ function CreateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Turnover"
+                            label="Turnover 24h"
                             variant="outlined"
                             defaultValue={5000000}
                             size="medium"

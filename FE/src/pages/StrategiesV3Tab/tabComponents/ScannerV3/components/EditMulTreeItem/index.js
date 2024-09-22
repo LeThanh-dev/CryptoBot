@@ -98,7 +98,7 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
-            name: "Turnover",
+            name: "Turnover 24h",
             value: "Turnover",
             compareFilterList: compareFilterListDefault,
         },

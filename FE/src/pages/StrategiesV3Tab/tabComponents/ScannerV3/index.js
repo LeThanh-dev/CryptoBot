@@ -303,8 +303,8 @@ function ScannerV3() {
         },
         {
             field: 'Turnover',
-            headerName: 'Turnover ($)',
-            minWidth: window.innerWidth <= 740 ? 170 : 150,
+            headerName: 'Turnover 24h ($)',
+            minWidth: window.innerWidth <= 740 ? 210 : 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 return <p >{formatNumberString(params.row['Turnover'] || 0)}</p>
