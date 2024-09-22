@@ -1966,12 +1966,12 @@ const handleScannerDataList = async ({
                                     newOC
                                 })
 
-                                console.log(changeColorConsole.cyanBright("\n", res.message));
 
                                 const newData = res.data
 
                                 if (newData.length > 0) {
-                                    handleSocketUpdate(newData)
+                                    console.log(changeColorConsole.cyanBright("\n", res.message));
+                                    await handleSocketUpdate(newData)
                                 }
                             } else {
                                 const res = await createStrategiesMultipleStrategyBE({
@@ -1995,11 +1995,11 @@ const handleScannerDataList = async ({
                                     },
                                 })
 
-                                console.log(changeColorConsole.cyanBright("\n", res.message));
 
                                 const newData = res.data
 
                                 if (newData.length > 0) {
+                                    console.log(changeColorConsole.cyanBright("\n", res.message));
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
                                     listConfigIDByScanner[scannerID][symbol] = true
                                     await handleSocketAddNew(newData)
@@ -3518,7 +3518,7 @@ socketRealtime.on('scanner-add', async (newData = []) => {
 
         const scannerID = scannerData._id
         const candle = scannerData.Candle.split("m")[0]
-        
+
         const botID = scannerData.botID?._id
         const botName = scannerData.botID.botName
         const ApiKey = scannerData.botID.ApiKey
@@ -3546,7 +3546,7 @@ socketRealtime.on('scanner-add', async (newData = []) => {
                 IsActive: true
             }
         }
-        
+
         const setBlacklist = new Set(scannerData.Blacklist)
         if (checkConditionBot(scannerData)) {
             scannerData.OnlyPairs.forEach(symbol => {
@@ -3576,7 +3576,7 @@ socketRealtime.on('scanner-update', async (newData = []) => {
         const scannerID = scannerData._id
         const IsActive = scannerData.IsActive
         const candle = scannerData.Candle.split("m")[0]
-        
+
         const botID = scannerData.botID?._id
         const botName = scannerData.botID.botName
         const ApiKey = scannerData.botID.ApiKey
