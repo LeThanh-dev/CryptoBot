@@ -7,8 +7,6 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../services/spotService';
-import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../services/marginService';
 import { createConfigScannerV3 } from '../../../../../../services/scannerV3Service';
 import { getAllSymbol, syncSymbol } from '../../../../../../services/dataCoinByBitService';
 
@@ -613,7 +611,6 @@ function CreateStrategy({
                             />
                             {errors.Longest?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
                             {errors.Longest?.type === "min" && <p className="formControlErrorLabel">{">=  0.01"}</p>}
-                            {/* {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>} */}
 
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
@@ -628,10 +625,8 @@ function CreateStrategy({
                                     </InputAdornment>
                                 }}
                                 {...register("Elastic", {
-                                    required: true,
                                 })}
                             />
-                            {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
 
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>

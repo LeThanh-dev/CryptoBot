@@ -496,7 +496,7 @@ function ScannerV3() {
                     ...item,
                     Expire:item.Expire || 0,
                     Condition:`${item.Longest} - ${item.Elastic || 0} - ${item.Ratio}`,
-                    FrameOCLength:`${item.Frame} - ${item.OCLength}%`,
+                    FrameOCLength:`${item.Frame} - ${item.OCLength || 0}%`,
                     OrderChangeAdjust:`${item.OrderChange} x ${item.Adjust}`,
                     BotName: item.botID.botName
                 })

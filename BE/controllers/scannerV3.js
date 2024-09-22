@@ -237,6 +237,55 @@ const dataCoinByBitController = {
             )
 
             if (result.acknowledged && result.matchedCount !== 0) {
+
+                // handle get all config by scannerID
+                const configIDBE = new mongoose.Types.ObjectId(configID)
+                const resultFilterSpot = await StrategiesModel.aggregate([
+                    {
+                        $match: {
+                            "children.scannerID": { $in: [configIDBE] }
+                        }
+                    },
+                    {
+                        $project: {
+                            label: 1,
+                            value: 1,
+                            volume24h: 1,
+                            children: {
+                                $filter: {
+                                    input: "$children",
+                                    as: "child",
+                                    cond: {
+                                        $in: ["$$child.scannerID", [configIDBE]]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]);
+
+                const resultGetSpot = await StrategiesModel.populate(resultFilterSpot, {
+                    path: 'children.botID',
+                }) || []
+
+
+                const handleResultDelete = resultGetSpot.flatMap((data) => data.children.map(child => {
+                    child.symbol = data.value
+                    child.value = `${data._id}-${child._id}`
+                    return child
+                })) || []
+
+                await StrategiesModel.updateMany(
+                    { "children.scannerID": { $in: [configIDBE] } },
+                    { $pull: { children: { scannerID: { $in: [configIDBE] } } } }
+                );
+
+
+                handleResultDelete.length > 0 && dataCoinByBitController.sendDataRealtime({
+                    type: "delete",
+                    data: handleResultDelete
+                })
+
                 dataCoinByBitController.sendDataRealtime({
                     type: "scanner-update",
                     data: [newData]
@@ -264,9 +313,10 @@ const dataCoinByBitController = {
             const spotDeleteID = []
 
             dataList.forEach((data) => {
+                const idMain = data.id
                 bulkOperations.push({
                     updateOne: {
-                        filter: { _id: data.id },
+                        filter: { _id: idMain },
                         update: {
                             $set: {
                                 ...data.UpdatedFields,
@@ -275,19 +325,9 @@ const dataCoinByBitController = {
                         }
                     }
                 })
-                if (!data.UpdatedFields.IsActive) {
-                    const id = new mongoose.Types.ObjectId(data.id)
-                    spotDeleteID.push(id)
-                }
+                const id = new mongoose.Types.ObjectId(idMain)
+                spotDeleteID.push(id)
             });
-
-            const bulkOperationsRes = ScannerV3Model.bulkWrite(bulkOperations);
-
-            const bulkOperationsDelSpotRes = StrategiesModel.updateMany(
-                { "children.scannerID": { $in: spotDeleteID } },
-                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
-            );
-
 
             // handle get all config by scannerID
 
@@ -325,6 +365,14 @@ const dataCoinByBitController = {
                 child.value = `${data._id}-${child._id}`
                 return child
             })) || []
+
+            const bulkOperationsRes = ScannerV3Model.bulkWrite(bulkOperations);
+
+            const bulkOperationsDelSpotRes = StrategiesModel.updateMany(
+                { "children.scannerID": { $in: spotDeleteID } },
+                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
+            );
+
 
             await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes])
 

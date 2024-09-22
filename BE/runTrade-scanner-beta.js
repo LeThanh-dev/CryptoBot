@@ -799,6 +799,7 @@ const sendMessageWithRetry = async ({
     }
 };
 
+
 const getMoneyFuture = async (botApiListInput) => {
 
     const list = Object.values(botApiListInput)
@@ -1168,7 +1169,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 console.log(`[-] Cancelled OC ( ${botName} - ${strategy.PositionSide === "Long" ? "Sell" : "Buy"} - ${symbol} - ${strategy.Candlestick}) `);
 
-                                                listOCByCandleBot[strategy.Candlestick]?.[botID]?.listOC[strategyID] && delete listOCByCandleBot[strategy.Candlestick][botID].listOC[strategyID]
+                                                delete listOCByCandleBot[strategy.Candlestick]?.[botID]?.listOC[strategyID]
                                                 cancelAll({ botID, strategyID })
                                             }
 
@@ -1857,9 +1858,6 @@ const handleStatistic = async (coinList = Object.values(allSymbol)) => {
 const handleScannerDataList = async ({
     candle,
     symbol,
-    OCLength,
-    OCLongLength,
-    turnoverPre
 }) => {
 
     // console.log(changeColorConsole.cyanBright(`[...] Handle history scanner ( ${symbol} - ${candle}m )`));
@@ -1870,8 +1868,8 @@ const handleScannerDataList = async ({
 
         try {
             const botID = scannerData.botID?._id
-
-            if (scannerData.IsActive && botApiList[botID]?.IsActive) {
+            const checkBotActive = botApiList[botID] ? botApiList[botID]?.IsActive : true
+            if (scannerData.IsActive && checkBotActive) {
                 const scannerID = scannerData._id
                 const botData = scannerData.botID
                 const Candlestick = scannerData.Candle
@@ -1893,10 +1891,11 @@ const handleScannerDataList = async ({
                 const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
                 const allHistoryList15 = PositionSide === "Long" ? allHistory15.listOC : allHistory15.listOCLong
 
-                const OCLengthCheck = allHistoryList15.slice(0, candleQty).some(item => Math.abs(item.OC) >= scannerData.OCLength)
+                const OCLengthCheck = allHistoryList15.slice(0, candleQty).some(item => Math.abs(item.OC) >= Math.abs(scannerData.OCLength))
 
                 const allHistoryListLimit50 = allHistoryList.slice(0, 50)
 
+                
                 // Check expire 
                 if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
                     // console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
@@ -1920,11 +1919,12 @@ const handleScannerDataList = async ({
                     }
                     allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
                 }
+                
                 if (OCLengthCheck && Math.abs(allSymbol[symbol].volume24h || 0) >= Math.abs(scannerData.Turnover)) {
 
                     const LongestQty = Math.round(allHistoryListLimit50.length * scannerData.Longest / 100)
                     const RatioQty = Math.round(LongestQty * scannerData.Ratio / 100)
-                    const Elastic = Math.abs(scannerData.Elastic || 0)
+                    const Elastic = Math.abs(scannerData.Elastic)
                     const Adjust = Math.abs(scannerData.Adjust)
 
                     const allHistoryListSort = sortListReverse(allHistoryListLimit50)
@@ -2027,7 +2027,8 @@ const handleWalletBalance = async () => {
 
     if (botListDataActiveRes.length > 0) {
         const botListDataActiveObject = await Promise.allSettled(botListDataActiveRes.map(async item => {
-            const botID = item._id
+            
+            const botID = item.id
 
             const result = await getFutureSpotBE(botID)
 
@@ -2127,7 +2128,6 @@ const Main = async () => {
             const botName = strategyItem.botID.botName
             const symbol = strategyItem.symbol
             const Candlestick = strategyItem.Candlestick.split("")[0]
-
 
             botApiList[botID] = {
                 id: botID,
@@ -2830,7 +2830,7 @@ try {
                     startTime,
                 })
 
-                handleScannerDataList({ candle, symbol, OCLength: OC, OCLongLength: OCLong })
+                handleScannerDataList({ candle, symbol })
 
             }
 
@@ -2879,11 +2879,11 @@ try {
 
         cron.schedule('0 */3 * * *', async () => {
             const balanceWalletAll = handleWalletBalance();
-
+    
             const syncSymbolBEAll = syncSymbolBE()
-
+    
             const resultAll = await Promise.allSettled([balanceWalletAll, syncSymbolBEAll])
-
+    
             const listSymbolUpdate = resultAll[1].value || []
             listSymbolUpdate.forEach(symbolData => {
                 const symbol = symbolData.value
@@ -2898,13 +2898,12 @@ try {
                     Promise.allSettled(list.map(async item => {
                         const key = item[0]
                         const value = item[1]
-                        sendMessageWithRetryByBot({
+                        sendMessageWithRetry({
                             messageText: `<b>BotType:</b> ${value.botType}\n💰 <b>Total Balance:</b> ${(value.totalBalanceAllBot).toFixed(3)}$`,
                             telegramID: value.telegramInfo.telegramID,
                             telegramToken: value.telegramInfo.telegramToken,
-                            botName: "Total Bot"
                         })
-
+    
                         botBalance[key] = {
                             totalBalanceAllBot: 0,
                             telegramInfo: {
@@ -3617,12 +3616,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
                     allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
 
                     const newScannerData = { ...scannerData }
-
-                    newScannerData.OrderChange = +newScannerData.OrderChange
-                    newScannerData.Elastic = +newScannerData.Elastic
-                    newScannerData.Turnover = +newScannerData.Turnover
-                    newScannerData.Amount = +newScannerData.Amount
-                    newScannerData.Expire = +newScannerData.Expire
                     newScannerData.ExpirePre = new Date()
 
                     allScannerDataObject[candle][symbol][scannerID] = newScannerData
