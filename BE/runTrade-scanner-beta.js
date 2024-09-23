@@ -12,7 +12,7 @@ const { getAllStrategiesActiveScannerV3BE } = require('./controllers/scannerV3')
 
 const wsConfig = {
     market: 'v5',
-    recvWindow: 100000,
+    // recvWindow: 100000,
     // pongTimeout: 5000
 }
 
@@ -24,7 +24,7 @@ const MAX_ORDER_LIMIT = 10
 
 const clientDigit = new RestClientV5({
     testnet: false,
-    recv_window: 100000,
+    // recv_window: 100000,
 });
 
 // ----------------------------------------------------------------------------------
@@ -907,7 +907,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                         }
                                     }
                                     if (orderStatus === "PartiallyFilled") {
-                                        console.log(changeColorConsole.blueBright(`[V] PartiallyFilled OrderID( ${botName} - ${dataMain.side} - ${symbol} - ${strategy.Candlestick} ):`, dataMain.qty));
+                                        console.log(changeColorConsole.blueBright(`[V] PartiallyFilled OrderID( ${botName} - ${dataMain.side} - ${symbol} ):`, dataMain.qty));
                                     }
 
                                     if (topicMain === "order") {
@@ -1868,9 +1868,8 @@ const handleScannerDataList = async ({
 
     const allScannerData = allScannerDataObject[candle]?.[symbol]
 
-    allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
-
-        try {
+    if (allScannerData && Object.values(allScannerData)?.length > 0) {
+        for (const scannerData of Object.values(allScannerData)) {
             if (scannerData.IsActive) {
                 const scannerID = scannerData._id
                 const botData = scannerData.botID
@@ -1899,7 +1898,7 @@ const handleScannerDataList = async ({
 
                 // Check expire 
                 if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
-                    // console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
+                    console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
 
                     // Delete all config
                     const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
@@ -1954,6 +1953,8 @@ const handleScannerDataList = async ({
                             const newOC = (OCAvg * Adjust).toFixed(3)
                             const OCAdjust = `${OCAvg} x ${Adjust}`
 
+                            console.log("listConfigIDByScanner",listConfigIDByScanner);
+                            
                             if (listConfigIDByScanner[scannerID]?.[symbol]) {
                                 const res = await updateStrategiesMultipleStrategyBE({
                                     scannerID,
@@ -1966,12 +1967,11 @@ const handleScannerDataList = async ({
                                     newOC
                                 })
 
-                                console.log(changeColorConsole.cyanBright("\n", res.message));
-
                                 const newData = res.data
 
                                 if (newData.length > 0) {
-                                    handleSocketUpdate(newData)
+                                    console.log(changeColorConsole.cyanBright("\n", res.message));
+                                    await handleSocketUpdate(newData)
                                 }
                             } else {
                                 const res = await createStrategiesMultipleStrategyBE({
@@ -1995,13 +1995,14 @@ const handleScannerDataList = async ({
                                     },
                                 })
 
-                                console.log(changeColorConsole.cyanBright("\n", res.message));
 
                                 const newData = res.data
 
                                 if (newData.length > 0) {
+                                    console.log(changeColorConsole.cyanBright("\n", res.message));
                                     listConfigIDByScanner[scannerID] = {}
                                     listConfigIDByScanner[scannerID][symbol] = true
+
                                     await handleSocketAddNew(newData)
                                 }
                             }
@@ -2010,12 +2011,8 @@ const handleScannerDataList = async ({
                     }
                 }
             }
-        } catch (error) {
-            console.log(error);
-
         }
-
-    }))
+    }
 }
 
 
@@ -2202,7 +2199,7 @@ const Main = async () => {
                         allScannerDataObject[candle] = allScannerDataObject[candle] || {}
                         allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
 
-                        const newScannerData = scannerData.toObject()
+                        const newScannerData = { ...scannerData }
 
                         newScannerData.ExpirePre = new Date()
 
@@ -3457,12 +3454,12 @@ socketRealtime.on('sync-symbol', async (newData) => {
 
 });
 
-socketRealtime.on('closeAllPosition', (botListData = []) => {
+socketRealtime.on('closeAllPosition', async (botListData = []) => {
 
 
     console.log(`[...] Close All Position From Realtime:`, botListData);
 
-    botListData.forEach(botData => {
+    await Promise.allSettled(botListData.map(async botData => {
 
         ["1m", "3m", "5m", "15m"].forEach(candle => {
             const botID = botData.botID
@@ -3492,7 +3489,7 @@ socketRealtime.on('closeAllPosition', (botListData = []) => {
                 }
             })
         })
-    });
+    }))
 
 });
 
