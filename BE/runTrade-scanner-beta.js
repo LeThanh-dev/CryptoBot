@@ -6,7 +6,7 @@ const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
-const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, syncSymbolBE, deleteAllScannerBE } = require('./controllers/dataCoinByBit');
+const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, syncSymbolBE, deleteAllScannerBE, deleteAllForUPcode } = require('./controllers/dataCoinByBit');
 const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbol } = require('./controllers/position');
 const { getAllStrategiesActiveScannerV3BE } = require('./controllers/scannerV3');
 
@@ -1873,8 +1873,8 @@ const handleScannerDataList = async ({
                 const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
                 const allHistory15 = allHistoryByCandleSymbol["15"][symbol]
 
-                const allHistoryList = PositionSide === "Long" ? allHistory.listOC : allHistory.listOCLong
-                const allHistoryList15 = PositionSide === "Long" ? allHistory15.listOC : allHistory15.listOCLong
+                const allHistoryList = PositionSide === "Long" ? allHistory.listOCLong : allHistory.listOC
+                const allHistoryList15 = PositionSide === "Long" ? allHistory15.listOCLong : allHistory15.listOC
 
                 const OCLengthCheck = allHistoryList15.slice(0, candleQty).some(item => Math.abs(item.OC) >= Math.abs(scannerData.OCLength))
 
@@ -3400,7 +3400,10 @@ socketRealtime.on('close-upcode', async () => {
 
     updatingAllMain = true
 
-    await cancelAllListOrderOC(listOCByCandleBot)
+    const cancelOC = cancelAllListOrderOC(listOCByCandleBot)
+    const deleteAll = deleteAllForUPcode()
+
+    await Promise.allSettled([cancelOC, deleteAll])
 
     console.log("PM2 Kill Successful");
     exec("pm2 stop runTrade-scanner-beta")

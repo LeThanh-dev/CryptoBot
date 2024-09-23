@@ -1,6 +1,7 @@
 const { RestClientV5 } = require('bybit-api');
 const StrategiesModel = require('../models/strategies.model')
 const BotModel = require('../models/bot.model')
+const PositionV3Model = require('../models/position.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
 
@@ -1614,6 +1615,20 @@ const dataCoinByBitController = {
             }
         } catch (error) {
             console.log("[V] Delete All Strategies By Scanner Error:", error);
+        }
+    },
+
+    deleteAllForUPcode: async () => {
+
+        try {
+
+            const cancelPositionV3 = PositionV3Model.deleteMany({})
+            await Promise.allSettled([cancelPositionV3])
+
+            console.log("[V] RESET All For UPcode Successful");
+
+        } catch (error) {
+            console.log("[V] RESET All For UPcode error:", error);
         }
     }
 
