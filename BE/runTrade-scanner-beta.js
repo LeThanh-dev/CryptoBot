@@ -18,7 +18,7 @@ const wsConfig = {
 
 const wsSymbol = new WebsocketClient(wsConfig);
 
-const limitNen = 50;
+const limitNen = 100;
 const LIST_ORDER = ["order", "position"]
 const MAX_ORDER_LIMIT = 10
 
@@ -1877,7 +1877,7 @@ const handleScannerDataList = async ({
 
                 // Check expire 
                 if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
-                    console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
+                    // console.log(changeColorConsole.magentaBright(`[V] Scanner ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) expire`));
 
                     // Delete all config
                     const listOCObject = listOCByCandleBot?.[Candlestick]?.[botID]?.listOC || {}
