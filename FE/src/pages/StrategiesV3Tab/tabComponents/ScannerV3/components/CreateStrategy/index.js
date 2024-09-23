@@ -19,6 +19,10 @@ function CreateStrategy({
 
     const positionSideListDefault = [
         {
+            name: "Long-Short",
+            value: "Long-Short",
+        },
+        {
             name: "Both",
             value: "Both",
         },

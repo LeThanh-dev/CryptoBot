@@ -270,9 +270,16 @@ function ScannerV3() {
             renderCell: params => {
                 const rowData = params.row
                 const PositionSide = rowData['PositionSide']
-                return <p style={{
-                    color: PositionSide === "Long" ? "green" : "red"
-                }}>{PositionSide}</p>
+                let color = "#0e6ec3" 
+                switch(PositionSide){
+                    case "Long":
+                        color = "green";
+                        break;
+                    case "Short":
+                        color = "red";
+                        break;
+                }
+                return <p style={{color}}>{PositionSide}</p>
             }
         },
         {

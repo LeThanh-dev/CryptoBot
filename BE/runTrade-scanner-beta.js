@@ -1663,6 +1663,80 @@ const handleSocketUpdate = async (newData = []) => {
 
     await handleSocketBotApiList(newBotApiList)
 }
+const handleSocketDelete = async (newData = []) => {
+    console.log(newData);
+    
+    console.log("[...] Deleted Strategies From Realtime", newData.length);
+
+    const listOrderOC = {}
+    const listOrderTP = []
+
+    await Promise.allSettled(newData.map((strategiesData) => {
+        if (checkConditionBot(strategiesData)) {
+
+            const ApiKey = strategiesData.botID.ApiKey
+            const SecretKey = strategiesData.botID.SecretKey
+
+            const symbol = strategiesData.symbol
+            const strategyID = strategiesData.value
+            const botID = strategiesData.botID._id
+            const botName = strategiesData.botID.botName
+            const CandlestickMain = strategiesData.Candlestick
+            const Candlestick = strategiesData.Candlestick.split("")[0]
+            const scannerID = strategiesData.scannerID
+
+            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+
+
+            const cancelDataObject = {
+                ApiKey,
+                SecretKey,
+                strategyID,
+                symbol: symbol,
+                candle: CandlestickMain,
+                side,
+                botName,
+                botID
+            }
+
+            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
+                listOC: {},
+                ApiKey,
+                SecretKey,
+            });
+            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
+                strategyID,
+                candle: CandlestickMain,
+                symbol,
+                side,
+                botName,
+                botID,
+                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
+            });
+
+            allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
+                ...cancelDataObject,
+                orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
+                gongLai: true
+            })
+
+            delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
+            delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
+            scannerID && delete listConfigIDByScanner[scannerID]?.[symbol]
+        }
+    }))
+
+    const cancelAllOC = cancelAllListOrderOC(listOrderOC)
+
+    const cancelAllTP = handleCancelAllOrderTP({
+        items: listOrderTP
+    })
+
+    await Promise.allSettled([cancelAllOC, cancelAllTP])
+}
+
 // ------------------------------ SCANNER ----------------------------------------------------
 
 
@@ -1873,8 +1947,28 @@ const handleScannerDataList = async ({
                 const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
                 const allHistory15 = allHistoryByCandleSymbol["15"][symbol]
 
-                const allHistoryList = PositionSide === "Long" ? allHistory.listOCLong : allHistory.listOC
-                const allHistoryList15 = PositionSide === "Long" ? allHistory15.listOCLong : allHistory15.listOC
+                let allHistoryList = PositionSide === "Long" ? allHistory.listOCLong : allHistory.listOC
+                let allHistoryList15 = PositionSide === "Long" ? allHistory15.listOCLong : allHistory15.listOC
+
+                switch (PositionSide) {
+                    case "Long":
+                        allHistoryList = allHistory.listOCLong
+                        allHistoryList15 = allHistory15.listOCLong
+                        break;
+                    case "Short":
+                        allHistoryList = allHistory.listOC
+                        allHistoryList15 = allHistory15.listOC
+                        break;
+                    default:
+                        allHistoryList = [
+                            ...allHistory.listOC,
+                            ...allHistory.listOCLong,
+                        ]
+                        allHistoryList15 = [
+                            ...allHistory15.listOC,
+                            ...allHistory15.listOCLong,
+                        ]
+                }
 
                 const OCLengthCheck = allHistoryList15.slice(0, candleQty).some(item => Math.abs(item.OC) >= Math.abs(scannerData.OCLength))
 
@@ -1893,14 +1987,20 @@ const handleScannerDataList = async ({
                     })
 
                     if (listConfigIDByScanner[scannerID]?.[symbol] && !checkListOC?.length) {
-                        const deleteSuccess = await deleteStrategiesMultipleStrategyBE({
+                        const deleteRes = await deleteStrategiesMultipleStrategyBE({
                             botName,
                             Candlestick,
                             PositionSide,
                             scannerID,
                             symbol
                         })
-                        deleteSuccess && delete listConfigIDByScanner[scannerID]?.[symbol]
+                        if(deleteRes.success)
+                        {
+                            delete listConfigIDByScanner[scannerID]?.[symbol]
+
+                            await handleSocketDelete(deleteRes.data)
+
+                        }
                     }
                     allScannerDataObject[candle][symbol][scannerID].ExpirePre = new Date()
                 }
@@ -2852,80 +2952,13 @@ socketRealtime.on('add', async (newData = []) => {
 socketRealtime.on('update', async (newData = []) => {
 
     await handleSocketUpdate(newData)
-
-
+    
+    
 });
 
 socketRealtime.on('delete', async (newData) => {
-    console.log("[...] Deleted Strategies From Realtime", newData.length);
-
-    const listOrderOC = {}
-    const listOrderTP = []
-
-    await Promise.allSettled(newData.map((strategiesData) => {
-        if (checkConditionBot(strategiesData)) {
-
-            const ApiKey = strategiesData.botID.ApiKey
-            const SecretKey = strategiesData.botID.SecretKey
-
-            const symbol = strategiesData.symbol
-            const strategyID = strategiesData.value
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
-            const CandlestickMain = strategiesData.Candlestick
-            const Candlestick = strategiesData.Candlestick.split("")[0]
-            const scannerID = strategiesData.scannerID
-
-            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
-
-
-            const cancelDataObject = {
-                ApiKey,
-                SecretKey,
-                strategyID,
-                symbol: symbol,
-                candle: CandlestickMain,
-                side,
-                botName,
-                botID
-            }
-
-            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
-            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
-            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
-                listOC: {},
-                ApiKey,
-                SecretKey,
-            });
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
-                strategyID,
-                candle: CandlestickMain,
-                symbol,
-                side,
-                botName,
-                botID,
-                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
-            });
-
-            allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
-                ...cancelDataObject,
-                orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
-                gongLai: true
-            })
-
-            delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
-            delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
-            scannerID && delete listConfigIDByScanner[scannerID]?.[symbol]
-        }
-    }))
-
-    const cancelAllOC = cancelAllListOrderOC(listOrderOC)
-
-    const cancelAllTP = handleCancelAllOrderTP({
-        items: listOrderTP
-    })
-
-    await Promise.allSettled([cancelAllOC, cancelAllTP])
+    
+    await handleSocketDelete(newData)
 
 
 });

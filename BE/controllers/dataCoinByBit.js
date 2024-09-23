@@ -1403,7 +1403,7 @@ const dataCoinByBitController = {
         try {
             const TimeTemp = new Date().toString()
 
-            const result = await StrategiesModel.updateMany(
+            const result = await StrategiesModel.updateOne(
                 {
                     "children.scannerID": scannerID,
                     "value": symbol
@@ -1414,11 +1414,7 @@ const dataCoinByBitController = {
                         "children.$[elem].TimeTemp": TimeTemp,
                     }
                 },
-                {
-                    arrayFilters: [{ "elem.scannerID": scannerID }]
-                }
             );
-
 
 
             const resultFilter = await StrategiesModel.aggregate([
@@ -1556,18 +1552,26 @@ const dataCoinByBitController = {
                     type: "delete",
                     data: handleResult
                 })
-
                 console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Successful`);
-                return true
+                return {
+                    success: true,
+                    data: handleResult
+                }
             }
             else {
                 console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Failed`);
-                return false
+                return {
+                    success: false,
+                    data: []
+                }
             }
 
         } catch (error) {
             console.log(`[Mongo] Delete Mul-Config Strategies ( ${botName} - ${symbol} - ${PositionSide} - ${Candlestick} ) Error: ${error.message} `)
-            return false
+            return {
+                success: false,
+                data: []
+            }
         }
     },
 
