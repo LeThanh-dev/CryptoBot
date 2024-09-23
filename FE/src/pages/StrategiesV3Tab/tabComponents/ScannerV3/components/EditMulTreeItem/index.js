@@ -10,6 +10,7 @@ import { getUserByID } from '../../../../../../services/userService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { copyMultipleStrategiesToBotScannerV3, deleteStrategiesMultipleScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../../../services/scannerV3Service';
 import { NumericFormat } from 'react-number-format';
+import { getAllSymbol } from '../../../../../../services/dataCoinByBitService';
 
 function EditMulTreeItem({
     onClose,
@@ -92,6 +93,24 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
+            name: "Only Pairs",
+            value: "OnlyPairs",
+            compareFilterList: ["="],
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Blacklist",
+            value: "Blacklist",
+            compareFilterList: ["="],
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
             name: "Longest",
             value: "Longest",
             compareFilterList: compareFilterListDefault,
@@ -167,6 +186,10 @@ function EditMulTreeItem({
     const [radioValue, setRadioValue] = useState("Update");
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [roleNameMainVIP, setRoleNameMainVIP] = useState("");
+    const [onlyPairsSelected, setOnlyPairsSelected] = useState([])
+    const [blackListSelected, setBlackListSelected] = useState( [])
+
+    const [allSymbolList, setAllSymbolList] = useState([])
 
     const newFrameDataRef = useRef({
         Frame: 1,
@@ -244,9 +267,17 @@ function EditMulTreeItem({
         }))
     }
 
+    const handleGetAlLSymbol = async () => {
+        if (!allSymbolList.length) {
+            const res = await getAllSymbol()
+            const { data: symbolListDataRes } = res.data
+            const newData = symbolListDataRes.map(item => ({ name: item, value: item }))
+            setAllSymbolList(newData)
+        }
+    }
     const handleFiledValueElement = (item, indexRow) => {
-        switch (item.name) {
-            case "Active":
+        switch (item.value) {
+            case "IsActive":
                 return <Checkbox
                     checked={item.data.value}
                     onChange={(e) => {
@@ -307,6 +338,115 @@ function EditMulTreeItem({
                     </FormControl>
 
                 </div>
+            case "OnlyPairs":
+            
+                handleGetAlLSymbol()
+                return <Autocomplete
+                    multiple
+                    limitTags={2}
+                    value={onlyPairsSelected}
+                    disableCloseOnSelect
+                    options={allSymbolList}
+                    size="small"
+                    getOptionLabel={(option) => option.name}
+                    onChange={(e, value) => {
+                        setOnlyPairsSelected(value)
+                    }}
+                    renderInput={(params) => (
+                        <TextField {...params} placeholder="Select..." />
+                    )}
+                    renderOption={(props, option, { selected, index }) => (
+                        <>
+                            {index === 0 && (
+                                <>
+                                    <Button
+                                        color="inherit"
+                                        style={{ width: '50%' }}
+                                        onClick={() => {
+                                            setOnlyPairsSelected(allSymbolList)
+                                        }}
+                                    >
+                                        Select All
+                                    </Button>
+                                    <Button
+                                        color="inherit"
+                                        style={{ width: '50%' }}
+                                        onClick={() => {
+                                            setOnlyPairsSelected([])
+                                        }}
+                                    >
+                                        Deselect All
+                                    </Button>
+                                </>
+                            )}
+                            <li {...props}>
+                                <Checkbox
+                                    checked={selected || onlyPairsSelected.findIndex(item => item === option.value) > -1}
+                                />
+                                {option.name.split("USDT")[0]}
+                            </li>
+                        </>
+                    )}
+                    renderTags={(value) => {
+                        return <p style={{ marginLeft: "6px" }}>{value.length} items selected</p>
+                    }}
+                >
+
+                </Autocomplete>
+            case "Blacklist":
+                handleGetAlLSymbol()
+                return <Autocomplete
+                    multiple
+                    limitTags={2}
+                    value={blackListSelected}
+                    disableCloseOnSelect
+                    options={allSymbolList}
+                    size="small"
+                    getOptionLabel={(option) => option.name}
+                    onChange={(e, value) => {
+                        setBlackListSelected(value)
+                    }}
+                    renderInput={(params) => (
+                        <TextField {...params} placeholder="Select..." />
+                    )}
+                    renderOption={(props, option, { selected, index }) => (
+                        <>
+                            {index === 0 && (
+                                <>
+                                    <Button
+                                        color="inherit"
+                                        style={{ width: '50%' }}
+                                        onClick={() => {
+                                            setBlackListSelected(allSymbolList)
+                                        }}
+                                    >
+                                        Select All
+                                    </Button>
+                                    <Button
+                                        color="inherit"
+                                        style={{ width: '50%' }}
+                                        onClick={() => {
+                                            setBlackListSelected([])
+                                        }}
+                                    >
+                                        Deselect All
+                                    </Button>
+                                </>
+                            )}
+                            <li {...props}>
+                                <Checkbox
+                                    checked={selected || blackListSelected.findIndex(item => item === option.value) > -1}
+                                />
+                                {option.name.split("USDT")[0]}
+                            </li>
+                        </>
+                    )}
+                    renderTags={(value) => {
+                        return <p style={{ marginLeft: "6px" }}>{value.length} items selected</p>
+                    }}
+                >
+
+                </Autocomplete>
             default:
                 // return <TextField
                 //     type='number'
@@ -408,23 +548,18 @@ function EditMulTreeItem({
                     UpdatedFields: filterDataRowList.map(filterRow => {
                         const filedValue = filterRow.value
                         let valueHandle = filedValue != "Label" ? handleCompare(dataCheckTreeItem[filedValue], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic","Frame"].includes(filedValue)) {
+                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic", "Frame", "Blacklist", "OnlyPairs"].includes(filedValue)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false
                             }
                         }
-                        if (filedValue !== 'Frame') {
-                            return {
-                                [filedValue]: valueHandle
-                            }
-                        }
-                        else {
+                        if (filedValue == 'Frame') {
                             const FrameData = newFrameDataRef.current
 
                             const FrameValue = +FrameData.Frame
                             const TimeValue = FrameData.Time
-                            
+
                             if (FrameValue >= 0.25 || (TimeValue == "D" && FrameValue <= 9)) {
                                 return {
                                     Frame: `${FrameData.Frame}${FrameData.Time}`
@@ -433,6 +568,25 @@ function EditMulTreeItem({
                             else {
                                 checkValueMin = false
                                 FrameCheck = true
+                            }
+
+                        }
+                        else if (filedValue === "OnlyPairs") {
+                            if (!onlyPairsSelected.length) {
+                                checkValueMin = false
+                            }
+                            return {
+                                [filedValue]: onlyPairsSelected.map(item=>item.value)
+                            } 
+                        }
+                        else if (filedValue === "Blacklist") {
+                            return {
+                                [filedValue]: blackListSelected.map(item=>item.value)
+                            } 
+                        }
+                        else {
+                            return {
+                                [filedValue]: valueHandle
                             }
                         }
                     }).reduce((accumulator, currentObject) => {
