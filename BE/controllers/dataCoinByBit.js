@@ -201,6 +201,7 @@ const dataCoinByBitController = {
 
             const botListId = await BotModel.find({
                 userID,
+                "botType": "ByBitV3",
                 ApiKey: { $exists: true, $ne: null },
                 SecretKey: { $exists: true, $ne: null }
             })
@@ -875,7 +876,7 @@ const dataCoinByBitController = {
 
 
                 const insertVol24 = StrategiesModel.bulkWrite(bulkOperations);
-                const bulkOperationsDeletedRes = await StrategiesModel.deleteMany({ value: { $in: deleteList } })
+                const bulkOperationsDeletedRes = StrategiesModel.deleteMany({ value: { $in: deleteList } })
 
                 await Promise.allSettled([insertSymbolNew, insertVol24, bulkOperationsDeletedRes])
 
@@ -1314,7 +1315,7 @@ const dataCoinByBitController = {
 
             const result = await StrategiesModel.updateMany(
                 { "value": symbol },
-                { "$push": { "children": { ...dataInput, botID, scannerID,TimeTemp } } },
+                { "$push": { "children": { ...dataInput, botID, scannerID, TimeTemp } } },
             );
 
             const resultFilter = await StrategiesModel.aggregate([
@@ -1325,7 +1326,7 @@ const dataCoinByBitController = {
                                 IsActive: true,
                                 TimeTemp: TimeTemp,
                                 scannerID: new mongoose.Types.ObjectId(scannerID),
-                                TimeTemp:TimeTemp
+                                TimeTemp: TimeTemp
                             }
                         },
                         value: symbol
@@ -1406,8 +1407,8 @@ const dataCoinByBitController = {
                     "children.scannerID": scannerID,
                     "value": symbol
                 },
-                { 
-                    $set: { 
+                {
+                    $set: {
                         "children.$[elem].OrderChange": newOC,
                         "children.$[elem].TimeTemp": TimeTemp,
                     }
@@ -1416,7 +1417,7 @@ const dataCoinByBitController = {
                     arrayFilters: [{ "elem.scannerID": scannerID }]
                 }
             );
-            
+
 
 
             const resultFilter = await StrategiesModel.aggregate([
@@ -1425,7 +1426,7 @@ const dataCoinByBitController = {
                         children: {
                             $elemMatch: {
                                 IsActive: true,
-                                TimeTemp:TimeTemp,
+                                TimeTemp: TimeTemp,
                                 scannerID: new mongoose.Types.ObjectId(scannerID),
                             }
                         },
@@ -1595,6 +1596,26 @@ const dataCoinByBitController = {
             return []
         }
     },
+
+    deleteAllScannerBE: async () => {
+        try {
+
+            const result = await StrategiesModel.updateMany(
+                {},
+                { $pull: { "children": { scannerID: { $exists: true, $ne: null } } } }
+            );
+
+            if (result.acknowledged && result.matchedCount !== 0) {
+                console.log("[V] Delete All Strategies By Scanner Successful");
+
+            }
+            else {
+                console.log("[V] Delete All Strategies By Scanner Failed");
+            }
+        } catch (error) {
+            console.log("[V] Delete All Strategies By Scanner Error:", error);
+        }
+    }
 
 }
 

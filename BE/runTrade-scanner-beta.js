@@ -6,7 +6,7 @@ const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
-const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, syncSymbolBE } = require('./controllers/dataCoinByBit');
+const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, syncSymbolBE, deleteAllScannerBE } = require('./controllers/dataCoinByBit');
 const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbol } = require('./controllers/position');
 const { getAllStrategiesActiveScannerV3BE } = require('./controllers/scannerV3');
 
@@ -1760,19 +1760,25 @@ const history = async ({
                         TPLong = 0
                         TPCheckLong = 0
                     }
-                    listOC.push({
+                    const dataCoinHandle = {
+                        open: Open,
+                        close: Close,
+                        high: Highest,
+                        low: Lowest,
+                    }
+                    listOC.unshift({
                         OC: roundNumber((Highest - Open) / Open),
                         TP: roundNumber(TP),
                         TPCheck: roundNumber(TPCheck),
                         startTime,
-                        dataCoin
+                        dataCoin: dataCoinHandle
                     })
-                    listOCLong.push({
+                    listOCLong.unshift({
                         OC: roundNumber((Lowest - Open) / Open),
                         TP: roundNumber(TPLong),
                         TPCheckLong: roundNumber(TPCheckLong),
                         startTime,
-                        dataCoin
+                        dataCoin: dataCoinHandle
                     })
                     index++
                 }
@@ -1801,7 +1807,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval, OpenTime }) {
     let index = 0
     const batchSize = 200
     while (index < coinList.length) {
-        const batch = coinList.slice(0, batchSize)
+        const batch = coinList.slice(index, index + batchSize)
 
         await Promise.allSettled(batch.map(async coin => {
             await history({
@@ -1846,7 +1852,7 @@ const handleScannerDataList = async ({
     allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
 
         try {
-            
+
             const scannerID = scannerData._id
             const botData = scannerData.botID
             const Candlestick = scannerData.Candle
@@ -1855,7 +1861,7 @@ const handleScannerDataList = async ({
             const CandlestickOnlyNumber = scannerData.Candle.split("m")[0]
             const botName = botData.botName
             const botID = botData._id
-            
+
             if (scannerData.IsActive && botApiList[botID]?.IsActive) {
 
                 const Frame = scannerData.Frame.split("")
@@ -2006,9 +2012,11 @@ const Main = async () => {
     let allStrategiesActiveBE = getAllStrategiesActive()
     let allSymbolBE = getAllSymbolBE()
     const getAllConfigScanner = getAllStrategiesActiveScannerV3BE()
+    const deleteAll = deleteAllScannerBE()
 
 
-    const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner])
+
+    const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner, deleteAll])
 
     const allStrategiesActiveObject = result[0].value || []
     const allSymbolArray = result[1].value || []
@@ -2121,6 +2129,7 @@ const Main = async () => {
     });
 
     // await handleStatistic([{ value: "ARKUSDT" }])
+
     await handleStatistic()
 
     await handleSocketBotApiList(botApiList)
@@ -2710,35 +2719,58 @@ try {
 
                 const startTime = new Date(+dataMain.start).toLocaleString("vi-vn")
 
-                const OC = roundNumber((Highest - Open) / Open)
+
                 let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
 
-                const OCLong = roundNumber((Lowest - Open) / Open)
                 let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+
+                let TPCheck = TP
+                let TPCheckLong = TPLong
+
+                if (Lowest < Open) {
+                    const dataPre = allHistoryByCandleSymbol[candle][symbol].listOC[0].dataCoin
+                    const OpenPre = +dataPre.open
+                    const HighestPre = +dataPre.high
+                    TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
+                }
+                if (Highest > Open) {
+                    const dataPre = allHistoryByCandleSymbol[candle][symbol].listOCLong[0].dataCoin
+                    const OpenPre = +dataPre.open
+                    const LowestPre = +dataPre.low
+                    TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
+                }
 
                 if (TP == "Infinity") {
                     TP = 0
+                    TPCheck = 0
                 }
                 if (TPLong == "Infinity") {
                     TPLong = 0
+                    TPCheckLong = 0
                 }
 
                 allHistoryByCandleSymbol[candle][symbol].listOC.pop()
                 allHistoryByCandleSymbol[candle][symbol].listOC.unshift({
-                    OC,
+                    OC: roundNumber((Highest - Open) / Open),
                     TP: roundNumber(TP),
+                    TPCheck: roundNumber(TPCheck),
                     startTime,
+                    dataCoin: dataMain
                 })
 
                 allHistoryByCandleSymbol[candle][symbol].listOCLong.pop()
                 allHistoryByCandleSymbol[candle][symbol].listOCLong.unshift({
-                    OC: OCLong,
+                    OC: roundNumber((Lowest - Open) / Open),
                     TP: roundNumber(TPLong),
+                    TPCheckLong: roundNumber(TPCheckLong),
                     startTime,
+                    dataCoin: dataMain
                 })
-
                 handleScannerDataList({ candle, symbol })
 
+            }
+            else {
+                console.log("candle-symbol", candle, symbol);
             }
 
         }

@@ -16,9 +16,7 @@ import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
 import { formatNumberString } from '../../../../functions';
 import useDebounce from '../../../../hooks/useDebounce';
 import { getAllBotActiveByUserID } from '../../../../services/botService';
-import { getTotalFutureByBot } from '../../../../services/dataCoinByBitService';
 import { addMessageToast } from '../../../../store/slices/Toast';
-import { setTotalFuture } from '../../../../store/slices/TotalFuture';
 import DataGridCustom from '../../../../components/DataGridCustom';
 import DialogCustom from '../../../../components/DialogCustom';
 import UpdateStrategy from './components/UpdateStrategy';
@@ -446,31 +444,6 @@ function ScannerV3() {
             }
             )
     }
-    const handleGetTotalFutureByBot = async () => {
-
-        try {
-            const res = await getTotalFutureByBot(userData._id)
-            const { status, message, data: resData } = res.data
-
-            dispatch(setTotalFuture({
-                total: resData || 0
-            }))
-
-            // if (status !== 200) {
-            //     dispatch(addMessageToast({
-            //         status,
-            //         message
-            //     }))
-            // }
-
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Get Total Future Error",
-            }))
-        }
-    }
 
 
     const handleGetAllStrategies = async (botListInput = botList.slice(1), filterStatus = false) => {
@@ -587,7 +560,6 @@ function ScannerV3() {
     useEffect(() => {
         if (userData.userName) {
             handleGetAllBotByUserID()
-            handleGetTotalFutureByBot()
         }
 
     }, [userData.userName]);
