@@ -300,7 +300,20 @@ const BotController = {
                                     const IsActive = data.Status === "Running" ? true : false;
 
                                     if (!IsActive) {
-                                        await ScannerModel.updateMany({ botID }, { IsActive: false })
+                                        const deActiveScanner = ScannerModel.updateMany({ botID }, { IsActive: false })
+                                        const deActiveStrategies = StrategiesModel.updateMany(
+                                            { "children.botID": botID },
+                                            {
+                                                $set: {
+                                                    "children.$[elem].IsActive": false,
+                                                }
+                                            },
+                                            {
+                                                arrayFilters: [{ "elem.botID": botID }]
+                                            }
+                                        );
+
+                                        await Promise.allSettled([deActiveScanner, deActiveStrategies])
                                     }
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                                         botID,
@@ -542,7 +555,6 @@ const BotController = {
             const data = await BotModel.find(
                 {
                     Status: "Running",
-                    "botType": "ByBitV3",
                     ApiKey: { $exists: true, $ne: null },
                     SecretKey: { $exists: true, $ne: null }
                 }

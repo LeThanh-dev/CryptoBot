@@ -1406,11 +1406,17 @@ const dataCoinByBitController = {
                     "children.scannerID": scannerID,
                     "value": symbol
                 },
-                { $set: { 
-                    "children.$.OrderChange": newOC ,
-                    "children.$.TimeTemp": TimeTemp ,
-                } }
+                { 
+                    $set: { 
+                        "children.$[elem].OrderChange": newOC,
+                        "children.$[elem].TimeTemp": TimeTemp,
+                    }
+                },
+                {
+                    arrayFilters: [{ "elem.scannerID": scannerID }]
+                }
             );
+            
 
 
             const resultFilter = await StrategiesModel.aggregate([

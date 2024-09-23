@@ -1,6 +1,6 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox, TextField, Autocomplete, Button, Table, TableHead, TableRow, TableCell, TableBody, Select, MenuItem, FormControl, RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import DialogCustom from '../../../../../../components/DialogCustom';
@@ -26,6 +26,18 @@ function EditMulTreeItem({
         "=%",
         "+%",
         "-%",
+    ]
+
+    const timeList = [
+        {
+            name: "h",
+            value: "h",
+        },
+        {
+            name: "D",
+            value: "D",
+        },
+
     ]
 
     const fieldFilterList = [
@@ -65,6 +77,15 @@ function EditMulTreeItem({
             name: "Adjust",
             value: "Adjust",
             compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
+            name: "Frame",
+            value: "Frame",
+            compareFilterList: ["="],
         },
         {
             data: {
@@ -134,8 +155,6 @@ function EditMulTreeItem({
 
     const dispatch = useDispatch()
 
-
-
     const [copyType, setCopyType] = useState("Bot");
     const [symbolListData, setSymbolListData] = useState([]);
     const [symbolListSelected, setSymbolListSelected] = useState([]);
@@ -149,6 +168,10 @@ function EditMulTreeItem({
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [roleNameMainVIP, setRoleNameMainVIP] = useState("");
 
+    const newFrameDataRef = useRef({
+        Frame: 1,
+        Time: 'h'
+    })
     const handleDataCheckTreeSelected = useMemo(() => {
         return dataCheckTreeSelected.map(item => JSON.parse(item))
     }, [dataCheckTreeSelected])
@@ -240,6 +263,50 @@ function EditMulTreeItem({
                     }}
                 >
                 </TextField>
+            case "Frame":
+                return <div style={{ display: 'flex' }}>
+
+                    <FormControl style={{ flex: 1 }}>
+                        <TextField
+                            type='number'
+                            label="Frame"
+                            variant="outlined"
+                            size="small"
+                            defaultValue={1}
+                            onChange={e => {
+                                newFrameDataRef.current = {
+                                    ...newFrameDataRef.current,
+                                    Frame: e.target.value
+                                }
+                            }}
+                        >
+                        </TextField>
+
+                    </FormControl>
+
+                    <FormControl style={{ flex: 1, marginLeft: "12px" }}>
+                        <TextField
+                            select
+                            label="Time"
+                            variant="outlined"
+                            size="small"
+                            defaultValue={timeList[0].value}
+                            onChange={e => {
+                                newFrameDataRef.current = {
+                                    ...newFrameDataRef.current,
+                                    Time: e.target.value
+                                }
+                            }}
+                        >
+                            {
+                                timeList.map(item => (
+                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                ))
+                            }
+                        </TextField>
+                    </FormControl>
+
+                </div>
             default:
                 // return <TextField
                 //     type='number'
@@ -332,21 +399,41 @@ function EditMulTreeItem({
     const handleUpdate = async () => {
 
         let checkValueMin = true
+        let FrameCheck = false
 
         try {
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => (
                 {
                     id: dataCheckTreeItem._id,
                     UpdatedFields: filterDataRowList.map(filterRow => {
-                        let valueHandle = filterRow.value != "Label" ? handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number" && !["Expire","Turnover","OCLength","Elastic"].includes(filterRow.value)) {
+                        const filedValue = filterRow.value
+                        let valueHandle = filedValue != "Label" ? handleCompare(dataCheckTreeItem[filedValue], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
+                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic","Frame"].includes(filedValue)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false
                             }
                         }
-                        return {
-                            [filterRow.value]: valueHandle
+                        if (filedValue !== 'Frame') {
+                            return {
+                                [filedValue]: valueHandle
+                            }
+                        }
+                        else {
+                            const FrameData = newFrameDataRef.current
+
+                            const FrameValue = +FrameData.Frame
+                            const TimeValue = FrameData.Time
+                            
+                            if (FrameValue >= 0.25 || (TimeValue == "D" && FrameValue <= 9)) {
+                                return {
+                                    Frame: `${FrameData.Frame}${FrameData.Time}`
+                                }
+                            }
+                            else {
+                                checkValueMin = false
+                                FrameCheck = true
+                            }
                         }
                     }).reduce((accumulator, currentObject) => {
                         const { parentID, ...oldData } = dataCheckTreeItem
@@ -373,9 +460,12 @@ function EditMulTreeItem({
                 }
             }
             else {
-                dispatch(addMessageToast({
+                !FrameCheck ? dispatch(addMessageToast({
                     status: 400,
                     message: "All Field Value >= 0.01",
+                })) : dispatch(addMessageToast({
+                    status: 400,
+                    message: "0.25h <= Frame <= 9Days",
                 }))
             }
         }

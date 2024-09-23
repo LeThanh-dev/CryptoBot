@@ -18,6 +18,22 @@ function UpdateStrategy({
     dataCheckTreeDefaultObject
 }) {
 
+    const Frame = dataInput.Frame.split("")
+    const FrameInput = Frame[0]
+    const TimeInput = Frame[1]
+
+    const timeList = [
+        {
+            name: "h",
+            value: "h",
+        },
+        {
+            name: "D",
+            value: "D",
+        },
+
+    ]
+
     const formControlMinValue = 0.01
 
     const {
@@ -32,6 +48,7 @@ function UpdateStrategy({
     const [onlyPairsSelected, setOnlyPairsSelected] = useState(onlyPairsSelectedInput || [])
     const [blackListSelected, setBlackListSelected] = useState(blackListSelectedInput || [])
     const [loadingSyncCoin, setLoadingSyncCoin] = useState(false);
+    const [maxFrame, setMaxFrame] = useState(undefined);
 
     const dataChangeRef = useRef(false)
     const [symbolGroupDataList, setSymbolGroupDataList] = useState({
@@ -89,12 +106,15 @@ function UpdateStrategy({
     }
 
     const handleSubmitCreate = async data => {
+        console.log(data);
+
         if (onlyPairsSelected.length > 0) {
 
             const configID = dataInput._id
             const newData = {
                 ...dataInput,
                 ...data,
+                Frame: `${data.Frame}${data.Time}`,
                 Blacklist: [... new Set(blackListSelected.map(item => item.value))],
                 OnlyPairs: [... new Set(onlyPairsSelected.map(item => item.value))]
             }
@@ -117,8 +137,8 @@ function UpdateStrategy({
                     newData.Condition = `${newData.Longest} - ${newData.Elastic || 0} - ${newData.Ratio}`
                     newData.OrderChangeAdjust = `${newData.OrderChange} x ${newData.Adjust}`
                     newData.FrameOCLength = `${newData.Frame} - ${newData.OCLength || 0}%`
-                    newData.Expire= newData.Expire || 0
-                    
+                    newData.Expire = newData.Expire || 0
+
 
                     setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
                         if (item._id === configID) {
@@ -335,16 +355,46 @@ function UpdateStrategy({
                 <div className={styles.formMainData}>
                     <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
-                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
-                            <TextField
-                                label="Frame"
-                                variant="outlined"
-                                size="medium"
-                                value={dataInput.Frame}
-                                disabled
-                            >
-                            </TextField>
-                        </FormControl>
+                        <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} style={{ flexBasis: "60%", marginRight: "16px" }} >
+
+                            <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                                <TextField
+                                    type='number'
+                                    label="Frame"
+                                    variant="outlined"
+                                    size="medium"
+                                    defaultValue={FrameInput}
+                                    {...register("Frame", { required: true, max: maxFrame, min: 0.25 })}
+                                >
+                                </TextField>
+                                {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                                {errors.Frame?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
+                                {errors.Frame?.type === "max" && <p className="formControlErrorLabel">Max: {maxFrame}</p>}
+
+                            </FormControl>
+
+                            <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                                <TextField
+                                    select
+                                    label="Time"
+                                    variant="outlined"
+                                    size="medium"
+                                    defaultValue={TimeInput}
+                                    {...register("Time", { required: true, })}
+                                    onChange={e => {
+                                        setMaxFrame(e.target.value == "h" ? undefined : 9)
+                                    }}
+                                >
+                                    {
+                                        timeList.map(item => (
+                                            <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                        ))
+                                    }
+                                </TextField>
+                                {errors.Time?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            </FormControl>
+
+                        </div>
 
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
