@@ -1309,15 +1309,31 @@ const dataCoinByBitController = {
         OCAdjust,
     }) => {
 
-        const TimeTemp = new Date().toString()
 
         try {
             const TimeTemp = new Date().toString()
 
-            const result = await StrategiesModel.updateMany(
-                { "value": symbol },
-                { "$push": { "children": { ...dataInput, botID, scannerID, TimeTemp } } },
-            );
+            let result = ""
+
+            if (dataInput.PositionSide === "Long-Short") {
+                result = await StrategiesModel.updateMany(
+                    { "value": symbol },
+                    {
+                        "$push": {
+                            "children": [
+                                { ...dataInput, botID, scannerID, TimeTemp, PositionSide: "Long" },
+                                { ...dataInput, botID, scannerID, TimeTemp, PositionSide: "Short" },
+                            ]
+                        }
+                    },
+                );
+            }
+            else {
+                result = await StrategiesModel.updateMany(
+                    { "value": symbol },
+                    { "$push": { "children": { ...dataInput, botID, scannerID, TimeTemp } } },
+                );
+            }
 
             const resultFilter = await StrategiesModel.aggregate([
                 {
