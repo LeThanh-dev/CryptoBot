@@ -7,8 +7,6 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../services/spotService';
-import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../services/marginService';
 import { createConfigScannerV3 } from '../../../../../../services/scannerV3Service';
 import { getAllSymbol, syncSymbol } from '../../../../../../services/dataCoinByBitService';
 
@@ -178,7 +176,10 @@ function CreateStrategy({
 
         try {
             const res = await createConfigScannerV3({
-                data: data,
+                data: {
+                    ...data,
+                    Frame: `${data.Frame}${data.Time}`
+                },
                 botListId: botList.map(item => item.value),
                 Blacklist: blackListSelected.map(item => item.value),
                 OnlyPairs: onlyPairsSelected.map(item => item.value)
@@ -610,7 +611,6 @@ function CreateStrategy({
                             />
                             {errors.Longest?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
                             {errors.Longest?.type === "min" && <p className="formControlErrorLabel">{">=  0.01"}</p>}
-                            {/* {errors.Elastic?.type === 'pattern' && <p className="formControlErrorLabel">The Elastic pattern num-num-num.</p>} */}
 
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
@@ -625,10 +625,8 @@ function CreateStrategy({
                                     </InputAdornment>
                                 }}
                                 {...register("Elastic", {
-                                    required: true,
                                 })}
                             />
-                            {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
 
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
@@ -696,7 +694,7 @@ function CreateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Turnover"
+                            label="Turnover 24h"
                             variant="outlined"
                             defaultValue={5000000}
                             size="medium"

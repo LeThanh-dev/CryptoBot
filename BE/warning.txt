@@ -39,7 +39,9 @@ Remote Mongo
     sudo nano /etc/mongod.conf
 
 Find in ubuntu:
-    grep -i "eth" filename
+    grep -i "eth" runTrade-scanner-beta-out.log
+    -- Tìm thời gian --
+    sed -n '/22-09-24 04:45/,/22-09-24 04:50/p' runTrade-scanner-beta-out.log
 
 
 git add .

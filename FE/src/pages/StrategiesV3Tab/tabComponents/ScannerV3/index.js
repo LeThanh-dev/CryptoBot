@@ -303,8 +303,8 @@ function ScannerV3() {
         },
         {
             field: 'Turnover',
-            headerName: 'Turnover ($)',
-            minWidth: window.innerWidth <= 740 ? 170 : 150,
+            headerName: 'Turnover 24h ($)',
+            minWidth: window.innerWidth <= 740 ? 210 : 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 return <p >{formatNumberString(params.row['Turnover'] || 0)}</p>
@@ -496,7 +496,7 @@ function ScannerV3() {
                     ...item,
                     Expire:item.Expire || 0,
                     Condition:`${item.Longest} - ${item.Elastic || 0} - ${item.Ratio}`,
-                    FrameOCLength:`${item.Frame} - ${item.OCLength}%`,
+                    FrameOCLength:`${item.Frame} - ${item.OCLength || 0}%`,
                     OrderChangeAdjust:`${item.OrderChange} x ${item.Adjust}`,
                     BotName: item.botID.botName
                 })

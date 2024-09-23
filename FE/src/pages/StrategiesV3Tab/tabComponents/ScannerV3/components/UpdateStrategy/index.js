@@ -114,9 +114,11 @@ function UpdateStrategy({
                     reset()
                     dataChangeRef.current = true
 
-                    newData.Condition = `${newData.Longest} - ${newData.Elastic} - ${newData.Ratio}`
+                    newData.Condition = `${newData.Longest} - ${newData.Elastic || 0} - ${newData.Ratio}`
                     newData.OrderChangeAdjust = `${newData.OrderChange} x ${newData.Adjust}`
-                    newData.FrameOCLength = `${newData.Frame} - ${newData.OCLength}%`
+                    newData.FrameOCLength = `${newData.Frame} - ${newData.OCLength || 0}%`
+                    newData.Expire= newData.Expire || 0
+                    
 
                     setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
                         if (item._id === configID) {
@@ -476,10 +478,8 @@ function UpdateStrategy({
                                     </InputAdornment>
                                 }}
                                 {...register("Elastic", {
-                                    required: true,
                                 })}
                             />
-                            {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
 
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
@@ -547,7 +547,7 @@ function UpdateStrategy({
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField
                             type='number'
-                            label="Turnover"
+                            label="Turnover 24h"
                             variant="outlined"
                             defaultValue={dataInput.Turnover || 0}
                             size="medium"

@@ -1310,6 +1310,8 @@ const dataCoinByBitController = {
         const TimeTemp = new Date().toString()
 
         try {
+            const TimeTemp = new Date().toString()
+
             const result = await StrategiesModel.updateMany(
                 { "value": symbol },
                 { "$push": { "children": { ...dataInput, botID, scannerID,TimeTemp } } },
@@ -1321,6 +1323,7 @@ const dataCoinByBitController = {
                         children: {
                             $elemMatch: {
                                 IsActive: true,
+                                TimeTemp: TimeTemp,
                                 scannerID: new mongoose.Types.ObjectId(scannerID),
                                 TimeTemp:TimeTemp
                             }
@@ -1396,17 +1399,17 @@ const dataCoinByBitController = {
         const TimeTemp = new Date().toString()
 
         try {
+            const TimeTemp = new Date().toString()
+
             const result = await StrategiesModel.updateMany(
                 {
                     "children.scannerID": scannerID,
                     "value": symbol
                 },
-                {
-                    $set: {
-                        "children.$.OrderChange": newOC,
-                        "children.$.TimeTemp": TimeTemp,
-                    }
-                }
+                { $set: { 
+                    "children.$.OrderChange": newOC ,
+                    "children.$.TimeTemp": TimeTemp ,
+                } }
             );
 
 
@@ -1416,7 +1419,7 @@ const dataCoinByBitController = {
                         children: {
                             $elemMatch: {
                                 IsActive: true,
-                                TimeTemp: TimeTemp,
+                                TimeTemp:TimeTemp,
                                 scannerID: new mongoose.Types.ObjectId(scannerID),
                             }
                         },

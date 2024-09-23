@@ -299,6 +299,9 @@ const BotController = {
                                 if (type === "Active") {
                                     const IsActive = data.Status === "Running" ? true : false;
 
+                                    if (!IsActive) {
+                                        await ScannerModel.updateMany({ botID }, { IsActive: false })
+                                    }
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                                         botID,
                                     })
