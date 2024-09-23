@@ -1664,7 +1664,6 @@ const handleSocketUpdate = async (newData = []) => {
     await handleSocketBotApiList(newBotApiList)
 }
 const handleSocketDelete = async (newData = []) => {
-    console.log(newData);
     
     console.log("[...] Deleted Strategies From Realtime", newData.length);
 
