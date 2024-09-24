@@ -1050,34 +1050,39 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 const newOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.newOC
 
                                                 console.log(`\n\n[V] Filled TP: \n${symbol.replace("USDT", "")} | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}\n`);
-                                                const teleText = `<b>${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
-                                                // const teleText = `<b>${symbol.replace("USDT", "")}</b> | Close ${side} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
 
                                                 const priceWinPercent = (Math.abs(closePrice - openTradeOCFilled) / openTradeOCFilled * 100).toFixed(2) || 0;
                                                 const priceWin = ((closePrice - openTradeOCFilled) * qty).toFixed(2) || 0;
 
                                                 let textWinLose = ""
+                                                let textWinLoseShort = ""
 
                                                 if (side === "Buy") {
                                                     if (priceWin > 0) {
                                                         textWinLose = `\n✅ [WIN - LONG]: ${priceWin} | ${priceWinPercent}%\n`
+                                                        textWinLoseShort = "✅"
                                                         console.log(changeColorConsole.greenBright(textWinLose));
                                                     }
                                                     else {
                                                         textWinLose = `\n❌ [LOSE - LONG]: ${priceWin} | ${priceWinPercent}%\n`
+                                                        textWinLoseShort = "❌"
                                                         console.log(changeColorConsole.magentaBright(textWinLose));
                                                     }
                                                 }
                                                 else {
                                                     if (priceWin > 0) {
                                                         textWinLose = `\n❌ [LOSE - SHORT]: ${-1 * priceWin} | ${priceWinPercent}%\n`
+                                                        textWinLoseShort = "❌"
                                                         console.log(changeColorConsole.magentaBright(textWinLose));
                                                     }
                                                     else {
                                                         textWinLose = `\n✅ [WIN - SHORT]: ${Math.abs(priceWin)} | ${priceWinPercent}%\n`
+                                                        textWinLoseShort = "✅"
                                                         console.log(changeColorConsole.greenBright(textWinLose));
                                                     }
                                                 }
+
+                                                const teleText = `<b>${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} | ${textWinLoseShort} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
 
                                                 missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 

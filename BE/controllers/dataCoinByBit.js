@@ -1414,7 +1414,6 @@ const dataCoinByBitController = {
         botName,
         OCAdjust,
     }) => {
-        const TimeTemp = new Date().toString()
 
         try {
             const TimeTemp = new Date().toString()
