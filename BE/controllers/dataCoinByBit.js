@@ -1432,6 +1432,19 @@ const dataCoinByBitController = {
                     arrayFilters: [{ "elem.scannerID": scannerID }]
                 }
             );
+
+
+            if (botName.includes("GPT")) {
+                const result2 = await StrategiesModel.find(
+                    {
+                        "children.scannerID": scannerID,
+                        "value": symbol
+                    },
+
+                );
+                console.log(result2);
+            }
+
             // const resultFilter = await StrategiesModel.aggregate([
             //     {
             //         $match: {
