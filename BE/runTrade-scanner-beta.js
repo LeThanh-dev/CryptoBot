@@ -2190,6 +2190,9 @@ const Main = async () => {
 
 
             allHistoryByCandleSymbol[candle] = {}
+
+            handleScannerDataList({ candle, symbol })
+
         })
         getAllConfigScannerRes.forEach(scannerData => {
             const scannerID = scannerData._id
