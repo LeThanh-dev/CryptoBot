@@ -2047,7 +2047,7 @@ const handleScannerDataList = async ({
                     const Elastic = Math.abs(scannerData.Elastic)
                     const Adjust = Math.abs(scannerData.Adjust)
 
-                    console.log("allHistoryListLimit50", allHistoryList.slice(0, 4), symbol, candle);
+                    // console.log("allHistoryListLimit50", allHistoryList.slice(0, 4), symbol, candle);
 
                     const allHistoryListSort = sortListReverse(allHistoryListLimit50)
 
