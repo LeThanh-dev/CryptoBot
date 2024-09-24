@@ -1549,6 +1549,7 @@ const handleSocketAddNew = async (newData = []) => {
     await handleSocketBotApiList(newBotApiList)
 }
 const handleSocketUpdate = async (newData = []) => {
+    
     console.log("[...] Update Strategies From Realtime", newData.length);
 
     const newBotApiList = {}
@@ -1988,18 +1989,19 @@ const handleScannerDataList = async ({
                         return OCData.symbol === symbol && scannerID == OCData.scannerID
                     })
 
-                    if (listConfigIDByScanner[scannerID]?.[symbol] && !checkListOC?.length) {
-                        const deleteRes = await deleteStrategiesMultipleStrategyBE({
+                    const listConfigIDByScannerData = listConfigIDByScanner[scannerID]?.[symbol]
+
+                    if (listConfigIDByScannerData?.length > 0 && !checkListOC?.length) {
+                        const deleteResSuccess = await deleteStrategiesMultipleStrategyBE({
                             botName,
                             Candlestick,
                             PositionSide,
                             scannerID,
                             symbol
                         })
-                        if (deleteRes.success) {
+                        if (deleteResSuccess) {
                             delete listConfigIDByScanner[scannerID]?.[symbol]
-
-                            await handleSocketDelete(deleteRes.data)
+                            await handleSocketDelete(listConfigIDByScannerData)
 
                         }
                     }
@@ -2039,7 +2041,8 @@ const handleScannerDataList = async ({
                             const newOC = (OCAvg * Adjust).toFixed(3)
                             const OCAdjust = `${OCAvg} x ${Adjust}`
 
-                            if (listConfigIDByScanner[scannerID]?.[symbol]) {
+                            const listConfigIDByScannerData = listConfigIDByScanner[scannerID]?.[symbol]
+                            if (listConfigIDByScannerData?.length > 0) {
                                 const res = await updateStrategiesMultipleStrategyBE({
                                     scannerID,
                                     newOC,
@@ -2051,11 +2054,9 @@ const handleScannerDataList = async ({
                                     newOC
                                 })
 
-                                const newData = res.data
-
-                                if (newData.length > 0) {
+                                if (res.success) {
                                     console.log(changeColorConsole.cyanBright("\n", res.message));
-                                    await handleSocketUpdate(newData)
+                                    await handleSocketUpdate(listConfigIDByScannerData)
                                 }
                             } else {
                                 const res = await createStrategiesMultipleStrategyBE({
@@ -2085,7 +2086,7 @@ const handleScannerDataList = async ({
                                 if (newData.length > 0) {
                                     console.log(changeColorConsole.cyanBright("\n", res.message));
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
-                                    listConfigIDByScanner[scannerID][symbol] = true
+                                    listConfigIDByScanner[scannerID][symbol] = newData
 
                                     await handleSocketAddNew(newData)
                                 }
