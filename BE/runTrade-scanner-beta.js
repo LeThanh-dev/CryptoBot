@@ -2024,11 +2024,6 @@ const handleScannerDataList = async ({
 
                     // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3[0], symbol);
 
-                    if (symbol === "HMSTRUSDT") {
-
-                        console.log("TRUE", allHistoryListSlice, symbol);
-                    }
-
                     if (allHistoryListSlice.length >= RatioQty / 2) {
 
 
