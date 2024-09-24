@@ -1801,10 +1801,10 @@ const history = async ({
                 const dataCoin = response.result.list?.[i]
 
                 if (dataCoin) {
-                    const Open = dataCoin[1]
-                    const Highest = dataCoin[2]
-                    const Lowest = dataCoin[3]
-                    const Close = dataCoin[4]
+                    const Open = +dataCoin[1]
+                    const Highest = +dataCoin[2]
+                    const Lowest = +dataCoin[3]
+                    const Close = +dataCoin[4]
 
                     const startTime = new Date(+dataCoin[0]).toLocaleString("vi-vn")
 
@@ -1819,14 +1819,14 @@ const history = async ({
                     if (index > 0) {
                         if (Lowest < Open) {
                             const dataPre = listOC[index - 1].dataCoin
-                            const OpenPre = +dataPre[1]
-                            const HighestPre = +dataPre[2]
+                            const OpenPre = +dataPre.open
+                            const HighestPre = +dataPre.high
                             TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
                         }
                         if (Highest > Open) {
                             const dataPre = listOCLong[index - 1].dataCoin
-                            const OpenPre = +dataPre[1]
-                            const LowestPre = +dataPre[3]
+                            const OpenPre = +dataPre.open
+                            const LowestPre = +dataPre.low
                             TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
                         }
                     }
@@ -2026,7 +2026,10 @@ const handleScannerDataList = async ({
 
                     // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3[0], symbol);
 
+                    console.log("allHistoryListSlice",allHistoryListSlice);
+
                     if (allHistoryListSlice.length >= RatioQty / 2) {
+
 
                         const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
                             return pre + Math.abs(cur.OC)
@@ -2829,9 +2832,6 @@ try {
                 let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
 
                 let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
-
-                let TPCheck = TP
-                let TPCheckLong = TPLong
 
                 if (Lowest < Open) {
                     const dataPre = allHistoryByCandleSymbol[candle][symbol].listOC[0].dataCoin
