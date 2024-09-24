@@ -1425,12 +1425,11 @@ const dataCoinByBitController = {
                 },
                 {
                     $set: {
-                        "children.$[elem].OrderChange": newOC,
-                        "children.$[elem].TimeTemp": TimeTemp,
+                        "children.$.OrderChange": newOC,
+                        "children.$.TimeTemp": TimeTemp,
                     }
                 },
             );
-
 
             const resultFilter = await StrategiesModel.aggregate([
                 {

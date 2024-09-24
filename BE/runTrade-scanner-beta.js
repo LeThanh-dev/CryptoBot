@@ -2026,7 +2026,6 @@ const handleScannerDataList = async ({
 
                     if (allHistoryListSlice.length >= RatioQty / 2) {
 
-
                         const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
                             return pre + Math.abs(cur.OC)
                         }, 0)
