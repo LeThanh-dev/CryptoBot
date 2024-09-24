@@ -1956,6 +1956,7 @@ const handleScannerDataList = async ({
 
                 let allHistoryList = []
                 let OCLengthCheck = false
+                let conditionLongShort = 1
 
                 switch (PositionSide) {
                     case "Long":
@@ -1970,10 +1971,11 @@ const handleScannerDataList = async ({
                         allHistoryList = allHistory.listOCLongShort
                         const conditionOCLength = Math.abs(scannerData.OCLength)
                         OCLengthCheck = allHistory15.listOCLongShort.slice(0, candleQty * 2).some(item => Math.abs(item.OC) >= conditionOCLength || Math.abs(item.OCLength) >= conditionOCLength)
+                        conditionLongShort = 2
                         break
                 }
 
-                const allHistoryListLimit50 = PositionSide !== "Long-Short" ? allHistoryList.slice(0, limitNen) : allHistoryList.slice(0, limitNen * 2)
+                const allHistoryListLimit50 = allHistoryList.slice(0, limitNen * conditionLongShort)
 
                 // Check expire 
                 if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
@@ -2020,11 +2022,15 @@ const handleScannerDataList = async ({
 
                     const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
 
-                    // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3, symbol);
+                    // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3[0], symbol);
 
-                    if (allHistoryListSlice.length >= RatioQty) {
+                    if (symbol === "HMSTRUSDT") {
 
-                        // console.log("TRUE", allHistoryListSlice, symbol);
+                        console.log("TRUE", allHistoryListSlice, symbol);
+                    }
+
+                    if (allHistoryListSlice.length >= RatioQty / 2) {
+
 
                         const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
                             return pre + Math.abs(cur.OC)
