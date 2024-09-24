@@ -1082,7 +1082,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     }
                                                 }
 
-                                                const teleText = `<b>${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} | ${textWinLoseShort} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
+                                                const teleText = `<b>${textWinLoseShort} ${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
 
                                                 missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
@@ -1505,7 +1505,7 @@ const handleSocketAddNew = async (newData = []) => {
 
             const botID = newStrategiesData.botID._id
             const botName = newStrategiesData.botID.botName
-            const Candlestick = newStrategiesData.Candlestick.split("")[0]
+            const Candlestick = newStrategiesData.Candlestick.split("m")[0]
 
             const ApiKey = newStrategiesData.botID.ApiKey
             const SecretKey = newStrategiesData.botID.SecretKey
@@ -1570,7 +1570,7 @@ const handleSocketUpdate = async (newData = []) => {
             const strategyID = strategiesData.value
             const IsActive = strategiesData.IsActive
             const CandlestickMain = strategiesData.Candlestick
-            const Candlestick = strategiesData.Candlestick.split("")[0]
+            const Candlestick = strategiesData.Candlestick.split("m")[0]
 
             blockContinueOrderOCByStrategiesID[strategyID] = false
 
@@ -1687,7 +1687,7 @@ const handleSocketDelete = async (newData = []) => {
             const botID = strategiesData.botID._id
             const botName = strategiesData.botID.botName
             const CandlestickMain = strategiesData.Candlestick
-            const Candlestick = strategiesData.Candlestick.split("")[0]
+            const Candlestick = strategiesData.Candlestick.split("m")[0]
             const scannerID = strategiesData.scannerID
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
@@ -1796,79 +1796,111 @@ const history = async ({
             const listOCLong = [];
             const listOCLongShort = [];
 
-            let index = 0
-            for (let i = limitNen - 1; i >= 0; i--) {
-                const dataCoin = response.result.list?.[i]
+            const listAllData = response.result.list
 
-                if (dataCoin) {
-                    const Open = +dataCoin[1]
-                    const Highest = +dataCoin[2]
-                    const Lowest = +dataCoin[3]
-                    const Close = +dataCoin[4]
+            if (listAllData?.length > 0) {
 
-                    const startTime = new Date(+dataCoin[0]).toLocaleString("vi-vn")
+                for (let i = 0; i <= limitNen - 2; i++) {
+                    const dataCoin = listAllData?.[i]
+                    const dataCoinPre = listAllData?.[i + 1]
 
-                    let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+                    if (dataCoin && dataCoinPre) {
+                        const Open = +dataCoin[1]
+                        const Highest = +dataCoin[2]
+                        const Lowest = +dataCoin[3]
+                        const Close = +dataCoin[4]
 
-                    let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                        const OpenPre = +dataCoinPre[1]
+                        const HighestPre = +dataCoinPre[2]
+                        const LowestPre = +dataCoinPre[3]
+                        const ClosePre = +dataCoinPre[4]
 
 
-                    let TPCheck = TP
-                    let TPCheckLong = TPLong
+                        if (i == 0) {
+                            const startTime = new Date(+dataCoin[0]).toLocaleString("vi-vn")
 
-                    if (index > 0) {
+                            let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+                            let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+
+                            if (TP == "Infinity") {
+                                TP = 0
+                            }
+                            if (TPLong == "Infinity") {
+                                TPLong = 0
+                            }
+
+                            const dataCoinHandle = {
+                                open: Open,
+                                close: Close,
+                                high: Highest,
+                                low: Lowest,
+                            }
+                            const OCData = {
+                                OC: roundNumber((Highest - Open) / Open),
+                                TP: roundNumber(TP),
+                                startTime,
+                                dataCoin: dataCoinHandle
+                            }
+                            const OCLongData = {
+                                OC: roundNumber((Lowest - Open) / Open),
+                                TP: roundNumber(TPLong),
+                                startTime,
+                                dataCoin: dataCoinHandle
+                            }
+                            listOC.push(OCData)
+                            listOCLong.push(OCLongData)
+                            listOCLongShort.push(OCData, OCLongData)
+                        }
+                        const startTime = new Date(+dataCoinPre[0]).toLocaleString("vi-vn")
+
+                        let TP = Math.abs((HighestPre - ClosePre) / (HighestPre - OpenPre)) || 0
+                        let TPLong = Math.abs(ClosePre - LowestPre) / (OpenPre - LowestPre) || 0
+
                         if (Lowest < Open) {
-                            const dataPre = listOC[index - 1].dataCoin
-                            const OpenPre = +dataPre.open
-                            const HighestPre = +dataPre.high
                             TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
                         }
                         if (Highest > Open) {
-                            const dataPre = listOCLong[index - 1].dataCoin
-                            const OpenPre = +dataPre.open
-                            const LowestPre = +dataPre.low
                             TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
                         }
-                    }
 
-                    if (TP == "Infinity") {
-                        TP = 0
-                        TPCheck = 0
-                    }
-                    if (TPLong == "Infinity") {
-                        TPLong = 0
-                        TPCheckLong = 0
-                    }
-                    const dataCoinHandle = {
-                        open: Open,
-                        close: Close,
-                        high: Highest,
-                        low: Lowest,
-                    }
-                    const OCData = {
-                        OC: roundNumber((Highest - Open) / Open),
-                        TP: roundNumber(TP),
-                        startTime,
-                        dataCoin: dataCoinHandle
-                    }
-                    const OCLongData = {
+                        if (TP == "Infinity") {
+                            TP = 0
+                        }
+                        if (TPLong == "Infinity") {
+                            TPLong = 0
+                        }
 
-                        OC: roundNumber((Lowest - Open) / Open),
-                        TP: roundNumber(TPLong),
-                        startTime,
-                        dataCoin: dataCoinHandle
+                        const dataCoinHandle = {
+                            open: OpenPre,
+                            close: ClosePre,
+                            high: HighestPre,
+                            low: LowestPre,
+                        }
+                        const OCData = {
+                            OC: roundNumber((HighestPre - OpenPre) / OpenPre),
+                            TP: roundNumber(TP),
+                            startTime,
+                            dataCoin: dataCoinHandle
+                        }
+                        const OCLongData = {
+
+                            OC: roundNumber((LowestPre - OpenPre) / OpenPre),
+                            TP: roundNumber(TPLong),
+                            startTime,
+                            dataCoin: dataCoinHandle
+                        }
+                        listOC.push(OCData)
+                        listOCLong.push(OCLongData)
+                        listOCLongShort.push(OCData, OCLongData)
+
                     }
-                    listOC.unshift(OCData)
-                    listOCLong.unshift(OCLongData)
-                    listOCLongShort.unshift(OCData, OCLongData)
-                    index++
                 }
-            }
 
-            allHistoryByCandleSymbol[interval][symbol] = {
-                listOC,
-                listOCLong,
-                listOCLongShort
+                allHistoryByCandleSymbol[interval][symbol] = {
+                    listOC,
+                    listOCLong,
+                    listOCLongShort
+                }
             }
 
 
@@ -1932,7 +1964,6 @@ const handleScannerDataList = async ({
     const allScannerData = allScannerDataObject[candle]?.[symbol]
 
     allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
-
         try {
 
             const scannerID = scannerData._id
@@ -1946,7 +1977,8 @@ const handleScannerDataList = async ({
 
             if (scannerData.IsActive && botApiList[botID]?.IsActive) {
 
-                const Frame = scannerData.Frame.split("")
+                const FrameMain = scannerData.Frame
+                const Frame = FrameMain.includes("h") ? FrameMain.split("h") : FrameMain.split("D")
 
                 const TimeHandle = Frame[1] === "h" ? 60 : 24 * 60
 
@@ -2015,6 +2047,8 @@ const handleScannerDataList = async ({
                     const Elastic = Math.abs(scannerData.Elastic)
                     const Adjust = Math.abs(scannerData.Adjust)
 
+                    console.log("allHistoryListLimit50", allHistoryList.slice(0, 4), symbol, candle);
+
                     const allHistoryListSort = sortListReverse(allHistoryListLimit50)
 
                     // // remove top max 
@@ -2026,7 +2060,7 @@ const handleScannerDataList = async ({
 
                     // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3[0], symbol);
 
-                    console.log("allHistoryListSlice",allHistoryListSlice);
+                    // console.log("allHistoryListSlice", allHistoryListSlice);
 
                     if (allHistoryListSlice.length >= RatioQty / 2) {
 
@@ -2137,7 +2171,7 @@ const Main = async () => {
             const botID = strategyItem.botID._id
             const botName = strategyItem.botID.botName
             const symbol = strategyItem.symbol
-            const Candlestick = strategyItem.Candlestick.split("")[0]
+            const Candlestick = strategyItem.Candlestick.split("m")[0]
 
             botApiList[botID] = {
                 id: botID,
@@ -2217,7 +2251,7 @@ const Main = async () => {
                     IsActive: true
                 };
 
-                const candleHandle = scannerData.Candle.split("")[0]
+                const candleHandle = scannerData.Candle.split("m")[0]
 
                 allScannerDataObject[candleHandle] = allScannerDataObject[candleHandle] || {}
                 allScannerDataObject[candleHandle][symbol] = allScannerDataObject[candleHandle][symbol] || {}
@@ -2828,32 +2862,41 @@ try {
 
                 const startTime = new Date(+dataMain.start).toLocaleString("vi-vn")
 
-
                 let TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
 
                 let TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
 
+                const dataPre = allHistoryByCandleSymbol[candle][symbol].listOC[0].dataCoin
+                const dataPreLong = allHistoryByCandleSymbol[candle][symbol].listOCLong[0].dataCoin
+                let TPPre = dataPre.TP
+                let TPLongPre = dataPreLong.TP
+
                 if (Lowest < Open) {
-                    const dataPre = allHistoryByCandleSymbol[candle][symbol].listOC[0].dataCoin
                     const OpenPre = +dataPre.open
                     const HighestPre = +dataPre.high
-                    TP = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
+                    TPPre = Math.abs((Lowest - HighestPre) / (HighestPre - OpenPre)) || 0
                 }
                 if (Highest > Open) {
-                    const dataPre = allHistoryByCandleSymbol[candle][symbol].listOCLong[0].dataCoin
-                    const OpenPre = +dataPre.open
-                    const LowestPre = +dataPre.low
-                    TPLong = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
+                    const OpenPre = +dataPreLong.open
+                    const LowestPre = +dataPreLong.low
+                    TPLongPre = Math.abs((Highest - LowestPre) / (LowestPre - OpenPre)) || 0
                 }
 
                 if (TP == "Infinity") {
                     TP = 0
-                    TPCheck = 0
                 }
                 if (TPLong == "Infinity") {
                     TPLong = 0
-                    TPCheckLong = 0
                 }
+                if (TPPre == "Infinity") {
+                    TPPre = 0
+                }
+                if (TPLongPre == "Infinity") {
+                    TPLongPre = 0
+                }
+
+                allHistoryByCandleSymbol[candle][symbol].listOC[0].TP = roundNumber(TPPre)
+                allHistoryByCandleSymbol[candle][symbol].listOCLong[0].TP = roundNumber(TPLongPre)
 
                 const OCData = {
                     OC: roundNumber((Highest - Open) / Open),
@@ -2868,7 +2911,6 @@ try {
                     dataCoin: dataMain
                 }
 
-
                 allHistoryByCandleSymbol[candle][symbol].listOC.pop()
                 allHistoryByCandleSymbol[candle][symbol].listOC.unshift(OCData)
 
@@ -2882,10 +2924,6 @@ try {
                 handleScannerDataList({ candle, symbol })
 
             }
-            else {
-                console.log("candle-symbol", candle, symbol);
-            }
-
         }
 
 
@@ -3005,7 +3043,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
         const strategyID = strategiesData.value
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
         const CandlestickMain = strategiesData.Candlestick
-        const Candlestick = strategiesData.Candlestick.split("")[0]
+        const Candlestick = strategiesData.Candlestick.split("m")[0]
         const scannerID = strategiesData.scannerID
 
         blockContinueOrderOCByStrategiesID[strategyID] = false
@@ -3147,7 +3185,7 @@ socketRealtime.on('bot-api', async (data) => {
             const botName = strategiesData.botID.botName
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
             const CandlestickMain = strategiesData.Candlestick
-            const Candlestick = strategiesData.Candlestick.split("")[0]
+            const Candlestick = strategiesData.Candlestick.split("m")[0]
 
 
             !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
@@ -3264,7 +3302,7 @@ socketRealtime.on('bot-delete', async (data) => {
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
             const CandlestickMain = strategiesData.Candlestick
-            const Candlestick = strategiesData.Candlestick.split("")[0]
+            const Candlestick = strategiesData.Candlestick.split("m")[0]
 
             const cancelDataObject = {
                 ApiKey,
@@ -3396,7 +3434,7 @@ socketRealtime.on('sync-symbol', async (newData) => {
 
     })
 
-    await handleStatistic(newData)
+    newData?.length > 0 && await handleStatistic(newData)
     await handleSocketListKline(newListKline)
 
 });
