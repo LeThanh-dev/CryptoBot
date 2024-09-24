@@ -1664,7 +1664,7 @@ const handleSocketUpdate = async (newData = []) => {
     await handleSocketBotApiList(newBotApiList)
 }
 const handleSocketDelete = async (newData = []) => {
-    
+
     console.log("[...] Deleted Strategies From Realtime", newData.length);
 
     const listOrderOC = {}
@@ -1764,8 +1764,7 @@ async function TimeS0(interval) {
 }
 
 const sortListReverse = (arr) => {
-    arr.sort((a, b) => Math.abs(b.OC) - Math.abs(a.OC));
-    return arr
+    return [...arr].sort((a, b) => Math.abs(b.OC) - Math.abs(a.OC))
 }
 
 const history = async ({
@@ -1789,6 +1788,7 @@ const history = async ({
         .then((response) => {
             const listOC = [];
             const listOCLong = [];
+            const listOCLongShort = [];
 
             let index = 0
             for (let i = limitNen - 1; i >= 0; i--) {
@@ -1839,27 +1839,30 @@ const history = async ({
                         high: Highest,
                         low: Lowest,
                     }
-                    listOC.unshift({
+                    const OCData = {
                         OC: roundNumber((Highest - Open) / Open),
                         TP: roundNumber(TP),
-                        TPCheck: roundNumber(TPCheck),
                         startTime,
                         dataCoin: dataCoinHandle
-                    })
-                    listOCLong.unshift({
+                    }
+                    const OCLongData = {
+
                         OC: roundNumber((Lowest - Open) / Open),
                         TP: roundNumber(TPLong),
-                        TPCheckLong: roundNumber(TPCheckLong),
                         startTime,
                         dataCoin: dataCoinHandle
-                    })
+                    }
+                    listOC.unshift(OCData)
+                    listOCLong.unshift(OCLongData)
+                    listOCLongShort.unshift(OCData, OCLongData)
                     index++
                 }
             }
 
             allHistoryByCandleSymbol[interval][symbol] = {
-                listOC: (listOC),
-                listOCLong: (listOCLong),
+                listOC,
+                listOCLong,
+                listOCLongShort
             }
 
 
@@ -1946,33 +1949,26 @@ const handleScannerDataList = async ({
                 const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
                 const allHistory15 = allHistoryByCandleSymbol["15"][symbol]
 
-                let allHistoryList = PositionSide === "Long" ? allHistory.listOCLong : allHistory.listOC
-                let allHistoryList15 = PositionSide === "Long" ? allHistory15.listOCLong : allHistory15.listOC
+                let allHistoryList = []
+                let OCLengthCheck = false
 
                 switch (PositionSide) {
                     case "Long":
                         allHistoryList = allHistory.listOCLong
-                        allHistoryList15 = allHistory15.listOCLong
+                        OCLengthCheck = allHistory15.listOCLong.slice(0, candleQty).some(item => Math.abs(item.OC) >= Math.abs(scannerData.OCLength))
                         break;
                     case "Short":
                         allHistoryList = allHistory.listOC
-                        allHistoryList15 = allHistory15.listOC
+                        OCLengthCheck = allHistory15.listOC.slice(0, candleQty).some(item => Math.abs(item.OC) >= Math.abs(scannerData.OCLength))
                         break;
-                    default:
-                        allHistoryList = [
-                            ...allHistory.listOC,
-                            ...allHistory.listOCLong,
-                        ]
-                        allHistoryList15 = [
-                            ...allHistory15.listOC,
-                            ...allHistory15.listOCLong,
-                        ]
+                    case "Long-Short":
+                        allHistoryList = allHistory.listOCLongShort
+                        const conditionOCLength = Math.abs(scannerData.OCLength)
+                        OCLengthCheck = allHistory15.listOCLongShort.slice(0, candleQty * 2).some(item => Math.abs(item.OC) >= conditionOCLength || Math.abs(item.OCLength) >= conditionOCLength)
+                        break
                 }
 
-                const OCLengthCheck = allHistoryList15.slice(0, candleQty).some(item => Math.abs(item.OC) >= Math.abs(scannerData.OCLength))
-
-                const allHistoryListLimit50 = allHistoryList.slice(0, 50)
-
+                const allHistoryListLimit50 = PositionSide !== "Long-Short" ? allHistoryList.slice(0, limitNen) : allHistoryList.slice(0, limitNen * 2)
 
                 // Check expire 
                 if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
@@ -1993,8 +1989,7 @@ const handleScannerDataList = async ({
                             scannerID,
                             symbol
                         })
-                        if(deleteRes.success)
-                        {
+                        if (deleteRes.success) {
                             delete listConfigIDByScanner[scannerID]?.[symbol]
 
                             await handleSocketDelete(deleteRes.data)
@@ -2012,8 +2007,9 @@ const handleScannerDataList = async ({
                     const Adjust = Math.abs(scannerData.Adjust)
 
                     const allHistoryListSort = sortListReverse(allHistoryListLimit50)
-                    // remove top max 
-                    allHistoryListSort.shift()
+
+                    // // remove top max 
+                    // allHistoryListSort.shift()
 
                     const allHistoryListSlice = allHistoryListSort.slice(0, LongestQty).filter(allHistory => Math.abs(allHistory.TP) >= Elastic)
 
@@ -2848,23 +2844,30 @@ try {
                     TPCheckLong = 0
                 }
 
-                allHistoryByCandleSymbol[candle][symbol].listOC.pop()
-                allHistoryByCandleSymbol[candle][symbol].listOC.unshift({
+                const OCData = {
                     OC: roundNumber((Highest - Open) / Open),
                     TP: roundNumber(TP),
-                    TPCheck: roundNumber(TPCheck),
                     startTime,
                     dataCoin: dataMain
-                })
-
-                allHistoryByCandleSymbol[candle][symbol].listOCLong.pop()
-                allHistoryByCandleSymbol[candle][symbol].listOCLong.unshift({
+                }
+                const OCLongData = {
                     OC: roundNumber((Lowest - Open) / Open),
                     TP: roundNumber(TPLong),
-                    TPCheckLong: roundNumber(TPCheckLong),
                     startTime,
                     dataCoin: dataMain
-                })
+                }
+
+
+                allHistoryByCandleSymbol[candle][symbol].listOC.pop()
+                allHistoryByCandleSymbol[candle][symbol].listOC.unshift(OCData)
+
+                allHistoryByCandleSymbol[candle][symbol].listOCLong.pop()
+                allHistoryByCandleSymbol[candle][symbol].listOCLong.unshift(OCLongData)
+
+                allHistoryByCandleSymbol[candle][symbol].listOCLongShort.pop()
+                allHistoryByCandleSymbol[candle][symbol].listOCLongShort.pop()
+                allHistoryByCandleSymbol[candle][symbol].listOCLongShort.unshift(OCData, OCLongData)
+
                 handleScannerDataList({ candle, symbol })
 
             }
@@ -2951,12 +2954,12 @@ socketRealtime.on('add', async (newData = []) => {
 socketRealtime.on('update', async (newData = []) => {
 
     await handleSocketUpdate(newData)
-    
-    
+
+
 });
 
 socketRealtime.on('delete', async (newData) => {
-    
+
     await handleSocketDelete(newData)
 
 
