@@ -1417,19 +1417,21 @@ const dataCoinByBitController = {
         try {
             const TimeTemp = new Date().toString()
 
-            const result = await StrategiesModel.updateOne(
+            const result = await StrategiesModel.updateMany(
                 {
                     "children.scannerID": scannerID,
                     "value": symbol
                 },
                 {
                     $set: {
-                        "children.$.OrderChange": newOC,
-                        "children.$.TimeTemp": TimeTemp,
+                        "children.$[elem].OrderChange": newOC,
+                        "children.$[elem].TimeTemp": TimeTemp,
                     }
                 },
+                {
+                    arrayFilters: [{ "elem.scannerID": scannerID }]
+                }
             );
-
             // const resultFilter = await StrategiesModel.aggregate([
             //     {
             //         $match: {
