@@ -1863,7 +1863,7 @@ const history = async ({
                     index++
                 }
             }
-            allHistoryByCandleSymbol[interval] = allHistoryByCandleSymbol[interval] || {}
+
             allHistoryByCandleSymbol[interval][symbol] = {
                 listOC,
                 listOCLong,
@@ -1906,7 +1906,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval, OpenTime }) {
 
 }
 
-const handleStatistic = async (coinList) => {
+const handleStatistic = async (coinList = Object.values(allSymbol)) => {
     for (const interval of [1, 3, 5, 15]) {
         const OpenTime = await TimeS0(interval);
         await getHistoryAllCoin({
@@ -1925,6 +1925,8 @@ const handleScannerDataList = async ({
     candle,
     symbol,
 }) => {
+
+    // console.log(changeColorConsole.cyanBright(`[...] Handle history scanner ( ${symbol} - ${candle}m )`));
 
     const allScannerData = allScannerDataObject[candle]?.[symbol]
 
@@ -2159,8 +2161,6 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
-    await handleStatistic(allSymbolArray)
-
     allSymbolArray.forEach(item => {
         const symbol = item.value
         const listKlineNumber = [1, 3, 5, 15]
@@ -2187,8 +2187,9 @@ const Main = async () => {
                 minPrice: [],
                 prePrice: 0,
             }
-            handleScannerDataList({ candle, symbol })
 
+
+            allHistoryByCandleSymbol[candle] = {}
         })
         getAllConfigScannerRes.forEach(scannerData => {
             const scannerID = scannerData._id
@@ -2209,28 +2210,30 @@ const Main = async () => {
                     IsActive: true
                 };
 
-                [1, 3, 5, 15].forEach(candle => {
+                const candleHandle = scannerData.Candle.split("")[0]
 
-                    if (scannerData.Candle === `${candle}m`) {
+                allScannerDataObject[candleHandle] = allScannerDataObject[candleHandle] || {}
+                allScannerDataObject[candleHandle][symbol] = allScannerDataObject[candleHandle][symbol] || {}
 
-                        allScannerDataObject[candle] = allScannerDataObject[candle] || {}
-                        allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
+                const newScannerData = scannerData.toObject()
 
-                        const newScannerData = scannerData.toObject()
+                newScannerData.ExpirePre = new Date()
 
-                        newScannerData.ExpirePre = new Date()
-
-                        allScannerDataObject[candle][symbol][scannerID] = newScannerData
-
-
-                    }
-                });
+                allScannerDataObject[candleHandle][symbol][scannerID] = newScannerData
             }
         })
     });
 
     // await handleStatistic([{ value: "ARKUSDT" }])
 
+    await handleStatistic()
+
+    allSymbolArray.forEach(item => {
+        const listKlineNumber = [1, 3, 5, 15]
+        listKlineNumber.forEach(candle => {
+            handleScannerDataList({ candle, symbol: item.value })
+        })
+    })
     await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(listKline)
@@ -2875,6 +2878,10 @@ try {
                 handleScannerDataList({ candle, symbol })
 
             }
+            else {
+                console.log("candle-symbol", candle, symbol);
+            }
+
         }
 
 
