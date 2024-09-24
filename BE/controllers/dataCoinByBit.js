@@ -1414,6 +1414,8 @@ const dataCoinByBitController = {
         OCAdjust,
     }) => {
 
+        console.log("OK");
+        
         try {
             const TimeTemp = new Date().toString()
 
