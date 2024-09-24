@@ -590,6 +590,7 @@ function CreateStrategy({
 
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
+                                type='number'
                                 label="Longest"
                                 variant="outlined"
                                 defaultValue={"20"}
@@ -619,6 +620,7 @@ function CreateStrategy({
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
+                                type='number'
                                 label="Elastic"
                                 variant="outlined"
                                 defaultValue={"40"}
@@ -635,6 +637,7 @@ function CreateStrategy({
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
+                                type='number'
                                 label="Ratio"
                                 variant="outlined"
                                 defaultValue={"30"}

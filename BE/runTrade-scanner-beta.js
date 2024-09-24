@@ -1549,7 +1549,7 @@ const handleSocketAddNew = async (newData = []) => {
     await handleSocketBotApiList(newBotApiList)
 }
 const handleSocketUpdate = async (newData = []) => {
-    
+
     console.log("[...] Update Strategies From Realtime", newData.length);
 
     const newBotApiList = {}
@@ -2056,7 +2056,10 @@ const handleScannerDataList = async ({
 
                                 if (res.success) {
                                     console.log(changeColorConsole.cyanBright("\n", res.message));
-                                    await handleSocketUpdate(listConfigIDByScannerData)
+                                    await handleSocketUpdate(listConfigIDByScannerData.map(item => {
+                                        item.OrderChange = newOC
+                                        return item
+                                    }))
                                 }
                             } else {
                                 const res = await createStrategiesMultipleStrategyBE({

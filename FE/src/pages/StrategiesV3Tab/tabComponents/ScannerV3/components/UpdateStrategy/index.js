@@ -487,6 +487,7 @@ function UpdateStrategy({
 
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
+                                type='number'
                                 label="Longest"
                                 variant="outlined"
                                 defaultValue={dataInput.Longest}
@@ -518,6 +519,7 @@ function UpdateStrategy({
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
+                                type='number'
                                 label="Elastic"
                                 variant="outlined"
                                 defaultValue={dataInput.Elastic}
@@ -534,6 +536,7 @@ function UpdateStrategy({
                         </FormControl>
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>
                             <TextField
+                                type='number'
                                 label="Ratio"
                                 variant="outlined"
                                 defaultValue={dataInput.Ratio}
