@@ -1863,7 +1863,7 @@ const history = async ({
                     index++
                 }
             }
-
+            allHistoryByCandleSymbol[interval] = allHistoryByCandleSymbol[interval] || {}
             allHistoryByCandleSymbol[interval][symbol] = {
                 listOC,
                 listOCLong,
@@ -1906,7 +1906,7 @@ async function getHistoryAllCoin({ coinList, limitNen, interval, OpenTime }) {
 
 }
 
-const handleStatistic = async (coinList = Object.values(allSymbol)) => {
+const handleStatistic = async (coinList) => {
     for (const interval of [1, 3, 5, 15]) {
         const OpenTime = await TimeS0(interval);
         await getHistoryAllCoin({
@@ -1925,8 +1925,6 @@ const handleScannerDataList = async ({
     candle,
     symbol,
 }) => {
-
-    // console.log(changeColorConsole.cyanBright(`[...] Handle history scanner ( ${symbol} - ${candle}m )`));
 
     const allScannerData = allScannerDataObject[candle]?.[symbol]
 
@@ -2161,6 +2159,8 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
+    await handleStatistic(allSymbolArray)
+
     allSymbolArray.forEach(item => {
         const symbol = item.value
         const listKlineNumber = [1, 3, 5, 15]
@@ -2187,10 +2187,6 @@ const Main = async () => {
                 minPrice: [],
                 prePrice: 0,
             }
-
-
-            allHistoryByCandleSymbol[candle] = {}
-
             handleScannerDataList({ candle, symbol })
 
         })
@@ -2225,6 +2221,8 @@ const Main = async () => {
                         newScannerData.ExpirePre = new Date()
 
                         allScannerDataObject[candle][symbol][scannerID] = newScannerData
+
+
                     }
                 });
             }
@@ -2232,8 +2230,6 @@ const Main = async () => {
     });
 
     // await handleStatistic([{ value: "ARKUSDT" }])
-
-    await handleStatistic()
 
     await handleSocketBotApiList(botApiList)
 
@@ -2879,10 +2875,6 @@ try {
                 handleScannerDataList({ candle, symbol })
 
             }
-            else {
-                console.log("candle-symbol", candle, symbol);
-            }
-
         }
 
 
