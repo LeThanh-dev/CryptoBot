@@ -347,6 +347,7 @@ const BotController = {
                                     })
                                 }
                                 else if (type === "telegram") {
+                                    
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                                         botID,
                                     })
@@ -360,6 +361,7 @@ const BotController = {
                                                 telegramTokenOld: data.telegramTokenOld,
                                                 telegramID: data.telegramID,
                                                 telegramToken: data.telegramToken,
+                                                botName: data.botName,
                                             }
                                         }
                                     })

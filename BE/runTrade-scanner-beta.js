@@ -199,6 +199,7 @@ const handleSubmitOrder = async ({
         allStrategiesByBotIDAndOrderID[botID][orderLinkId] = {
             strategy,
             coinOpen,
+            OrderChangeFilled:strategy.OrderChange,
             OC: true
         }
 
@@ -289,6 +290,7 @@ const handleSubmitOrder = async ({
 
 const handleSubmitOrderTP = async ({
     strategy,
+    OrderChangeFilled,
     strategyID,
     symbol,
     side,
@@ -315,6 +317,7 @@ const handleSubmitOrderTP = async ({
     if (!missState) {
         allStrategiesByBotIDAndOrderID[botID][orderLinkId] = {
             strategy,
+            OrderChangeFilled,
             TP: true
         }
     }
@@ -920,8 +923,9 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                     if (strategy) {
 
                                         const strategyID = strategy.value
+                                        const OrderChangeFilled = strategyData.OrderChangeFilled
                                         // const coinOpenOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen || strategy.coinOpen
-
+                                        
                                         if (orderStatus === "Filled") {
 
                                             if (OCTrue) {
@@ -944,9 +948,9 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 const priceOldOrder = (botAmountListObject[botID] * strategy.Amount / 100).toFixed(2)
 
-                                                console.log(`\n\n[V] Filled OC: \n${symbol.replace("USDT", "")} | Open ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}\n`);
-                                                const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
-                                                // const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${sideText} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% | TP: ${strategy.TakeProfit}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
+                                                console.log(`\n\n[V] Filled OC: \n${symbol.replace("USDT", "")} | Open ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${OrderChangeFilled}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}\n`);
+                                                const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${OrderChangeFilled}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
+                                                // const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${sideText} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${OrderChangeFilled}% | TP: ${strategy.TakeProfit}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
 
                                                 if (!missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
 
@@ -1008,6 +1012,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 const dataInput = {
                                                     strategy,
+                                                    OrderChangeFilled,
                                                     strategyID,
                                                     symbol,
                                                     qty,
@@ -1049,7 +1054,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 const newOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.newOC
 
-                                                console.log(`\n\n[V] Filled TP: \n${symbol.replace("USDT", "")} | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}\n`);
+                                                console.log(`\n\n[V] Filled TP: \n${symbol.replace("USDT", "")} | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${OrderChangeFilled}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}\n`);
 
                                                 const priceWinPercent = (Math.abs(closePrice - openTradeOCFilled) / openTradeOCFilled * 100).toFixed(2) || 0;
                                                 const priceWin = ((closePrice - openTradeOCFilled) * qty).toFixed(2) || 0;
@@ -1082,7 +1087,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     }
                                                 }
 
-                                                const teleText = `<b>${textWinLoseShort} ${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${strategy.OrderChange}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
+                                                const teleText = `<b>${textWinLoseShort} ${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} \nBot: ${botName} \nFT: ${strategy.Candlestick} | OC: ${OrderChangeFilled}% -> ${newOC}% | TP: ${strategy.TakeProfit}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
 
                                                 missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
 
@@ -1970,12 +1975,12 @@ const handleScannerDataList = async ({
 
             const scannerID = scannerData._id
             const botData = scannerData.botID
+            const botID = botData._id
             const Candlestick = scannerData.Candle
             const PositionSide = scannerData.PositionSide
             const Expire = Math.abs(scannerData.Expire)
             const CandlestickOnlyNumber = scannerData.Candle.split("m")[0]
-            const botName = botData.botName
-            const botID = botData._id
+            const botName = botApiList[botID]?.botName || botData.botName
 
             if (scannerData.IsActive && botApiList[botID]?.IsActive) {
 
@@ -2071,7 +2076,7 @@ const handleScannerDataList = async ({
 
                         const OCAvg = Math.abs((OCTotal / allHistoryListLongestTop3.length).toFixed(3))
 
-                        // console.log("OCAvg", OCAvg, symbol, candle);
+                        // console.log("OCAvg", OCAvg, symbol, candle,PositionSide);
 
                         if (OCAvg >= Math.abs(scannerData.OrderChange)) {
 
@@ -2360,7 +2365,7 @@ try {
 
                     strategy.digit = digitAllCoinObject[strategy.symbol]
 
-                    const botName = strategy.botID.botName
+                    const botName = botApiList[botID]?.botName || strategy.botID.botName
 
                     const ApiKey = strategy.botID.ApiKey
                     const SecretKey = strategy.botID.SecretKey
@@ -3378,7 +3383,8 @@ socketRealtime.on('bot-telegram', async (data) => {
     botApiList[botIDMain] = {
         ...botApiList[botIDMain],
         telegramID: newApiData.telegramID,
-        telegramToken: newApiData.telegramToken
+        telegramToken: newApiData.telegramToken,
+        botName: newApiData.botName,
     }
 
 });
