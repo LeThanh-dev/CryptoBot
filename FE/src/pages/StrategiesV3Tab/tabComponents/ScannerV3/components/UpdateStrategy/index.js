@@ -18,9 +18,14 @@ function UpdateStrategy({
     dataCheckTreeDefaultObject
 }) {
 
-    const Frame = dataInput.Frame.split("")
+    const FrameMain = dataInput.Frame
+    const checkHourFrameTime = FrameMain.includes("h")
+
+    const TimeInput = checkHourFrameTime ? "h" : "D"
+
+    const Frame = FrameMain.split(TimeInput)
+
     const FrameInput = Frame[0]
-    const TimeInput = Frame[1]
 
     const timeList = [
         {

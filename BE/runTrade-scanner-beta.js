@@ -1980,9 +1980,10 @@ const handleScannerDataList = async ({
             if (scannerData.IsActive && botApiList[botID]?.IsActive) {
 
                 const FrameMain = scannerData.Frame
-                const Frame = FrameMain.includes("h") ? FrameMain.split("h") : FrameMain.split("D")
+                const checkTimeFrameHour = FrameMain.includes("h")
+                const Frame = checkTimeFrameHour ? FrameMain.split("h") : FrameMain.split("D")
 
-                const TimeHandle = Frame[1] === "h" ? 60 : 24 * 60
+                const TimeHandle = checkTimeFrameHour ? 60 : 24 * 60
 
                 const candleQty = Math.round(Frame[0] * TimeHandle / 15)
 

@@ -187,7 +187,7 @@ function EditMulTreeItem({
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [roleNameMainVIP, setRoleNameMainVIP] = useState("");
     const [onlyPairsSelected, setOnlyPairsSelected] = useState([])
-    const [blackListSelected, setBlackListSelected] = useState( [])
+    const [blackListSelected, setBlackListSelected] = useState([])
 
     const [allSymbolList, setAllSymbolList] = useState([])
 
@@ -339,7 +339,7 @@ function EditMulTreeItem({
 
                 </div>
             case "OnlyPairs":
-            
+
                 handleGetAlLSymbol()
                 return <Autocomplete
                     multiple
@@ -560,7 +560,7 @@ function EditMulTreeItem({
                             const FrameValue = +FrameData.Frame
                             const TimeValue = FrameData.Time
 
-                            if (FrameValue >= 0.25 || (TimeValue == "D" && FrameValue <= 9)) {
+                            if (FrameValue && ((FrameValue >= 0.25 && TimeValue == "h") || (TimeValue == "D" && FrameValue <= 9))) {
                                 return {
                                     Frame: `${FrameData.Frame}${FrameData.Time}`
                                 }
@@ -576,13 +576,13 @@ function EditMulTreeItem({
                                 checkValueMin = false
                             }
                             return {
-                                [filedValue]: onlyPairsSelected.map(item=>item.value)
-                            } 
+                                [filedValue]: onlyPairsSelected.map(item => item.value)
+                            }
                         }
                         else if (filedValue === "Blacklist") {
                             return {
-                                [filedValue]: blackListSelected.map(item=>item.value)
-                            } 
+                                [filedValue]: blackListSelected.map(item => item.value)
+                            }
                         }
                         else {
                             return {

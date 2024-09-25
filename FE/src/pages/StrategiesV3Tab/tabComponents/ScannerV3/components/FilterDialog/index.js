@@ -67,15 +67,15 @@ function FilterDialog({
             value: "PositionSide",
             compareFilterList: ["="],
         },
-        {
-            data: {
-                compare: "=",
-                value: ""
-            },
-            name: "Frame",
-            value: "Frame",
-            compareFilterList: ["="],
-        },
+        // {
+        //     data: {
+        //         compare: "=",
+        //         value: ""
+        //     },
+        //     name: "Frame",
+        //     value: "Frame",
+        //     compareFilterList: ["="],
+        // },
         {
             data: {
                 compare: "=",
@@ -279,23 +279,23 @@ function FilterDialog({
                         ))
                     }
                 </Select>
-            case "Frame":
-                return <Select
-                    value={item.data.value}
-                    defaultValue=""
-                    size="small"
-                    style={{
-                        width: "100%"
-                    }}
-                >
-                    {
-                        candlestickList.map(item => (
-                            <MenuItem value={item.value} key={item.value}
-                                onClick={() => { handleChangeValue(item.value, indexRow) }}
-                            >{item.name}</MenuItem>
-                        ))
-                    }
-                </Select>
+            // case "Frame":
+            //     return <Select
+            //         value={item.data.value}
+            //         defaultValue=""
+            //         size="small"
+            //         style={{
+            //             width: "100%"
+            //         }}
+            //     >
+            //         {
+            //             candlestickList.map(item => (
+            //                 <MenuItem value={item.value} key={item.value}
+            //                     onClick={() => { handleChangeValue(item.value, indexRow) }}
+            //                 >{item.name}</MenuItem>
+            //             ))
+            //         }
+            //     </Select>
 
             case "Candle":
                 return <Select
