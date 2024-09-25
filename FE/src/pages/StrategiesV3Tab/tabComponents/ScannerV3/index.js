@@ -122,7 +122,7 @@ function ScannerV3() {
                     checkedIcon={<StarIcon />}
                     onClick={async e => {
                         try {
-                            const newIsBookmark =  e.target.checked
+                            const newIsBookmark = e.target.checked
                             const res = await handleBookmarkScannerV3({
                                 configID, IsBookmark: newIsBookmark
                             }
@@ -134,7 +134,7 @@ function ScannerV3() {
                                 message,
                             }))
                             if (status === 200) {
-                              
+
                                 dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
                                     console.log(item._id === configID);
 
@@ -196,18 +196,20 @@ function ScannerV3() {
                                     }))
 
                                     if (status === 200) {
-                                      
+
                                         dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
                                             if (item._id === configID) {
-                                                return {
+                                                const newData = {
                                                     ...data,
                                                     IsActive: newIsActive
                                                 }
+                                                dataCheckTreeDefaultObject.current[configID] = newData
+                                                return newData
                                             }
                                             return item
                                         })
 
-                                        setDataCheckTree(dataCheckTree=>dataCheckTree.map(item => {
+                                        setDataCheckTree(dataCheckTree => dataCheckTree.map(item => {
                                             if (item._id === configID) {
                                                 return {
                                                     ...data,
@@ -216,7 +218,7 @@ function ScannerV3() {
                                             }
                                             return item
                                         }))
-                                        
+
                                     }
                                 } catch (error) {
                                     dispatch(addMessageToast({
@@ -231,7 +233,7 @@ function ScannerV3() {
                             className={styles.icon}
                             style={{ margin: "0 4px", }}
                             onClick={async () => {
-                                setOpenConfirmDeleteConfig({configID,Market})
+                                setOpenConfirmDeleteConfig({ configID, Market })
                             }}
                         />
                         <EditIcon className={styles.icon}
@@ -259,7 +261,7 @@ function ScannerV3() {
         {
             field: 'BotName',
             headerName: 'Bot',
-            minWidth:  130,
+            minWidth: 130,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
@@ -270,8 +272,8 @@ function ScannerV3() {
             renderCell: params => {
                 const rowData = params.row
                 const PositionSide = rowData['PositionSide']
-                let color = "#0e6ec3" 
-                switch(PositionSide){
+                let color = "#0e6ec3"
+                switch (PositionSide) {
                     case "Long":
                         color = "green";
                         break;
@@ -279,7 +281,7 @@ function ScannerV3() {
                         color = "red";
                         break;
                 }
-                return <p style={{color}}>{PositionSide}</p>
+                return <p style={{ color }}>{PositionSide}</p>
             }
         },
         {
@@ -337,7 +339,7 @@ function ScannerV3() {
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 const list = params.row["OnlyPairs"]
-                return <div style={{ display: "flex", alignItems: "center",  }}>
+                return <div style={{ display: "flex", alignItems: "center", }}>
                     <p style={{
                         marginRight: "6px"
                     }}>{list.length}</p>
@@ -360,7 +362,7 @@ function ScannerV3() {
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: params => {
                 const list = params.row["Blacklist"]
-                return <div style={{ display: "flex", alignItems: "center",  }}>
+                return <div style={{ display: "flex", alignItems: "center", }}>
                     <p style={{
                         marginRight: "6px"
                     }}>{list.length}</p>
@@ -377,7 +379,7 @@ function ScannerV3() {
         },
     ]
 
-    
+
 
     const [openFilterDialog, setOpenFilterDialog] = useState(false);
     const [openEditTreeItemMultipleDialog, setOpenEditTreeItemMultipleDialog] = useState({
@@ -412,7 +414,7 @@ function ScannerV3() {
     const [dataCheckTree, setDataCheckTree] = useState([]);
 
     const [searchKey, setSearchKey] = useState("");
-    
+
     // Filter
 
     const filterQuantityRef = useRef([])
@@ -474,10 +476,10 @@ function ScannerV3() {
                 return ({
                     id,
                     ...item,
-                    Expire:item.Expire || 0,
-                    Condition:`${item.Longest} - ${item.Elastic || 0} - ${item.Ratio}`,
-                    FrameOCLength:`${item.Frame} - ${item.OCLength || 0}%`,
-                    OrderChangeAdjust:`${item.OrderChange} x ${item.Adjust}`,
+                    Expire: item.Expire || 0,
+                    Condition: `${item.Longest} - ${item.Elastic || 0} - ${item.Ratio}`,
+                    FrameOCLength: `${item.Frame} - ${item.OCLength || 0}%`,
+                    OrderChangeAdjust: `${item.OrderChange} x ${item.Adjust}`,
                     BotName: item.botID.botName
                 })
             })
@@ -555,6 +557,7 @@ function ScannerV3() {
     const searchDebounce = useDebounce(searchKey, 200)
 
     const handleDataCheckTreeSelected = useMemo(() => {
+
         return dataCheckTreeSelected.map(id => {
             return JSON.stringify(dataCheckTreeDefaultObject.current[id])
         })
@@ -709,7 +712,7 @@ function ScannerV3() {
                         </Select>
                     </FormControl>
 
-                   
+
 
                 </div>
 
@@ -724,7 +727,7 @@ function ScannerV3() {
                             tableRows={dataCheckTree}
                             tableColumns={tableColumns}
                             hideFooter
-                            // centerCell = {window.innerWidth > 740}
+                        // centerCell = {window.innerWidth > 740}
                         />
                         :
                         <p style={{
@@ -898,7 +901,7 @@ function ScannerV3() {
                             <TableBody>
                                 {
                                     showBlackList.map((data, index) => (
-                                    <TableRow key={index}>
+                                        <TableRow key={index}>
                                             <TableCell>
                                                 {index + 1}
                                             </TableCell>
@@ -931,7 +934,7 @@ function ScannerV3() {
                         onSubmit={async () => {
                             const configID = openConfirmDeleteConfig.configID
                             try {
-                                const res = await deleteStrategiesMultipleScannerV3([{id:configID,Market:openConfirmDeleteConfig.Market}])
+                                const res = await deleteStrategiesMultipleScannerV3([{ id: configID, Market: openConfirmDeleteConfig.Market }])
                                 const { data: resData, status, message } = res.data
 
                                 dispatch(addMessageToast({

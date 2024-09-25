@@ -562,6 +562,7 @@ const dataCoinByBitController = {
 
             if (result) {
                 const handleResult = await ScannerV3Model.find({
+                    IsActive: true,
                     TimeTemp
                 }).populate('botID')
 
