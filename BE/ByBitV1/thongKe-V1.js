@@ -17,6 +17,8 @@ const bot = new TelegramBot("6992407921:AAFS2wimsauyuoj1eXJFN_XxRFhs5wWtp7c", {
 const CHANNEL_ID = "-1002178225625"
 const MAX_ORDER_LIMIT = 20
 
+const LIMIT_CANDLE = 5
+
 var sendTeleCount = {
     logError: false,
     total: 0
@@ -109,8 +111,8 @@ async function ListCoinFT() {
         });
 
 
-    return ListCoin1m
-    // return [`kline.1.OASUSDT`]
+    // return ListCoin1m
+    return [`kline.D.SEILORUSDT`]
 }
 
 
@@ -151,8 +153,9 @@ const tinhOC = (symbol, dataAll = []) => {
         let TP = 0
         let OCLong = 0
         let TPLong = 0
-        let OCNotPercent = 0
-        let OCLongNotPercent = 0
+
+        let dataOC = ""
+        let timestamp = 0
 
         const vol = dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol]
 
@@ -164,45 +167,35 @@ const tinhOC = (symbol, dataAll = []) => {
             const Lowest = +data.low
 
 
-            if (index === 0) {
-                OCNotPercent = Highest - Open
-                OC = OCNotPercent / Open
-                OCLongNotPercent = Lowest - Open
-                OCLong = OCLongNotPercent / Open
+            if (!dataOC) {
+                OC = (Highest - Open) / Open
+                OCLong = (Lowest - Open) / Open
+                TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+                TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                dataOC = {
+                    close: Close,
+                    open: Open,
+                    high: Highest,
+                    low: Lowest,
+                }
+                timestamp = data.timestamp
             }
             else {
 
-                let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
-                let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
-                let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
-                let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
-
-
-                if ([Infinity, -Infinity].includes(TPTemp)) {
-                    TPTemp = 0
+                let TPTemp = 0
+                let TPLongTemp = 0
+                if (Lowest < dataOC.close) {
+                    TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
                 }
-                if ([Infinity, -Infinity].includes(TPLongTemp)) {
-                    TPLongTemp = 0
+                if (Highest > dataOC.close) {
+                    TPLongTemp = Math.abs((Highest - dataOC.low) / (dataOC.low - dataOC.open)) || 0
                 }
-                if ([Infinity, -Infinity].includes(TPTemp2)) {
-                    TPTemp2 = 0
-                }
-                if ([Infinity, -Infinity].includes(TPLongTemp2)) {
-                    TPLongTemp2 = 0
-                }
-
 
                 if (TPTemp > TP) {
                     TP = TPTemp
                 }
                 if (TPLongTemp > TPLong) {
                     TPLong = TPLongTemp
-                }
-                if (TPTemp2 > TP) {
-                    TP = TPTemp2
-                }
-                if (TPLongTemp2 > TPLong) {
-                    TPLong = TPLongTemp2
                 }
             }
         })
@@ -215,28 +208,32 @@ const tinhOC = (symbol, dataAll = []) => {
         if ([Infinity, -Infinity].includes(OCLong)) {
             OCLong = 0
         }
+        if ([Infinity, -Infinity].includes(TP)) {
+            TP = 0
+        }
 
+        if ([Infinity, -Infinity].includes(TPLong)) {
+            TPLong = 0
+        }
 
         const OCRound = roundNumber(OC)
         const TPRound = roundNumber(TP)
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
 
-
-        if (vol >= 2000) {
-            if (OCRound >= 1 && TPRound > 0 ) {
-                // console.log("TPRound > 60", TPRound, typeof TPRound, TPRound > 60);
-                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
+        const timeOC = new Date(timestamp).toLocaleTimeString()
+        if (vol >= 0) {
+            if (OCRound >= .3) {
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(ht)
-                console.log(ht, new Date().toLocaleTimeString());
+                console.log(ht, timeOC);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1 && TPLongRound > 0 ) {
-                // console.log("TPLongRound > 60", TPLongRound, typeof TPLongRound, TPLongRound > 60);
-                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+            if (OCLongRound <= -.3) {
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(htLong)
-                console.log(htLong, new Date().toLocaleTimeString());
+                console.log(htLong, timeOC);
                 console.log(dataAll);
             }
         }
@@ -246,7 +243,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
@@ -273,7 +270,9 @@ let Main = async () => {
 
     listKline = await ListCoinFT()
 
-   await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
+    const listKlineObject = {}
+
+    await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
         console.log("[V] Subscribe Kline Successful");
 
         wsSymbol.on('update', (dataCoin) => {
@@ -282,7 +281,10 @@ let Main = async () => {
 
             const coinCurrent = +dataMain.close
             const turnover = +dataMain.turnover
+            const timestamp = dataMain.timestamp
             const [_, candle, symbol] = dataCoin.topic.split(".");
+
+            listKlineObject[symbol] = symbol
 
             // if (symbol === "GUMMYUSDT") {
             //     console.log("\n", dataCoin, new Date().toLocaleTimeString(), "\n");
@@ -313,13 +315,14 @@ let Main = async () => {
 
             trichMauData[symbol].turnoverD = turnover
             trichMauData[symbol].close = coinCurrent
+            trichMauData[symbol].timestamp = timestamp
 
-            if (new Date() - trichMau[symbol].pre >= 1000) {
+            if (new Date(timestamp) - trichMau[symbol].pre >= 1000) {
                 // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date()
+                trichMau[symbol].pre = new Date(timestamp)
             }
-            
+
             trichMauData[symbol] = {
                 open: coinCurrent,
                 close: coinCurrent,
@@ -349,8 +352,7 @@ let Main = async () => {
 
     setInterval(() => {
 
-        listKline.forEach(item => {
-            const [_, candle, symbol] = item.split(".");
+        Object.values(listKlineObject).forEach(symbol => {
             tinhOC(symbol, trichMauDataArray[symbol])
             const coinCurrent = trichMauData[symbol].close
             const turnover = trichMauData[symbol].turnover
@@ -365,7 +367,7 @@ let Main = async () => {
             preTurnover[symbol] = trichMauData[symbol].turnover
             trichMauDataArray[symbol] = []
         })
-    }, 3000)
+    }, LIMIT_CANDLE * 1000)
 
 
 
@@ -379,7 +381,7 @@ let Main = async () => {
 try {
     Main()
 
-    
+
 
     setTimeout(() => {
         cron.schedule('0 */3 * * *', async () => {
