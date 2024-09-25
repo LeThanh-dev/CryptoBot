@@ -826,7 +826,6 @@ const dataCoinByBitController = {
 
     syncSymbol: async (req, res) => {
         try {
-            const userID = req.user._id
 
             const listSymbolObject = await dataCoinByBitController.getSymbolFromCloud();
 
@@ -885,7 +884,7 @@ const dataCoinByBitController = {
 
                     const newSymbolResult = await StrategiesModel.find({
                         value: { $in: newSymbolNameList }
-                    }).select("value")
+                    })
 
                     dataCoinByBitController.sendDataRealtime({
                         type: "sync-symbol",
@@ -1290,7 +1289,7 @@ const dataCoinByBitController = {
     },
     getAllSymbolBE: async (req, res) => {
         try {
-            const result = await StrategiesModel.find().select("value volume24h");
+            const result = await StrategiesModel.find()
             return result || []
 
         } catch (err) {
@@ -1588,7 +1587,6 @@ const dataCoinByBitController = {
 
             const listSymbolUpdate = []
             if (listSymbolObject?.length) {
-
 
                 listSymbolObject.forEach((value) => {
                     const symbol = value.symbol

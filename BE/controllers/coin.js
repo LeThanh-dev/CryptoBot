@@ -57,21 +57,41 @@ const CoinController = {
     syncCoin: async (req, res) => {
         try {
             const resData = await CoinController.getSymbolFromCloud()
+            const existingDocs = await CoinModel.find();
 
-            const bulkOperations = resData.map(data => ({
-                updateOne: {
-                    filter: {"symbol": data.symbol},
-                    update: {
-                        $set: {
-                            "symbol": data.symbol,
-                            "volume24h": data.volume24h
-                        }
-                    },
-                    upsert: true
+            const existingValues = existingDocs.reduce((pre, cur) => {
+                const symbol = cur.symbol
+                pre[symbol] = symbol
+                return pre
+            }, {});
+
+            const bulkOperations = []
+            resData.forEach(data => {
+                const symbol = data.symbol
+                bulkOperations.push({
+                    updateOne: {
+                        filter: { "symbol": symbol },
+                        update: {
+                            $set: {
+                                "symbol": symbol,
+                                "volume24h": data.volume24h
+                            }
+                        },
+                        upsert: true
+                    }
+                });
+
+                if (existingValues[symbol]) {
+                    delete existingValues[symbol]
                 }
-            }));
 
-            await CoinModel.bulkWrite(bulkOperations);
+            })
+            const deleteList = Object.values(existingValues)
+
+            const bulkOperationsDeletedRes = CoinModel.deleteMany({ symbol: { $in: deleteList } })
+            const update = CoinModel.bulkWrite(bulkOperations);
+
+            await Promise.allSettled([update, bulkOperationsDeletedRes])
 
             res.customResponse(200, "Sync All Coin Successful", "");
 

@@ -1896,6 +1896,8 @@ const history = async ({
                     }
                 }
 
+                allHistoryByCandleSymbol[interval] = allHistoryByCandleSymbol[interval] || {}
+
                 allHistoryByCandleSymbol[interval][symbol] = {
                     listOC,
                     listOCLong,
@@ -2047,7 +2049,7 @@ const handleScannerDataList = async ({
                     const Elastic = Math.abs(scannerData.Elastic)
                     const Adjust = Math.abs(scannerData.Adjust)
 
-                    // console.log("allHistoryListLimit50", allHistoryList.slice(0, 4), symbol, candle);
+                    // console.log("allHistoryListLimit50", allHistoryListLimit50.slice(0, 4), symbol, candle);
 
                     const allHistoryListSort = sortListReverse(allHistoryListLimit50)
 
@@ -2058,12 +2060,9 @@ const handleScannerDataList = async ({
 
                     const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
 
-                    // console.log("allHistoryListLongestTop3", allHistoryListLongestTop3[0], symbol);
-
-                    // console.log("allHistoryListSlice", allHistoryListSlice);
+                    // console.log("allHistoryListSlice", allHistoryListSlice, allHistoryListSlice.length);
 
                     if (allHistoryListSlice.length >= RatioQty / 2) {
-
 
                         const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
                             return pre + Math.abs(cur.OC)
@@ -2142,7 +2141,15 @@ const handleScannerDataList = async ({
     }))
 }
 
+const syncVol24 = async () => {
 
+    const syncSymbolBEAll = await syncSymbolBE()
+    const listSymbolUpdate = syncSymbolBEAll || []
+    listSymbolUpdate.forEach(symbolData => {
+        allSymbol[symbolData.value] = symbolData
+    })
+    console.log("[V] Sync volume 24h all symbol");
+}
 
 
 // ----------------------------------------------------------------------------------
@@ -2229,8 +2236,6 @@ const Main = async () => {
                 prePrice: 0,
             }
 
-
-            allHistoryByCandleSymbol[candle] = {}
         })
         getAllConfigScannerRes.forEach(scannerData => {
             const scannerID = scannerData._id
@@ -2268,6 +2273,8 @@ const Main = async () => {
     // await handleStatistic([{ value: "ARKUSDT" }])
 
     await handleStatistic()
+
+    await syncVol24()
 
     allSymbolArray.forEach(item => {
         const listKlineNumber = [1, 3, 5, 15]
@@ -2966,16 +2973,7 @@ try {
 
     cron.schedule('0 */3 * * *', async () => {
 
-        const syncSymbolBEAll = await syncSymbolBE()
-
-        const listSymbolUpdate = syncSymbolBEAll || []
-        listSymbolUpdate.forEach(symbolData => {
-            const symbol = symbolData.value
-            allSymbol[symbol] = {
-                value: symbol,
-                volume24h: symbolData.volume24h
-            }
-        })
+        await syncVol24()
 
     });
 
@@ -3385,8 +3383,8 @@ socketRealtime.on('bot-telegram', async (data) => {
 });
 
 socketRealtime.on('sync-symbol', async (newData) => {
-    console.log("[...] Sync Symbol");
 
+    console.log("[...] Sync New Symbol");
 
     const newListKline = []
 
@@ -3625,7 +3623,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
 
 socketRealtime.on('scanner-delete', async (newData = []) => {
     console.log("[...] Delete Scanner From Realtime", newData.length);
-
 
     newData.forEach(scannerData => {
         const scannerID = scannerData._id
