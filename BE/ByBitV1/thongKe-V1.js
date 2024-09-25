@@ -243,7 +243,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                // sendMessageTinhOC(messageList)
+                sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
