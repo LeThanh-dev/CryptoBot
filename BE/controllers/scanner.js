@@ -2,6 +2,7 @@ const { RestClientV5, WebsocketClient } = require('bybit-api');
 const ScannerModel = require('../models/scanner.model')
 const SpotModel = require('../models/spot.model');
 const MarginModel = require('../models/margin.model');
+const PositionV1Model = require('../models/positionV1.model');
 const BotModel = require('../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
@@ -1052,6 +1053,39 @@ const dataCoinByBitController = {
         }
     },
 
+    deleteAllScannerV1BE: async () => {
+        try {
+
+            const result = SpotModel.updateMany(
+                {},
+                { $pull: { "children": { scannerID: { $exists: true, $ne: null } } } }
+            );
+            const result2 = MarginModel.updateMany(
+                {},
+                { $pull: { "children": { scannerID: { $exists: true, $ne: null } } } }
+            );
+
+            await Promise.allSettled([result, result2])
+
+            console.log("[V] Delete All Config By Scanner Successful");
+
+        } catch (error) {
+            console.log("[V] Delete All Config By Scanner Error:", error);
+        }
+    },
+    deleteAllForUPcodeV1: async () => {
+
+        try {
+
+            const cancelPositionV3 = PositionV1Model.deleteMany({})
+            await Promise.allSettled([cancelPositionV3])
+
+            console.log("[V] RESET All For UPcode Successful");
+
+        } catch (error) {
+            console.log("[V] RESET All For UPcode error:", error);
+        }
+    }
 }
 
 module.exports = dataCoinByBitController 

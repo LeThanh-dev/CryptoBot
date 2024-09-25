@@ -4,7 +4,8 @@ const UserModel = require('../models/user.model');
 const StrategiesModel = require('../models/strategies.model');
 const SpotModel = require('../models/spot.model');
 const MarginModel = require('../models/margin.model');
-const ScannerModel = require('../models/scannerV3.model');
+const ScannerV3Model = require('../models/scannerV3.model');
+const ScannerV1Model = require('../models/scanner.model');
 const { default: mongoose } = require('mongoose');
 
 // ByBitV3
@@ -59,6 +60,81 @@ const BotController = {
         })) || []
 
         return newDataSocketWithBotData;
+    },
+    getAllStrategiesV1ByBotID: async ({
+        botID,
+    }) => {
+        const resultFilter = await SpotModel.aggregate([
+            {
+                $match: {
+                    "children.botID": new mongoose.Types.ObjectId(botID)
+                }
+            },
+            {
+                $project: {
+                    label: 1,
+                    value: 1,
+                    volume24h: 1,
+                    children: {
+                        $filter: {
+                            input: "$children",
+                            as: "child",
+                            cond: {
+                                $and: [
+                                    { $eq: ["$$child.botID", new mongoose.Types.ObjectId(botID)] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+        const result = await SpotModel.populate(resultFilter, {
+            path: 'children.botID',
+        })
+
+        const newDataSocketWithBotData = result.flatMap((data) => data.children.map(child => {
+            child.symbol = data.value
+            child.value = `SPOT-${data._id}-${child._id}`
+            return child
+        })) || []
+
+        const resultFilter2 = await MarginModel.aggregate([
+            {
+                $match: {
+                    "children.botID": new mongoose.Types.ObjectId(botID)
+                }
+            },
+            {
+                $project: {
+                    label: 1,
+                    value: 1,
+                    volume24h: 1,
+                    children: {
+                        $filter: {
+                            input: "$children",
+                            as: "child",
+                            cond: {
+                                $and: [
+                                    { $eq: ["$$child.botID", new mongoose.Types.ObjectId(botID)] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+        const result2 = await MarginModel.populate(resultFilter2, {
+            path: 'children.botID',
+        })
+
+        const newDataSocketWithBotData2 = result2.flatMap((data) => data.children.map(child => {
+            child.symbol = data.value
+            child.value = `MARGIN-${data._id}-${child._id}`
+            return child
+        })) || []
+
+        return newDataSocketWithBotData.concat(newDataSocketWithBotData2);
     },
     getAllStrategiesSpotByBotID: async ({
         botID,
@@ -300,7 +376,7 @@ const BotController = {
                                     const IsActive = data.Status === "Running" ? true : false;
 
                                     if (!IsActive) {
-                                        const deActiveScanner = ScannerModel.updateMany({ botID }, { IsActive: false })
+                                        const deActiveScanner = ScannerV3Model.updateMany({ botID }, { IsActive: false })
                                         const deActiveStrategies = StrategiesModel.updateMany(
                                             { "children.botID": botID },
                                             {
@@ -347,8 +423,93 @@ const BotController = {
                                     })
                                 }
                                 else if (type === "telegram") {
-                                    
+
                                     const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
+                                        botID,
+                                    })
+
+                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                        type: "bot-telegram",
+                                        data: {
+                                            newData: newDataSocketWithBotData,
+                                            botID,
+                                            newApiData: {
+                                                telegramTokenOld: data.telegramTokenOld,
+                                                telegramID: data.telegramID,
+                                                telegramToken: data.telegramToken,
+                                                botName: data.botName,
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                            break;
+                        case "ByBitV1":
+                            if (checkBot) {
+                                if (type === "Active") {
+                                    const IsActive = data.Status === "Running" ? true : false;
+
+                                    if (!IsActive) {
+                                        const deActiveScanner = ScannerV1Model.updateMany({ botID }, { IsActive: false })
+                                        const deActiveStrategies = SpotModel.updateMany(
+                                            { "children.botID": botID },
+                                            {
+                                                $set: {
+                                                    "children.$[elem].IsActive": false,
+                                                }
+                                            },
+                                            {
+                                                arrayFilters: [{ "elem.botID": botID }]
+                                            }
+                                        );
+                                        const deActiveStrategiesMargin = MarginModel.updateMany(
+                                            { "children.botID": botID },
+                                            {
+                                                $set: {
+                                                    "children.$[elem].IsActive": false,
+                                                }
+                                            },
+                                            {
+                                                arrayFilters: [{ "elem.botID": botID }]
+                                            }
+                                        );
+
+                                        await Promise.allSettled([deActiveScanner, deActiveStrategies,deActiveStrategiesMargin])
+                                    }
+                                    const newDataSocketWithBotData = await BotController.getAllStrategiesV1ByBotID({
+                                        botID,
+                                    })
+
+                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                        type: "bot-update",
+                                        data: {
+                                            newData: newDataSocketWithBotData,
+                                            botIDMain: botID,
+                                            botActive: IsActive
+                                        }
+                                    })
+
+                                }
+                                else if (type === "Api") {
+                                    const newDataSocketWithBotData = await BotController.getAllStrategiesV1ByBotID({
+                                        botID,
+                                    })
+
+                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                        type: "bot-api",
+                                        data: {
+                                            newData: newDataSocketWithBotData,
+                                            botID,
+                                            newApiData: {
+                                                ApiKey: data.ApiKey,
+                                                SecretKey: data.SecretKey
+                                            }
+                                        }
+                                    })
+                                }
+                                else if (type === "telegram") {
+
+                                    const newDataSocketWithBotData = await BotController.getAllStrategiesV1ByBotID({
                                         botID,
                                     })
 
@@ -409,7 +570,7 @@ const BotController = {
 
             const result = await BotModel.deleteOne({ _id: botID })
 
-            await ScannerModel.deleteMany({ botID })
+            await ScannerV3Model.deleteMany({ botID })
 
             if (result.deletedCount !== 0) {
 
@@ -461,38 +622,48 @@ const BotController = {
                     newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
                         botID,
                     })
+                case "ByBitV1":
+                    newDataSocketWithBotData = await BotController.getAllStrategiesV1ByBotID({
+                        botID,
+                    })
                     break
             }
 
             const result = await BotModel.deleteMany({ _id: { $in: botIDList } })
+            let resultStrategies
+            switch (botType) {
+                case "ByBitV3":
+                    resultStrategies = StrategiesModel.updateMany(
+                        { "children.botID": { $in: botIDList } },
+                        { $pull: { children: { botID: { $in: botIDList } } } }
+                    );
+                    break
+                case "ByBitV1":
+                    const spotDelete = SpotModel.updateMany(
+                        { "children.botID": { $in: botIDList } },
+                        { $pull: { children: { botID: { $in: botIDList } } } }
+                    );
+                    const marginDelete = MarginModel.updateMany(
+                        { "children.botID": { $in: botIDList } },
+                        { $pull: { children: { botID: { $in: botIDList } } } }
+                    );
+                    resultStrategies = Promise.allSettled([spotDelete, marginDelete]);
+                    break
+            }
 
-            const resultStrategies = await StrategiesModel.updateMany(
-                { "children.botID": { $in: botIDList } },
-                { $pull: { children: { botID: { $in: botIDList } } } }
-            );
 
-            const resultAll = await Promise.all([result, resultStrategies])
+            await Promise.all([result, resultStrategies])
 
-            if (resultAll.some(item => item.deletedCount !== 0)) {
-
-                switch (botType) {
-                    case "ByBitV3":
-
-                        newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
-                            type: "bot-delete",
-                            data: {
-                                newData: newDataSocketWithBotData,
-                                botID,
-                            }
-                        })
-                        break
+            newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                type: "bot-delete",
+                data: {
+                    newData: newDataSocketWithBotData,
+                    botID,
                 }
+            })
 
-                res.customResponse(200, "Delete Bot Successful");
-            }
-            else {
-                res.customResponse(400, "Delete Bot failed", "");
-            }
+            res.customResponse(200, "Delete Bot Successful");
+
 
         } catch (error) {
             res.status(500).json({ message: "Delete Bot Error" });

@@ -15,7 +15,8 @@ function UpdateStrategy({
     onClose,
     dataInput,
     setDataCheckTree,
-    dataCheckTreeDefaultRef
+    dataCheckTreeDefaultRef,
+    dataCheckTreeDefaultObject
 }) {
 
     const formControlMinValue = 0.01
@@ -195,6 +196,7 @@ function UpdateStrategy({
                 }))
                 dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
                     if (item._id === configID) {
+                        dataCheckTreeDefaultObject.current[configID] = newData
                         return newData
                     }
                     return item

@@ -10,7 +10,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE, createStrategiesMultipleMarginBE, deleteStrategiesMultipleMarginBE, offConfigMarginBE } = require('../controllers/margin');
 const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE, offConfigSpotBE } = require('../controllers/spot');
 const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../controllers/positionV1');
-const { getAllStrategiesActiveScannerBE } = require('../controllers/scanner');
+const { getAllStrategiesActiveScannerBE, deleteAllForUPcodeV1, deleteAllScannerV1BE } = require('../controllers/scanner');
 
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
@@ -1958,13 +1958,13 @@ const tinhOC = (symbol, dataAll = []) => {
 
     if (dataAll.length > 0) {
 
-
         let OC = 0
         let TP = 0
         let OCLong = 0
         let TPLong = 0
-        let OCNotPercent = 0
-        let OCLongNotPercent = 0
+
+        let dataOC = ""
+        let timestamp = 0
 
         const vol = dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol]
 
@@ -1975,45 +1975,36 @@ const tinhOC = (symbol, dataAll = []) => {
             const Highest = +data.high
             const Lowest = +data.low
 
-            if (index === 0) {
-                OCNotPercent = Highest - Open
-                OC = OCNotPercent / Open
-                OCLongNotPercent = Lowest - Open
-                OCLong = OCLongNotPercent / Open
+
+            if (!dataOC) {
+                OC = (Highest - Open) / Open
+                OCLong = (Lowest - Open) / Open
+                TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+                TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                dataOC = {
+                    close: Close,
+                    open: Open,
+                    high: Highest,
+                    low: Lowest,
+                }
+                timestamp = data.timestamp
             }
             else {
 
-                let TPTemp = Math.abs((Highest - Close) / OCNotPercent)
-                let TPLongTemp = Math.abs((Lowest - Close) / OCNotPercent)
-                let TPTemp2 = Math.abs((Highest - Close) / Math.abs(OCLongNotPercent))
-                let TPLongTemp2 = Math.abs((Lowest - Close) / Math.abs(OCLongNotPercent))
-
-
-                if ([Infinity, -Infinity].includes(TPTemp)) {
-                    TPTemp = 0
+                let TPTemp = 0
+                let TPLongTemp = 0
+                if (Lowest < dataOC.close) {
+                    TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
                 }
-                if ([Infinity, -Infinity].includes(TPLongTemp)) {
-                    TPLongTemp = 0
+                if (Highest > dataOC.close) {
+                    TPLongTemp = Math.abs((Highest - dataOC.low) / (dataOC.low - dataOC.open)) || 0
                 }
-                if ([Infinity, -Infinity].includes(TPTemp2)) {
-                    TPTemp2 = 0
-                }
-                if ([Infinity, -Infinity].includes(TPLongTemp2)) {
-                    TPLongTemp2 = 0
-                }
-
 
                 if (TPTemp > TP) {
                     TP = TPTemp
                 }
                 if (TPLongTemp > TPLong) {
                     TPLong = TPLongTemp
-                }
-                if (TPTemp2 > TP) {
-                    TP = TPTemp2
-                }
-                if (TPLongTemp2 > TPLong) {
-                    TPLong = TPLongTemp2
                 }
             }
         })
@@ -2026,12 +2017,21 @@ const tinhOC = (symbol, dataAll = []) => {
         if ([Infinity, -Infinity].includes(OCLong)) {
             OCLong = 0
         }
+        if ([Infinity, -Infinity].includes(TP)) {
+            TP = 0
+        }
 
+        if ([Infinity, -Infinity].includes(TPLong)) {
+            TPLong = 0
+        }
 
         const OCRound = roundNumber(OC)
         const TPRound = roundNumber(TP)
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
+
+        const timeOC = new Date(timestamp).toLocaleTimeString()
+
 
         // if (symbol === "CRDSUSDT") {
 
@@ -2061,7 +2061,7 @@ const tinhOC = (symbol, dataAll = []) => {
                     if (PositionSide === "Long") {
 
                         if (Math.abs(OCLongRound) >= OrderChange && TPLongRound >= Elastic) {
-                            const htLong = (`[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)}`)
+                            const htLong = (`[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                             console.log(changeColorConsole.cyanBright(htLong, new Date().toLocaleTimeString()));
                             console.log(dataAll);
                             if (!scannerData.OrderConfig) {
@@ -2079,7 +2079,7 @@ const tinhOC = (symbol, dataAll = []) => {
                     }
                     else {
                         if (Math.abs(OCRound) >= OrderChange && TPRound >= Elastic) {
-                            const ht = (`[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)}`)
+                            const ht = (`[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                             console.log(changeColorConsole.cyanBright(ht, new Date().toLocaleTimeString()));
                             console.log(dataAll);
                             if (!scannerData.OrderConfig) {
@@ -2122,9 +2122,10 @@ const Main = async () => {
     const getAllConfigSpot = getAllStrategiesActiveSpotBE()
     const getAllConfigMargin = getAllStrategiesActiveMarginBE()
     const getAllConfigScanner = getAllStrategiesActiveScannerBE()
+    const deleteAll = deleteAllScannerV1BE()
 
 
-    const allRes = await Promise.allSettled([getAllSymbolSpot, getAllSymbolMargin, getAllConfigSpot, getAllConfigMargin, getAllConfigScanner])
+    const allRes = await Promise.allSettled([getAllSymbolSpot, getAllSymbolMargin, getAllConfigSpot, getAllConfigMargin, getAllConfigScanner,deleteAll])
 
     const allSymbolRes = [
         ...allRes[0].value || [],
@@ -2547,7 +2548,7 @@ try {
             preTurnover[symbol] = trichMauData[symbol].turnover
             trichMauDataArray[symbol] = []
         })
-    }, 3000)
+    }, 5000)
 
 
     // handleCreateMultipleConfigSpot({
@@ -3351,7 +3352,10 @@ socketRealtime.on('close-upcode', async () => {
 
     updatingAllMain = true
 
-    await cancelAllListOrderOC(listOCByCandleBot)
+    const cancelOC = cancelAllListOrderOC(listOCByCandleBot)
+    const deleteAll = deleteAllForUPcodeV1()
+
+    await Promise.allSettled([cancelOC, deleteAll])
 
     console.log("PM2 Kill Successful");
     exec("pm2 stop runTrade-V1")

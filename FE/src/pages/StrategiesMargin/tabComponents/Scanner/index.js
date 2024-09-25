@@ -130,8 +130,7 @@ function Scanner() {
                             if (status === 200) {
                               
                                 dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
-                                    console.log(item._id === configID);
-
+                                    
                                     if (item._id === configID) {
                                         return {
                                             ...data,
@@ -193,10 +192,12 @@ function Scanner() {
                                       
                                         dataCheckTreeDefaultRef.current = dataCheckTreeDefaultRef.current.map(item => {
                                             if (item._id === configID) {
-                                                return {
+                                                const newData = {
                                                     ...data,
                                                     IsActive: newIsActive
                                                 }
+                                                dataCheckTreeDefaultObject.current[configID] = newData
+                                                return newData
                                             }
                                             return item
                                         })
@@ -818,6 +819,7 @@ function Scanner() {
                     dataInput={openUpdateStrategy.data}
                     setDataCheckTree={setDataCheckTree}
                     dataCheckTreeDefaultRef={dataCheckTreeDefaultRef}
+                    dataCheckTreeDefaultObject={dataCheckTreeDefaultObject}
                 />
 
             }
