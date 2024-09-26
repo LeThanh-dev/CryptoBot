@@ -38,6 +38,7 @@ function EditBot({
                     id: botData.id,
                     data: {
                         ...formData,
+                        botName: formData.botName.trim(),
                         telegramTokenOld: botData.telegramTokenOld?.trim(),
                         telegramID,
                         telegramToken,
@@ -89,10 +90,14 @@ function EditBot({
                     <FormLabel className={styles.label}>Name</FormLabel>
                     <TextField
                         defaultValue={botData?.botName}
-                        {...register("botName", { required: true, pattern: /\S/ })}
+                        {...register("botName", {
+                            required: true,
+                            pattern: /^[a-zA-Z0-9\s]*$/ // Chỉ cho phép chữ cái, số và khoảng trắng
+                        })}
                         size="small"
                     />
-                    {errors.botName && <p className="formControlErrorLabel">The Bot Name Required.</p>}
+                    {errors.botName?.type === "required" && <p className="formControlErrorLabel">The Bot Name Required.</p>}
+                    {errors.botName?.type === "pattern" && <p className="formControlErrorLabel">Error</p>}
 
                 </FormControl>
                 <FormControl className={styles.formControl}>

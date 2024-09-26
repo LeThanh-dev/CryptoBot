@@ -77,7 +77,11 @@ const RoleController = {
                 {
                     "$addToSet": {
                         roleList: [
-                            "ScannerV3"
+                            "ScannerV3",
+                            "Spot",
+                            "Margin",
+                            "Scanner",
+                            "PositionV1"
                         ]
                     }
                 },

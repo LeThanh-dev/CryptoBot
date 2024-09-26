@@ -494,6 +494,10 @@ function Scanner() {
                 return ({
                     id,
                     ...item,
+                    Expire: item.Expire || 0,
+                    Turnover: item.Turnover || 0,
+                    Elastic: item.Elastic || 0,
+
                     BotName: item.botID.botName
                 })
             })

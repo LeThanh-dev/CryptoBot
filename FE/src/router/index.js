@@ -15,7 +15,6 @@ import StrategiesMargin from "../pages/StrategiesMargin"
 import Spot from "../pages/StrategiesMargin/tabComponents/Spot"
 import Margin from "../pages/StrategiesMargin/tabComponents/Margin"
 import Scanner from "../pages/StrategiesMargin/tabComponents/Scanner"
-import PositionAll from "../pages/Position"
 import PositionV3 from "../pages/Position/Position-V3"
 import PositionV1 from "../pages/Position/Position-V1"
 import StrategiesHistory from "../pages/StrategiesHistory"
@@ -54,7 +53,7 @@ const routeList = [
                 element: <BotDetail />,
             },
             {
-                path: "Strategies",
+                path: "StrategiesV3",
                 element:
                     <>
                         <StrategiesV3Tab />
@@ -107,18 +106,12 @@ const routeList = [
                 element: <Coin />,
             },
             {
-                path: "PositionV3",
-                element: <>
-                    <PositionAll />
-                    <PositionV3 />
-                </>,
+                path: "PositionV1",
+                element: <PositionV1 />,
             },
             {
-                path: "PositionV1",
-                element: <>
-                    <PositionAll />
-                    <PositionV1 />
-                </>,
+                path: "PositionV3",
+                element: <PositionV3 />,
             },
             {
                 path: "Order",

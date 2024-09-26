@@ -278,10 +278,8 @@ const dataCoinByBitController = {
                         }
                     }
                 })
-                if (!data.UpdatedFields.IsActive) {
-                    const id = new mongoose.Types.ObjectId(data.id)
-                    data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
-                }
+                const id = new mongoose.Types.ObjectId(data.id)
+                data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
             });
 
             const bulkOperationsRes = ScannerModel.bulkWrite(bulkOperations);

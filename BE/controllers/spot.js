@@ -1328,7 +1328,6 @@ const dataCoinByBitController = {
 
     createStrategiesMultipleSpotBE: async ({
         dataInput,
-        userID,
         botID,
         botName,
         symbol,
@@ -1341,7 +1340,7 @@ const dataCoinByBitController = {
 
             const result = await SpotModel.updateMany(
                 { "value": symbol },
-                { "$push": { "children": dataInput.map(newData => ({ ...newData, botID, userID, TimeTemp, scannerID })) } },
+                { "$push": { "children": dataInput.map(newData => ({ ...newData, botID, TimeTemp, scannerID })) } },
             );
 
             const resultFilter = await SpotModel.aggregate([
@@ -1350,7 +1349,7 @@ const dataCoinByBitController = {
                         children: {
                             $elemMatch: {
                                 IsActive: true,
-                                userID: new mongoose.Types.ObjectId(userID),
+                                scannerID: new mongoose.Types.ObjectId(scannerID),
                                 TimeTemp: TimeTemp
                             }
                         }
@@ -1368,7 +1367,7 @@ const dataCoinByBitController = {
                                 cond: {
                                     $and: [
                                         { $eq: ["$$child.IsActive", true] },
-                                        { $eq: ["$$child.userID", new mongoose.Types.ObjectId(userID)] },
+                                        { $eq: ["$$child.scannerID", new mongoose.Types.ObjectId(scannerID)] },
                                         { $eq: ["$$child.TimeTemp", TimeTemp] }
                                     ]
                                 }
@@ -1390,10 +1389,6 @@ const dataCoinByBitController = {
 
             if (result.acknowledged && result.matchedCount !== 0) {
 
-                // handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
-                //     type: "add",
-                //     data: handleResult
-                // })
                 return {
                     message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
                     data: handleResult || []
@@ -1416,27 +1411,35 @@ const dataCoinByBitController = {
         }
 
     },
+
     deleteStrategiesMultipleSpotBE: async ({
+        scannerID,
         symbol,
-        listConFigID,
-        botName
+        PositionSide,
+        botName,
     }) => {
         try {
             const result = await SpotModel.updateMany(
-                { "children._id": { $in: listConFigID } },
-                { $pull: { "children": { _id: { $in: listConFigID } } } }
+                {
+                    "children.scannerID": scannerID,
+                    "value": symbol
+                },
+                { $pull: { "children": { scannerID } } }
             );
 
             if (result.acknowledged && result.matchedCount !== 0) {
-                console.log(`[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Successful`);
+                console.log(`[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} - ${PositionSide} ) Successful`);
+                return true
             }
             else {
-                console.log(`[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Failed `)
+                console.log(`[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} - ${PositionSide} ) Failed `)
+                return false
             }
 
 
         } catch (error) {
-            console.log(`[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message} `)
+            console.log(`[Mongo] Delete Mul-Config Spot ( ${botName} - ${symbol} - ${PositionSide} ) Error: ${error.message} `)
+                return false
         }
     },
 
@@ -1453,14 +1456,16 @@ const dataCoinByBitController = {
 
             if (result.acknowledged && result.matchedCount !== 0) {
                 console.log(`[Mongo] OFF config SPOT ( ${symbol} ) successful`);
-
+                return true
             }
             else {
                 console.log(`[Mongo] OFF config SPOT ( ${symbol} ) failed`);
+                return false
 
             }
         } catch (error) {
             console.log(`[Mongo] OFF config SPOT ( ${symbol} ) error: ${error.message}`);
+            return false
 
         }
     }

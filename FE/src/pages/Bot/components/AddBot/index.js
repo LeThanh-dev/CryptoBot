@@ -14,7 +14,7 @@ function AddBot({
     botTypeList
 }, ref) {
 
-    
+
     const {
         register,
         handleSubmit,
@@ -26,7 +26,7 @@ function AddBot({
 
     const newBotDataRef = useRef()
 
-    const checkRoleNameAdmin = ()=>{
+    const checkRoleNameAdmin = () => {
         // return roleName === "Admin" || roleName === "SuperAdmin"
         return roleName !== "Trader"
     }
@@ -36,6 +36,7 @@ function AddBot({
         try {
             const res = await createBot({
                 ...formData,
+                botName: formData.botName.trim(),
                 Status: checkRoleNameAdmin() ? "Stopped" : "Pending",
             })
 
@@ -76,11 +77,14 @@ function AddBot({
                 <FormControl className={styles.formControl}>
                     <FormLabel className={styles.label}>Name</FormLabel>
                     <TextField
-                        {...register("botName", { required: true, pattern: /\S/ })}
-
+                        {...register("botName", {
+                            required: true,
+                            pattern: /^[a-zA-Z0-9\s]*$/ // Chỉ cho phép chữ cái, số và khoảng trắng
+                        })}
                         size="small"
                     />
-                    {errors.botName && <p className="formControlErrorLabel">The Bot Name Required.</p>}
+                    {errors.botName?.type === "required" && <p className="formControlErrorLabel">The Bot Name Required.</p>}
+                    {errors.botName?.type === "pattern" && <p className="formControlErrorLabel">Error</p>}
 
                 </FormControl>
                 <FormControl className={styles.formControl}>

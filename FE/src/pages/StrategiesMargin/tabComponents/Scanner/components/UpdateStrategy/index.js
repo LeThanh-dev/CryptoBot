@@ -463,9 +463,8 @@ function UpdateStrategy({
                                     %
                                 </InputAdornment>
                             }}
-                            {...register("Elastic", { required: true })}
+                            {...register("Elastic")}
                         />
-                        {errors.Elastic?.type === 'required' && <p className="formControlErrorLabel">The Elastic Required.</p>}
 
                     </FormControl>
 
@@ -558,10 +557,8 @@ function UpdateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover", { required: true, min: formControlMinValue })}
+                            {...register("Turnover",)}
                         />
-                        {errors.Turnover?.type === 'required' && <p className="formControlErrorLabel">The Turnover Required.</p>}
-                        {errors.Turnover?.type === "min" && <p className="formControlErrorLabel">The Turnover must bigger 0.01.</p>}
 
                     </FormControl>
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>

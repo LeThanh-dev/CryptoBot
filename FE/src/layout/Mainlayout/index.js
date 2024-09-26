@@ -21,10 +21,7 @@ function MainLayout({ children }) {
 
     const ROLE_LIST_DEFAULT = [
         "Bots",
-        "Strategies",
-        "Spot",
-        "Margin",
-        "Scanner",
+        "StrategiesV3",
         "Coin",
         "Order",
         "StrategiesHistory",
@@ -38,14 +35,14 @@ function MainLayout({ children }) {
             icon: <SmartToyIcon className={styles.icon} />
         },
         {
-            linK: "/Strategies",
-            name: "Strategies V3",
+            linK: "/StrategiesV3",
+            name: "StrategiesV3",
             icon: <LocalMallIcon className={styles.icon} />
         },
 
         {
             linK: "/PositionV3",
-            name: "Positions",
+            name: "PositionsV3",
             icon: <ViewInArIcon className={styles.icon} />
         },
 

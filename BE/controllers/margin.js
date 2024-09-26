@@ -897,7 +897,7 @@ const dataCoinByBitController = {
                     dataCoinByBitController.sendDataRealtime({
                         type: "sync-symbol",
                         data: newSymbolResult.map(data => ({
-                            value:data.value,
+                            value: data.value,
                             type: "Margin"
                         }))
                     })
@@ -1296,11 +1296,11 @@ const dataCoinByBitController = {
 
     createStrategiesMultipleMarginBE: async ({
         dataInput,
-        userID,
         botID,
         botName,
         symbol,
-        scannerID
+        scannerID,
+        PositionSide
     }) => {
 
         try {
@@ -1309,7 +1309,7 @@ const dataCoinByBitController = {
 
             const result = await MarginModel.updateMany(
                 { "value": symbol },
-                { "$push": { "children": dataInput.map(newData => ({ ...newData, botID, userID, TimeTemp, scannerID })) } },
+                { "$push": { "children": dataInput.map(newData => ({ ...newData, botID, TimeTemp, scannerID })) } },
             );
 
             const resultFilter = await MarginModel.aggregate([
@@ -1318,7 +1318,7 @@ const dataCoinByBitController = {
                         children: {
                             $elemMatch: {
                                 IsActive: true,
-                                userID: new mongoose.Types.ObjectId(userID),
+                                scannerID: new mongoose.Types.ObjectId(scannerID),
                                 TimeTemp: TimeTemp
                             }
                         }
@@ -1336,7 +1336,7 @@ const dataCoinByBitController = {
                                 cond: {
                                     $and: [
                                         { $eq: ["$$child.IsActive", true] },
-                                        { $eq: ["$$child.userID", new mongoose.Types.ObjectId(userID)] },
+                                        { $eq: ["$$child.scannerID", new mongoose.Types.ObjectId(scannerID)] },
                                         { $eq: ["$$child.TimeTemp", TimeTemp] }
                                     ]
                                 }
@@ -1357,19 +1357,14 @@ const dataCoinByBitController = {
             })) || []
 
             if (result.acknowledged && result.matchedCount !== 0) {
-
-                // handleResult.length > 0 && dataCoinByBitController.sendDataRealtime({
-                //     type: "add",
-                //     data: handleResult
-                // })
                 return {
-                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} ) Successful`,
+                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Successful`,
                     data: handleResult || []
                 }
             }
             else {
                 return {
-                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} ) Failed`,
+                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Failed`,
                     data: []
                 }
             }
@@ -1378,39 +1373,48 @@ const dataCoinByBitController = {
 
         catch (error) {
             return {
-                message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message}`,
+                message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} - ${PositionSide} ) Error: ${error.message}`,
                 data: []
             }
         }
 
     },
     deleteStrategiesMultipleMarginBE: async ({
+        scannerID,
         symbol,
-        listConFigID,
-        botName
+        PositionSide,
+        botName,
     }) => {
         try {
+
             const result = await MarginModel.updateMany(
-                { "children._id": { $in: listConFigID } },
-                { $pull: { "children": { _id: { $in: listConFigID } } } }
+                {
+                    "children.scannerID": scannerID,
+                    "value": symbol
+                },
+                { $pull: { "children": { scannerID } } }
             );
 
             if (result.acknowledged && result.matchedCount !== 0) {
-                console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} ) Successful`);
+                console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Successful`);
+                return true
             }
             else {
-                console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} ) Failed `)
+                console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Failed `)
+                return false
             }
 
 
         } catch (error) {
-            console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} ) Error: ${error.message} `)
+            console.log(`[Mongo] Delete Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Error: ${error.message} `)
+            return false
         }
     },
 
     offConfigMarginBE: async ({
         symbol,
-        configID
+        configID,
+        PositionSide
     }) => {
 
         try {
@@ -1420,15 +1424,17 @@ const dataCoinByBitController = {
             )
 
             if (result.acknowledged && result.matchedCount !== 0) {
-                console.log(`[Mongo] OFF config MARGIN ( ${symbol} ) successful`);
-
+                console.log(`[Mongo] OFF config MARGIN ( ${symbol} - ${PositionSide} ) successful`);
+                return true
             }
             else {
-                console.log(`[Mongo] OFF config MARGIN ( ${symbol} ) failed`);
+                console.log(`[Mongo] OFF config MARGIN ( ${symbol} - ${PositionSide} ) failed`);
+                return false
 
             }
         } catch (error) {
-            console.log(`[Mongo] OFF config MARGIN ( ${symbol} ) error: ${error.message}`);
+            console.log(`[Mongo] OFF config MARGIN ( ${symbol} - ${PositionSide} ) error: ${error.message}`);
+            return false
 
         }
     }

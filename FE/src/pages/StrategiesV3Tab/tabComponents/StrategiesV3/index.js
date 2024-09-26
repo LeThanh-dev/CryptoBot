@@ -287,7 +287,7 @@ function Strategies() {
     }
 
     const handleFilterAll = () => {
-        
+
         filterQuantityRef.current = []
         const listData = dataCheckTreeDefaultRef.current.reduce((acc, data) => {
 
@@ -447,7 +447,7 @@ function Strategies() {
                 </div>
 
                 <div className={styles.strategiesHeader}>
-                <FormControl className={styles.strategiesHeaderItem}>
+                    <FormControl className={styles.strategiesHeaderItem}>
                         <FormLabel className={styles.formLabel}>Bookmark</FormLabel>
                         <Select
                             value={bookmarkSelectedRef.current}

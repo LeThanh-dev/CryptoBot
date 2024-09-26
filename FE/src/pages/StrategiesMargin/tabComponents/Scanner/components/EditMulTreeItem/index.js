@@ -322,15 +322,16 @@ function EditMulTreeItem({
                 {
                     id: dataCheckTreeItem._id,
                     UpdatedFields: filterDataRowList.map(filterRow => {
-                        let valueHandle = filterRow.value != "Label" ? handleCompare(dataCheckTreeItem[filterRow.value], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number") {
+                        const filedValue = filterRow.value
+                        let valueHandle = filterRow.value != "Label" ? handleCompare(dataCheckTreeItem[filedValue], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
+                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "Elastic",].includes(filedValue)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false
                             }
                         }
                         return {
-                            [filterRow.value]: valueHandle
+                            [filedValue]: valueHandle
                         }
                     }).reduce((accumulator, currentObject) => {
                         const { parentID, ...oldData } = dataCheckTreeItem
@@ -381,7 +382,7 @@ function EditMulTreeItem({
         try {
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => ({
                 id: dataCheckTreeItem._id,
-                Market:dataCheckTreeItem.Market
+                Market: dataCheckTreeItem.Market
             }))
 
             const res = await deleteStrategiesMultipleScanner(newData)

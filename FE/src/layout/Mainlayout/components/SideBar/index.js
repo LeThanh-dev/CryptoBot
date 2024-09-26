@@ -1,3 +1,5 @@
+import ControlCameraIcon from '@mui/icons-material/ControlCamera';
+import RadarIcon from '@mui/icons-material/Radar';
 import PermDataSettingIcon from '@mui/icons-material/PermDataSetting';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -10,12 +12,13 @@ import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
-import { Link, NavLink } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 import clsx from "clsx";
 import styles from "./SideBar.module.scss"
-import { ExpandLess, ExpandMore, StarBorder } from '@mui/icons-material';
-import { Collapse, List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListSubheader } from '@mui/material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { Collapse } from '@mui/material';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 
 function SideBar({
@@ -23,7 +26,10 @@ function SideBar({
     roleList
 }, ref) {
 
+    const userData = useSelector(state => state.userDataSlice.userData)
 
+    const [openStrategies, setOpenStrategies] = useState(false);
+    const [openPosition, setOpenPosition] = useState(false);
     const linkList = [
 
         {
@@ -49,6 +55,8 @@ function SideBar({
         {
             name: "Strategies",
             icon: <PermDataSettingIcon className={styles.icon} />,
+            open: openStrategies,
+            openFunc: () => { setOpenStrategies(!openStrategies) },
             children: [
                 {
                     linK: "/Spot",
@@ -56,47 +64,48 @@ function SideBar({
                     icon: <ShoppingCartIcon className={styles.icon} />
                 },
                 {
-                    linK: "/Strategies",
+                    linK: "/StrategiesV3",
                     name: "V3",
                     icon: <LocalMallIcon className={styles.icon} />
                 },
             ]
         },
-        // {
-        //     linK: "/Spot",
-        //     name: "Strategies V1",
-        //     icon: <ShoppingCartIcon className={styles.icon} />
-        // },
-        // {
-        //     linK: "/Strategies",
-        //     name: "Strategies V3",
-        //     icon: <LocalMallIcon className={styles.icon} />
-        // },
+        
+        {
+            name: "Positions",
+            icon: <ControlCameraIcon className={styles.icon} />,
+            open: openPosition,
+            openFunc: () => { setOpenPosition(!openPosition) },
+            children: [
+                {
+                    linK: "/PositionV1",
+                    name: "V1",
+                    icon: <RadarIcon className={styles.icon} />
+                },
+                {
+                    linK: "/PositionV3",
+                    name: "V3",
+                    icon: <ViewInArIcon className={styles.icon} />
+                },
+            ]
+        },
         {
             linK: "/Coin",
             name: "Coin",
             icon: <CurrencyExchangeIcon className={styles.icon} />
         },
         {
-            linK: "/PositionV3",
-            name: "Positions",
-            icon: <ViewInArIcon className={styles.icon} />
-        },
-        {
             linK: "/InstrumentsInfo",
             name: "InstrumentsInfo",
             icon: <PaymentsIcon className={styles.icon} />
         },
-        {
-            linK: "/Order",
-            name: "Order",
-            icon: <CreditCardIcon className={styles.icon} />
-        },
+        // {
+        //     linK: "/Order",
+        //     name: "Order",
+        //     icon: <CreditCardIcon className={styles.icon} />
+        // },
     ]
-    const [openGroup1, setOpenGroup1] = useState(false);
-    const handleGroup1Click = () => {
-        setOpenGroup1(!openGroup1);
-    };
+
     return (
         <div
             className={styles.sidebar}
@@ -119,11 +128,13 @@ function SideBar({
             </NavLink>
             {
                 linkList.map(item => {
+
+
                     if (item.children?.length) {
                         return <div key={item.linK}>
                             <div
                                 className={styles.sidebarItem}
-                                onClick={handleGroup1Click}
+                                onClick={item.openFunc}
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
@@ -137,12 +148,12 @@ function SideBar({
                                     {item.icon}
                                     <p className={styles.sidebarItemName}>{item.name}</p>
                                 </div>
-                                {openGroup1 ? <ExpandLess /> : <ExpandMore />}
+                                {item.open ? <ExpandLess /> : <ExpandMore />}
                             </div>
-                            <Collapse in={openGroup1} timeout="auto" unmountOnExit>
-                                <div style={{ paddingLeft: "20px" }}>
+                            <Collapse in={item.open} timeout="auto" unmountOnExit>
+                                <div style={{ paddingLeft: "16px" }}>
                                     {item.children.map(child => (
-                                        <NavLink
+                                       roleList.includes(`${child.linK.replace("/","")}`) && <NavLink
                                             className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
                                             to={child.linK}
                                         >
@@ -167,28 +178,9 @@ function SideBar({
                             }
                         </div>
                     }
+
                 })
             }
-
-            {/* {
-                
-                  <>
-                    <ListItem  onClick={handleGroup1Click}>
-                        <ListItemText primary="Strategies" />
-                        {openGroup1 ? <ExpandLess /> : <ExpandMore />}
-                    </ListItem>
-                    <Collapse in={openGroup1} timeout="auto" unmountOnExit>
-                        <List component="div" disablePadding>
-                            <ListItem  component={Link} to="/route1">
-                                <ListItemText primary="Route 1" />
-                            </ListItem>
-                            <ListItem  component={Link} to="/route2">
-                                <ListItemText primary="Route 2" />
-                            </ListItem>
-                        </List>
-                    </Collapse>
-                  </>
-            } */}
 
         </div >
     );

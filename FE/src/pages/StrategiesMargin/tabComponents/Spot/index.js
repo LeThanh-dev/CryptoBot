@@ -57,7 +57,20 @@ function Spot() {
         },
     ]
 
-
+    const bookmarkListDefault = [
+        {
+            name: "All",
+            value: "All",
+        },
+        {
+            name: "Yes",
+            value: "Yes",
+        },
+        {
+            name: "No",
+            value: "No",
+        },
+    ]
 
 
     const [openFilterDialog, setOpenFilterDialog] = useState(false);
@@ -91,6 +104,7 @@ function Spot() {
     const botSelectedRef = useRef("All")
     const positionSideSelectedRef = useRef("All")
     const candlestickSelectedRef = useRef("All")
+    const bookmarkSelectedRef = useRef("All")
     const selectAllRef = useRef(false)
     const bookmarkCheckRef = useRef(false)
 
@@ -113,7 +127,7 @@ function Spot() {
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotActiveByUserID(userData._id,"ByBitV1")
+        getAllBotActiveByUserID(userData._id, "ByBitV1")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (
@@ -251,8 +265,13 @@ function Spot() {
                 const checkPosition = positionSideSelectedRef.current === "All" || positionSideSelectedRef.current === item.PositionSide;
                 const checkCandle = candlestickSelectedRef.current === "All" || candlestickSelectedRef.current === item.Candlestick;
                 const checkSearch = searchDebounce === "" || data.label.toUpperCase().includes(searchDebounce.toUpperCase().trim());
-                const checkBookmark = bookmarkCheckRef.current ? data.bookmarkList?.includes(userData._id) : true
-
+                let checkBookmark = true
+                if (bookmarkSelectedRef.current === "Yes") {
+                    checkBookmark = data.bookmarkList?.includes(userData._id)
+                }
+                else if (bookmarkSelectedRef.current === "No") {
+                    checkBookmark = !data.bookmarkList?.includes(userData._id)
+                }
                 return checkBotType && checkBot && checkPosition && checkCandle && checkSearch && checkBookmark;
             });
 
@@ -391,24 +410,24 @@ function Spot() {
                 </div>
 
                 <div className={styles.strategiesHeader}>
-                    {/* <FormControl className={styles.strategiesHeaderItem}>
-                        <FormLabel className={styles.formLabel}>Bot Type</FormLabel>
+                    <FormControl className={styles.strategiesHeaderItem}>
+                        <FormLabel className={styles.formLabel}>Bookmark</FormLabel>
                         <Select
-                            value={botTypeSelectedRef.current}
+                            value={bookmarkSelectedRef.current}
                             size="small"
                             onChange={e => {
                                 const value = e.target.value;
-                                botTypeSelectedRef.current = value
+                                bookmarkSelectedRef.current = value
                                 handleFilterAll()
                             }}
                         >
                             {
-                                botTypeList.map(item => (
+                                bookmarkListDefault.map(item => (
                                     <MenuItem value={item.value} key={item.value}>{item.name}</MenuItem>
                                 ))
                             }
                         </Select>
-                    </FormControl> */}
+                    </FormControl>
 
                     <FormControl className={styles.strategiesHeaderItem}>
                         <FormLabel className={styles.formLabel}>Bot</FormLabel>
@@ -499,29 +518,7 @@ function Spot() {
                         marginLeft: "6px"
                     }}>( {countTotalActive.countActive} / {countTotalActive.totalItem} )</span>
 
-                    <span style={{ margin: "0px 2px 3px 12px", opacity: ".6", fontSize: ".9rem" }}>|</span>
-                    <div className={styles.bookmarkAll}   >
-                        <Checkbox
-                            checked={bookmarkCheckRef.current}
-                            style={{
-                                padding: " 0 6px",
-                            }}
-                            sx={{
-                                color: "#b5b5b5",
-                                '&.Mui-checked': {
-                                    color: "var(--yellowColor)",
-                                },
-                            }}
-                            onClick={e => {
-                                const value = e.target.checked;
-                                bookmarkCheckRef.current = value
-                                handleFilterAll()
-                            }}
-                            icon={<StarBorderIcon />}
-                            checkedIcon={<StarIcon />}
-                        />
-                        <span>Bookmark</span>
-                    </div>
+
                 </p>}
                 {
                     (dataCheckTree.length > 0 && !loadingDataCheckTree)
