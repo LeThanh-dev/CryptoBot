@@ -17,7 +17,6 @@ const bot = new TelegramBot("6992407921:AAFS2wimsauyuoj1eXJFN_XxRFhs5wWtp7c", {
 const CHANNEL_ID = "-1002178225625"
 const MAX_ORDER_LIMIT = 20
 
-const LIMIT_CANDLE = 5
 
 var sendTeleCount = {
     logError: false,
@@ -367,7 +366,7 @@ let Main = async () => {
             preTurnover[symbol] = trichMauData[symbol].turnover
             trichMauDataArray[symbol] = []
         })
-    }, LIMIT_CANDLE * 1000)
+    }, 3000)
 
 
 
