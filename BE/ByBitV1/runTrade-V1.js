@@ -590,9 +590,10 @@ const handleRepaySymbol = async ({
     console.log(changeColorConsole.magentaBright(`[...] Repay ( ${symbol}  ${side} )`));
 
     repayCoinObject[symbol] = true
-    await handleCancelAllOrderOC(listOCByCandleBot[botID])
+
     const clientConfigRepay = getRestClientV5Config({ ApiKey, SecretKey })
     const clientRepay = new RestClientV5(clientConfigRepay);
+
     await clientRepay.repayLiability({ coin: symbol.replace("USDT", "") }).then((response) => {
         if (response.retCode == 0) {
             console.log(changeColorConsole.greenBright(`[V] Repay ( ${symbol}  ${side} ) successful`));
@@ -623,6 +624,10 @@ const handleCloseMarket = async ({
 
     const MarketName = symbolTradeTypeObject[symbol]
     const isLeverage = MarketName === "Spot" ? 0 : 1
+    
+    console.log("\n[...] Cancel All OC for Close Market-Repay");
+    
+    await handleCancelAllOrderOC(listOCByCandleBot[botID])
 
     if (MarketName === "Spot") {
         client

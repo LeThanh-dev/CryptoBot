@@ -145,7 +145,7 @@ function MainLayout({ children }) {
                 const routeCurrent = location.pathname.replace("/", "")
 
                 if (!newRoleList.includes(routeCurrent) && routeCurrent) {
-                    navigate("/")
+                    navigate("404")
                 }
                 setRoleList(newRoleList || [])
                 dispatch(setUserDataLocal({

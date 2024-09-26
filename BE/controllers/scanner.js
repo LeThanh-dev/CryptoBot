@@ -213,6 +213,7 @@ const dataCoinByBitController = {
                     type: "scanner-add",
                     data: handleResult
                 })
+
                 res.customResponse(200, "Add New Config Successful", []);
             }
             else {
@@ -233,21 +234,113 @@ const dataCoinByBitController = {
 
             const { newData, configID } = req.body
 
-            const result = await ScannerModel.updateOne(
+            const bulkOperationsRes = ScannerModel.updateOne(
                 { _id: configID },
                 { $set: newData }
             )
+            const configIDBE = new mongoose.Types.ObjectId(configID)
 
-            if (result.acknowledged && result.matchedCount !== 0) {
-                dataCoinByBitController.sendDataRealtime({
-                    type: "scanner-update",
-                    data: [newData]
-                })
-                res.customResponse(200, "Update Config Successful", "");
-            }
-            else {
-                res.customResponse(400, "Update Config Failed", "");
-            }
+            console.log(configIDBE, configID);
+            
+
+            const resultFilterSpot = await SpotModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: [configIDBE] }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", [configIDBE]]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetSpot = await SpotModel.populate(resultFilterSpot, {
+                path: 'children.botID',
+            }) || []
+
+
+            const handleResultSpot = resultGetSpot.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `SPOT-${data._id}-${child._id}`
+                return child
+            })) || []
+
+            const resultFilterMargin = await MarginModel.aggregate([
+                {
+                    $match: {
+                        "children.scannerID": { $in: [configIDBE] }
+                    }
+                },
+                {
+                    $project: {
+                        label: 1,
+                        value: 1,
+                        volume24h: 1,
+                        children: {
+                            $filter: {
+                                input: "$children",
+                                as: "child",
+                                cond: {
+                                    $in: ["$$child.scannerID", [configIDBE]]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const resultGetMargin = await MarginModel.populate(resultFilterMargin, {
+                path: 'children.botID',
+            }) || []
+
+            const handleResultMargin = resultGetMargin.flatMap((data) => data.children.map(child => {
+                child.symbol = data.value
+                child.value = `MARGIN-${data._id}-${child._id}`
+                return child
+            })) || []
+
+
+            const handleResultDelete = handleResultMargin.concat(handleResultSpot)
+
+            const bulkOperationsDelSpotRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: [configIDBE] } },
+                { $pull: { children: { scannerID: { $in: [configIDBE] } } } }
+            );
+
+
+            const bulkOperationsDelMarginRes = MarginModel.updateMany(
+                { "children.scannerID": { $in: [configIDBE] } },
+                { $pull: { children: { scannerID: { $in: [configIDBE] } } } }
+            );
+
+
+            await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
+
+            handleResultDelete.length > 0 && dataCoinByBitController.sendDataRealtime({
+                type: "delete",
+                data: handleResultDelete
+            })
+
+            dataCoinByBitController.sendDataRealtime({
+                type: "scanner-update",
+                data: [newData]
+            })
+            res.customResponse(200, "Update Config Successful", "");
+
+
 
         } catch (error) {
             // Xử lý lỗi nếu có
@@ -281,21 +374,6 @@ const dataCoinByBitController = {
                 const id = new mongoose.Types.ObjectId(data.id)
                 data.UpdatedFields.Market === "Spot" ? spotDeleteID.push(id) : marginDeleteID.push(id)
             });
-
-            const bulkOperationsRes = ScannerModel.bulkWrite(bulkOperations);
-
-            const bulkOperationsDelSpotRes = SpotModel.updateMany(
-                { "children.scannerID": { $in: spotDeleteID } },
-                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
-            );
-
-
-            const bulkOperationsDelMarginRes = MarginModel.updateMany(
-                { "children.scannerID": { $in: marginDeleteID } },
-                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
-            );
-
-
 
             // handle get all config by scannerID
 
@@ -334,7 +412,6 @@ const dataCoinByBitController = {
                 return child
             })) || []
 
-
             const resultFilterMargin = await MarginModel.aggregate([
                 {
                     $match: {
@@ -371,6 +448,23 @@ const dataCoinByBitController = {
 
 
             const handleResultDelete = handleResultMargin.concat(handleResultSpot)
+
+
+            // ----------------------------------------------------------------
+
+            const bulkOperationsRes = ScannerModel.bulkWrite(bulkOperations);
+
+            const bulkOperationsDelSpotRes = SpotModel.updateMany(
+                { "children.scannerID": { $in: spotDeleteID } },
+                { $pull: { children: { scannerID: { $in: spotDeleteID } } } }
+            );
+
+
+            const bulkOperationsDelMarginRes = MarginModel.updateMany(
+                { "children.scannerID": { $in: marginDeleteID } },
+                { $pull: { children: { scannerID: { $in: marginDeleteID } } } }
+            );
+
 
             await Promise.allSettled([bulkOperationsRes, bulkOperationsDelSpotRes, bulkOperationsDelMarginRes])
 
