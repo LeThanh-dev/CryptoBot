@@ -221,7 +221,7 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
         const timeOC = new Date(timestamp).toLocaleString()
-        if (vol >= 2000) {
+        if (vol >= 5000) {
             if (OCRound >= 1 && TPRound > 0) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(ht)

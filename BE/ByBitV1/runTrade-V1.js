@@ -42,6 +42,7 @@ const clientDigit = new RestClientV5({
 // ----------------------------------------------------------------------------------
 let missTPDataBySymbol = {}
 
+var closeMarketRepayBySymbol = {}
 var listKline = {}
 var allSymbol = []
 var updatingAllMain = false
@@ -597,6 +598,7 @@ const handleRepaySymbol = async ({
     await clientRepay.repayLiability({ coin: symbol.replace("USDT", "") }).then((response) => {
         if (response.retCode == 0) {
             console.log(changeColorConsole.greenBright(`[V] Repay ( ${symbol}  ${side} ) successful`));
+            closeMarketRepayBySymbol[botID][symbol] = true
         }
         else {
             console.log(changeColorConsole.yellowBright(`[!] Repay ( ${symbol}  ${side} ) failed: ${response.retMsg}`));
@@ -616,57 +618,64 @@ const handleCloseMarket = async ({
     SecretKey,
     qty,
 }) => {
-    const botSymbolMissID = `${botID}-${symbol}`
 
-    const qtyMain = qty || missTPDataBySymbol[botSymbolMissID]?.size?.toString()
+    if (!closeMarketRepayBySymbol[botID]?.[symbol]) {
 
-    if (missTPDataBySymbol[botSymbolMissID]?.size) {
-        missTPDataBySymbol[botSymbolMissID].size = Math.abs(qtyMain)
-    }
+        closeMarketRepayBySymbol[botID] = closeMarketRepayBySymbol[botID] || {}
+        
+        const botSymbolMissID = `${botID}-${symbol}`
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+        const qtyMain = qty || missTPDataBySymbol[botSymbolMissID]?.size?.toString()
 
-    const client = new RestClientV5(clientConfig);
+        if (missTPDataBySymbol[botSymbolMissID]?.size) {
+            missTPDataBySymbol[botSymbolMissID].size = Math.abs(qtyMain)
+        }
 
-    const MarketName = symbolTradeTypeObject[symbol]
-    const isLeverage = MarketName === "Spot" ? 0 : 1
+        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
-    console.log("\n[...] Cancel All OC For Close Market-Repay");
+        const client = new RestClientV5(clientConfig);
 
-    await handleCancelAllOrderOC(listOCByCandleBot[botID])
+        const MarketName = symbolTradeTypeObject[symbol]
+        const isLeverage = MarketName === "Spot" ? 0 : 1
 
-    if (side === "Buy") {
-        client
-            .submitOrder({
-                category: 'spot',
+        console.log("\n[...] Cancel All OC For Close Market-Repay");
+
+        await handleCancelAllOrderOC(listOCByCandleBot[botID])
+
+        if (side === "Buy") {
+            client
+                .submitOrder({
+                    category: 'spot',
+                    symbol,
+                    side: side === "Buy" ? "Sell" : "Buy",
+                    positionIdx: 0,
+                    orderType: 'Market',
+                    qty: qtyMain,
+                    isLeverage
+                })
+                .then((response) => {
+
+                    if (response.retCode == 0) {
+                        console.log(changeColorConsole.greenBright(`[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) successful: ${qtyMain}`));
+                        closeMarketRepayBySymbol[botID][symbol] = true
+                    }
+                    else {
+                        console.log(changeColorConsole.yellowBright(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) failed: ${qtyMain} - ${response.retMsg}`));
+                    }
+                })
+                .catch((error) => {
+                    console.log(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) error: ${error}`)
+                });
+        }
+        else {
+            await handleRepaySymbol({
                 symbol,
-                side: side === "Buy" ? "Sell" : "Buy",
-                positionIdx: 0,
-                orderType: 'Market',
-                qty: qtyMain,
-                isLeverage
+                botID,
+                side,
+                ApiKey,
+                SecretKey
             })
-            .then((response) => {
-
-                if (response.retCode == 0) {
-                    console.log(changeColorConsole.greenBright(`[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) successful: ${qtyMain}`));
-                }
-                else {
-                    console.log(changeColorConsole.yellowBright(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) failed: ${qtyMain} - ${response.retMsg}`));
-                }
-            })
-            .catch((error) => {
-                console.log(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) error: ${error}`)
-            });
-    }
-    else {
-        handleRepaySymbol({
-            symbol,
-            botID,
-            side,
-            ApiKey,
-            SecretKey
-        })
+        }
     }
 }
 const handleCancelOrderOC = async ({
@@ -708,9 +717,6 @@ const handleCancelOrderOC = async ({
             .then((response) => {
                 if (response.retCode == 0) {
                     console.log(`[V] Cancel order OC ( ${OrderChange} ) ( ${botName} - ${side} -  ${symbol} ) successful `);
-
-                    cancelAll({ strategyID, botID })
-                    delete listOCByCandleBot[botID].listOC[strategyID]
                 }
                 else {
                     console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${OrderChange} ) ( ${botName} - ${side} -  ${symbol} ) failed `, response.retMsg))
@@ -737,6 +743,8 @@ const handleCancelOrderOC = async ({
                     OrderChange: strategy.OrderChange
                 })
             });
+        cancelAll({ strategyID, botID })
+        delete listOCByCandleBot[botID].listOC[strategyID]
 
         maxCancelOrderOCData[botID].timeout && clearTimeout(maxCancelOrderOCData[botID].timeout)
         maxCancelOrderOCData[botID].timeout = setTimeout(() => {
@@ -797,7 +805,11 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 ApiKey: cur.ApiKey,
                                 SecretKey: cur.SecretKey,
                             })
-
+                            cancelAll({
+                                botID: botIDTemp,
+                                strategyID: strategyIDTemp,
+                            })
+                            delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                         }
                         return pre
                     }, [])
@@ -818,11 +830,6 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
 
                         if (codeData.code == 0) {
                             console.log(`[V] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) successful `);
-                            cancelAll({
-                                botID: botIDTemp,
-                                strategyID: strategyIDTemp,
-                            })
-                            delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                         }
                         else {
                             console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed `, codeData.msg));
@@ -835,6 +842,11 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 SecretKey: data.SecretKey,
                             })
                         }
+                        cancelAll({
+                            botID: botIDTemp,
+                            strategyID: strategyIDTemp,
+                        })
+                        delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                     })
 
                     await delay(1200)
