@@ -1358,13 +1358,13 @@ const dataCoinByBitController = {
 
             if (result.acknowledged && result.matchedCount !== 0) {
                 return {
-                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Successful`,
+                    message: `[Mongo] Add New ${dataInput.length} Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Successful`,
                     data: handleResult || []
                 }
             }
             else {
                 return {
-                    message: `[Mongo] Add New Mul-Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Failed`,
+                    message: `[Mongo] Add New ${dataInput.length} Config Margin ( ${botName} - ${symbol} - ${PositionSide} ) Failed`,
                     data: []
                 }
             }
@@ -1373,7 +1373,7 @@ const dataCoinByBitController = {
 
         catch (error) {
             return {
-                message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} - ${PositionSide} ) Error: ${error.message}`,
+                message: `[Mongo] Add New ${dataInput.length} Config Spot ( ${botName} - ${symbol} - ${PositionSide} ) Error: ${error.message}`,
                 data: []
             }
         }

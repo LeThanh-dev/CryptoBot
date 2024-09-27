@@ -72,7 +72,7 @@ function PositionV1() {
             maxWidth: 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: (params) => {
-                const TradeType = params.value ? "Margin" : "Spot"
+                const TradeType = params.value
                 return <p> {TradeType == "Margin" ? "🍁" : "🍀"} {TradeType}</p>
             }
         },
@@ -163,46 +163,27 @@ function PositionV1() {
             renderCell: params => {
                 const rowData = params.row; // Dữ liệu của hàng hiện tại
                 const Symbol = rowData["Symbol"]
+                const Side = rowData["Side"]
+
                 return (
                     <>
                         {Symbol !== "USDT" && (
-                            <div >
-                                {/* {
-                                    <Button
-                                        variant="contained"
-                                        size="small"
-                                        color="inherit"
-                                        style={{
-                                            margin: "0 6px"
-                                        }}
-                                        onClick={() => {
-                                            setOpenAddLimit({
-                                                isOpen: true,
-                                                dataChange: "",
-                                                data: rowData
-                                            })
-                                        }}
-                                    >
-                                        Limit
-                                    </Button>
-                                } */}
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    style={{
-                                        margin: "0 6px"
-                                    }}
-                                    onClick={() => {
-                                        setOpenAddMarket({
-                                            isOpen: true,
-                                            dataChange: "",
-                                            data: rowData
-                                        })
-                                    }}
-                                >
-                                    Market
-                                </Button>
-                            </div>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                style={{
+                                    margin: "0 6px"
+                                }}
+                                onClick={() => {
+                                    setOpenAddMarket({
+                                        isOpen: true,
+                                        dataChange: "",
+                                        data: rowData
+                                    })
+                                }}
+                            >
+                                {Side === "Buy" ? "Market" : "Repay"}
+                            </Button>
                         )}
                     </>
                 )

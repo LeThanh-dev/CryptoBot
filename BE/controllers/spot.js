@@ -1390,13 +1390,13 @@ const dataCoinByBitController = {
             if (result.acknowledged && result.matchedCount !== 0) {
 
                 return {
-                    message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Successful`,
+                    message: `[Mongo] Add New ${dataInput.length} Config Spot ( ${botName} - ${symbol} ) Successful`,
                     data: handleResult || []
                 }
             }
             else {
                 return {
-                    message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Failed`,
+                    message: `[Mongo] Add New ${dataInput.length} Config Spot ( ${botName} - ${symbol} ) Failed`,
                     data: []
                 }
             }
@@ -1405,7 +1405,7 @@ const dataCoinByBitController = {
 
         catch (error) {
             return {
-                message: `[Mongo] Add New Mul-Config Spot ( ${botName} - ${symbol} ) Error: ${error.message}`,
+                message: `[Mongo] Add New ${dataInput.length} Config Spot ( ${botName} - ${symbol} ) Error: ${error.message}`,
                 data: []
             }
         }

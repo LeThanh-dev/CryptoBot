@@ -210,7 +210,7 @@ const PositionController = {
                                     Quantity,
                                     borrowAmount: viTheListItem.borrowAmount,
                                     Symbol,
-                                    TradeType: viTheListItem?.marginCollateral,
+                                    TradeType: viTheListItem?.marginCollateral ? "Margin" : "Spot",
                                     botID,
                                     botName: dataBotItem?.name,
                                     botData: dataBotItem,
@@ -393,35 +393,53 @@ const PositionController = {
             secret: positionData.botData.SecretKey,
             syncTimeBeforePrivateRequests: true,
         });
-        client
-            .submitOrder({
-                category: 'spot',
-                symbol: positionData.Symbol,
-                side: positionData.Side === "Sell" ? "Buy" : "Sell",
-                positionIdx: 0,
-                orderType: 'Market',
-                qty: Quantity
-                // price: Math.abs(positionData.Price).toString(),
-            })
-            .then((response) => {
 
+        const Symbol = positionData.Symbol
+        const Side = positionData.Side
+
+        if (Side === "Buy") {
+            client
+                .submitOrder({
+                    category: 'spot',
+                    symbol: Symbol,
+                    side:  Side === "Sell" ? "Buy" : "Sell",
+                    positionIdx: 0,
+                    orderType: 'Market',
+                    qty: Quantity
+                })
+                .then((response) => {
+
+                    if (response.retCode == 0) {
+                        res.customResponse(200, "Close Market Successful");
+                        PositionController.deletePositionBE({
+                            orderID: positionData.id
+                        }).then(message => {
+                            console.log(message);
+                        }).catch(err => {
+                            console.log(err);
+                        })
+                    }
+                    else {
+                        res.customResponse(400, response.retMsg);
+                    }
+                })
+                .catch((error) => {
+                    res.customResponse(500, "Close Market Error");
+                });
+        }
+        else {
+            await client.repayLiability({ coin: Symbol.replace("USDT","") }).then((response) => {
                 if (response.retCode == 0) {
-                    res.customResponse(200, "Close Market Successful");
-                    PositionController.deletePositionBE({
-                        orderID: positionData.id
-                    }).then(message => {
-                        console.log(message);
-                    }).catch(err => {
-                        console.log(err);
-                    })
+                    res.customResponse(200, "Repay Successful");
                 }
                 else {
-                    res.customResponse(400, response.retMsg);
+                    res.customResponse(400, `Repay Failed: ${response.retMsg}`);
                 }
             })
-            .catch((error) => {
-                res.customResponse(500, "Close Market Error");
-            });
+                .catch((error) => {
+                    res.customResponse(500, `Repay Error`)
+                });
+        }
     },
 
     closeLimit: async (req, res) => {

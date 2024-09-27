@@ -616,7 +616,13 @@ const handleCloseMarket = async ({
     SecretKey,
     qty,
 }) => {
-    const qtyMain = qty || missTPDataBySymbol[`${botID}-${symbol}`]?.size?.toString()
+    const botSymbolMissID = `${botID}-${symbol}`
+
+    const qtyMain = qty || missTPDataBySymbol[botSymbolMissID]?.size?.toString()
+
+    if (missTPDataBySymbol[botSymbolMissID]?.size) {
+        missTPDataBySymbol[botSymbolMissID].size = Math.abs(qtyMain)
+    }
 
     const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
 
@@ -624,17 +630,17 @@ const handleCloseMarket = async ({
 
     const MarketName = symbolTradeTypeObject[symbol]
     const isLeverage = MarketName === "Spot" ? 0 : 1
-    
-    console.log("\n[...] Cancel All OC for Close Market-Repay");
-    
+
+    console.log("\n[...] Cancel All OC For Close Market-Repay");
+
     await handleCancelAllOrderOC(listOCByCandleBot[botID])
 
-    if (MarketName === "Spot") {
+    if (side === "Buy") {
         client
             .submitOrder({
                 category: 'spot',
                 symbol,
-                side,
+                side: side === "Buy" ? "Sell" : "Buy",
                 positionIdx: 0,
                 orderType: 'Market',
                 qty: qtyMain,
@@ -711,7 +717,7 @@ const handleCancelOrderOC = async ({
                     handleCloseMarket({
                         OrderChange,
                         botID,
-                        side: side === "Buy" ? "Sell" : "Buy",
+                        side,
                         symbol,
                         ApiKey,
                         SecretKey,
@@ -724,7 +730,7 @@ const handleCancelOrderOC = async ({
                 handleCloseMarket({
                     OrderChange,
                     botID,
-                    side: side === "Buy" ? "Sell" : "Buy",
+                    side,
                     symbol,
                     ApiKey,
                     SecretKey,
@@ -786,7 +792,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                             handleCloseMarket({
                                 OrderChange,
                                 botID: botIDTemp,
-                                side: cur.side === "Buy" ? "Sell" : "Buy",
+                                side: cur.side,
                                 symbol: cur.symbol,
                                 ApiKey: cur.ApiKey,
                                 SecretKey: cur.SecretKey,
@@ -823,7 +829,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                             handleCloseMarket({
                                 OrderChange: OrderChange,
                                 botID: botIDTemp,
-                                side: data.side === "Buy" ? "Sell" : "Buy",
+                                side: data.side,
                                 symbol: data.symbol,
                                 ApiKey: data.ApiKey,
                                 SecretKey: data.SecretKey,
@@ -1335,7 +1341,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                         const topicMain = dataCoin.topic
                         const dataMainAll = dataCoin.data
 
-                        const dataMain = dataMainAll[0]
+                        // const dataMain = dataMainAll[0]
                         ApiKey && SecretKey && await Promise.allSettled(dataMainAll.map(async dataMain => {
 
                             if (dataMain.category == "spot") {
@@ -1755,7 +1761,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                                 price: TPNew,
                                                                 tickSize: digitAllCoinObject[symbol]?.priceScale
                                                             }),
-                                                            side: side === "Buy" ? "Sell" : "Buy",
+                                                            side,
                                                             ApiKey,
                                                             SecretKey,
                                                             botName,
@@ -1816,7 +1822,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                     // })
                                                 }
 
-                                            }, 3000)
+                                            }, 2000)
                                         }
                                         else {
                                             missTPDataBySymbol[botSymbolMissID]?.timeOutFunc && clearTimeout(missTPDataBySymbol[botSymbolMissID].timeOutFunc)
@@ -1862,7 +1868,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                 // User cancel vị thế ( Market )
                                 if (dataMain.orderType === "Market") {
 
-                                    console.log(`[...] User ( ${botName} ) Clicked Close Vị Thế (Market) - ( ${symbol} )`)
+                                    console.log(`[...] User ( ${botName} ) Clicked Close Vị Thế (Market) - ( ${symbol} - ${dataMain.side} )`)
 
                                     if (missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
                                         await deletePositionBE({
@@ -2075,6 +2081,7 @@ const tinhOC = (symbol, dataAll = []) => {
                     const listConfigIDByScannerData = listConfigIDByScanner[scannerID]?.[symbol]
                     if (listConfigIDByScannerData?.length > 0) {
                         let deleteResSuccess = false
+                        console.log(changeColorConsole.blueBright(`[V] Scanner Expire ( ${symbol} - ${PositionSide} - ${OrderChange} ) ( ${Expire} min )`));
                         if (Market === "Spot") {
                             deleteResSuccess = await deleteStrategiesMultipleSpotBE({
                                 botName,
