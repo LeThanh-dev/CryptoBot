@@ -58,3 +58,17 @@
     nano /etc/nginx/nginx.conf
     client_max_body_size 100M;
 -> Refresh nginx ( 8 )
+
+
+----------------------------------------------------------------
+
+use crypto-bot
+db.createUser({
+  user: "LeThanh889",
+  pwd: "LeThanh889$$T.;",
+  roles: [{ role: "readWrite", db: "crypto-bot" }]
+})
+
+
+ nano /etc/mongod.conf
+ sudo systemctl restart mongod

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-mongoose.connect(`mongodb://localhost:27017/crypto-bot`, {
+mongoose.connect('mongodb://LeThanh88:LeThanh88@localhost:27017/crypto-bot', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {
