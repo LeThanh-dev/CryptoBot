@@ -44,6 +44,8 @@ let missTPDataBySymbol = {}
 
 var closeMarketRepayBySymbol = {}
 var listKline = {}
+var listKlineObject = {}
+
 var allSymbol = []
 var updatingAllMain = false
 var connectErrorMain = false
@@ -622,7 +624,7 @@ const handleCloseMarket = async ({
     if (!closeMarketRepayBySymbol[botID]?.[symbol]) {
 
         closeMarketRepayBySymbol[botID] = closeMarketRepayBySymbol[botID] || {}
-        
+
         const botSymbolMissID = `${botID}-${symbol}`
 
         const qtyMain = qty || missTPDataBySymbol[botSymbolMissID]?.size?.toString()
@@ -2495,6 +2497,8 @@ try {
         // SCANNER
         const turnover = +dataMain.turnover
 
+        listKlineObject[symbol] = symbol
+
         if (!trichMauData[symbol].open) {
             trichMauData[symbol] = {
                 open: coinCurrent,
@@ -2519,7 +2523,6 @@ try {
 
         // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
         trichMauData[symbol].turnoverD = turnover
-        trichMauData[symbol].close = coinCurrent
         trichMauData[symbol].close = coinCurrent
         trichMauData[symbol].timestamp = dataMain.timestamp
 
@@ -2565,8 +2568,7 @@ try {
     });
 
     setInterval(() => {
-        allSymbol.forEach(symbolData => {
-            const symbol = symbolData.value
+        Object.values(listKlineObject).forEach(symbol => {
             tinhOC(symbol, trichMauDataArray[symbol])
             const coinCurrent = trichMauData[symbol].close
             const turnover = trichMauData[symbol].turnover
@@ -2582,7 +2584,8 @@ try {
             preTurnover[symbol] = trichMauData[symbol].turnover
             trichMauDataArray[symbol] = []
         })
-    }, 3000)
+        listKlineObject = {}
+    }, 5000)
 
 
     // handleCreateMultipleConfigSpot({

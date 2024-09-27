@@ -376,7 +376,7 @@ function Margin() {
 
     return (
         <div className={styles.strategies}>
-            <AddBreadcrumbs list={["Strategies"]} />
+            <AddBreadcrumbs list={["Margin"]} />
 
             <div
                 style={{

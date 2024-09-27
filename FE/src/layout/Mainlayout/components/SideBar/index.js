@@ -53,7 +53,7 @@ function SideBar({
             icon: <PrecisionManufacturingIcon className={styles.icon} />
         },
         {
-            name: "Strategies",
+            name: "Config",
             icon: <PermDataSettingIcon className={styles.icon} />,
             open: openStrategies,
             openFunc: () => { setOpenStrategies(!openStrategies) },
@@ -64,7 +64,7 @@ function SideBar({
                     icon: <ShoppingCartIcon className={styles.icon} />
                 },
                 {
-                    linK: "/StrategiesV3",
+                    linK: "/ConfigV3",
                     name: "V3",
                     icon: <LocalMallIcon className={styles.icon} />
                 },
@@ -128,8 +128,6 @@ function SideBar({
             </NavLink>
             {
                 linkList.map(item => {
-
-
                     if (item.children?.length) {
                         return <div key={item.linK}>
                             <div
@@ -156,6 +154,7 @@ function SideBar({
                                        roleList.includes(`${child.linK.replace("/","")}`) && <NavLink
                                             className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
                                             to={child.linK}
+                                            key = {child.linK}
                                         >
                                             {child.icon}
                                             <p className={styles.sidebarItemName}>{child.name}</p>

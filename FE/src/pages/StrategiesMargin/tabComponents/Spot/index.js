@@ -375,8 +375,7 @@ function Spot() {
 
     return (
         <div className={styles.strategies}>
-            <AddBreadcrumbs list={["Strategies"]} />
-
+            <AddBreadcrumbs list={["Spot"]} />
             <div
                 style={{
                     display: "flex",

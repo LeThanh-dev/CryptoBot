@@ -26,6 +26,7 @@ let digit = []
 let OpenTimem1 = []
 let CoinFT = []
 let messageList = []
+var listKlineObject = {}
 
 var delayTimeOut = ""
 var coinAllClose = false
@@ -86,6 +87,7 @@ async function ListCoinFT() {
             rescoin.result.list.forEach((e) => {
                 const symbol = e.symbol
                 if (symbol.split("USDT")[1] === "") {
+                // if (e.marginTrading != "none" && e.symbol.split("USDT")[1] === "") {
                     ListCoin1m.push(`kline.D.${symbol}`)
                 }
 
@@ -222,14 +224,14 @@ const tinhOC = (symbol, dataAll = []) => {
 
         const timeOC = new Date(timestamp).toLocaleString()
         if (vol >= 5000) {
-            if (OCRound >= 1 && TPRound > 0) {
+            if (OCRound >= 1) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1 && TPLongRound > 0) {
+            if (OCLongRound <= -1) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(htLong)
                 console.log(htLong);
@@ -269,7 +271,6 @@ let Main = async () => {
 
     listKline = await ListCoinFT()
 
-    const listKlineObject = {}
 
     await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
         console.log("[V] Subscribe Kline Successful");
@@ -316,10 +317,10 @@ let Main = async () => {
             trichMauData[symbol].close = coinCurrent
             trichMauData[symbol].timestamp = timestamp
 
-            if (new Date(timestamp) - trichMau[symbol].pre >= 1000) {
+            if (new Date() - trichMau[symbol].pre >= 1000) {
                 // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date(timestamp)
+                trichMau[symbol].pre = new Date()
             }
 
             trichMauData[symbol] = {
@@ -329,9 +330,6 @@ let Main = async () => {
                 low: coinCurrent,
                 turnover
             }
-
-
-
 
             // }
             // else if (dataMain.confirm === true) {
@@ -366,7 +364,8 @@ let Main = async () => {
             preTurnover[symbol] = trichMauData[symbol].turnover
             trichMauDataArray[symbol] = []
         })
-    }, 3000)
+        listKlineObject = {}
+    }, 5000)
 
 
 

@@ -334,7 +334,7 @@ function PositionV1() {
 
     return (
         <div>
-            <AddBreadcrumbs list={["Position"]} />
+            <AddBreadcrumbs list={["PositionV1"]} />
 
             <div className={styles.position}>
 

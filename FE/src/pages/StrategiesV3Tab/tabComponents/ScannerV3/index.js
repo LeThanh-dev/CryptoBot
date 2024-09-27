@@ -583,7 +583,7 @@ function ScannerV3() {
 
     return (
         <div className={styles.strategies}>
-            <AddBreadcrumbs list={["Strategies"]} />
+            <AddBreadcrumbs list={["ScannerV3"]} />
 
             <div
                 style={{

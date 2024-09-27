@@ -412,7 +412,7 @@ function Strategies() {
 
     return (
         <div className={styles.strategies}>
-            <AddBreadcrumbs list={["Strategies"]} />
+            <AddBreadcrumbs list={["ConfigV3"]} />
 
             <div
                 style={{

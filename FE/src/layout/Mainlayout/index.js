@@ -21,7 +21,7 @@ function MainLayout({ children }) {
 
     const ROLE_LIST_DEFAULT = [
         "Bots",
-        "StrategiesV3",
+        "ConfigV3",
         "Coin",
         "Order",
         "StrategiesHistory",
@@ -35,8 +35,8 @@ function MainLayout({ children }) {
             icon: <SmartToyIcon className={styles.icon} />
         },
         {
-            linK: "/StrategiesV3",
-            name: "StrategiesV3",
+            linK: "/ConfigV3",
+            name: "ConfigV3",
             icon: <LocalMallIcon className={styles.icon} />
         },
 

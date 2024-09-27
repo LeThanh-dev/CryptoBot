@@ -17,7 +17,7 @@ function StrategiesV3Tab() {
     const tabList = [
         {
             label: "Config",
-            value: "StrategiesV3",
+            value: "ConfigV3",
         },
         {
             label: "Scanner",

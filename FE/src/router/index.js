@@ -53,7 +53,7 @@ const routeList = [
                 element: <BotDetail />,
             },
             {
-                path: "StrategiesV3",
+                path: "ConfigV3",
                 element:
                     <>
                         <StrategiesV3Tab />

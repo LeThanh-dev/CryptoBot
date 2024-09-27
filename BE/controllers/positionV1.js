@@ -203,7 +203,6 @@ const PositionController = {
                                 const positionID = `${botID}-${Symbol}`
                                 const positionData = dataPositionObject[positionID]
                                 const usdValue = viTheListItem.usdValue
-
                                 const minOrderQtyObjectSymbol = minOrderQtyObject[`${Symbol}USDT`]
                                 let data = {
                                     usdValue,
@@ -214,6 +213,7 @@ const PositionController = {
                                     botID,
                                     botName: dataBotItem?.name,
                                     botData: dataBotItem,
+                                    Side: Quantity > 0 ? "Buy": "Sell"
                                 }
 
                                 if (Symbol !== "USDT") {
@@ -226,7 +226,6 @@ const PositionController = {
                                     data = {
                                         ...data,
                                         _id: positionData?._id,
-                                        Side: positionData.side,
                                         Time: positionData?.Time,
                                         TimeUpdated: new Date(),
                                         Miss: positionData.Miss,
@@ -313,7 +312,6 @@ const PositionController = {
                                 qty: Math.floor(((+viTheListItem.walletBalance) - (+viTheListItem.walletBalance * 0.15) / 100)).toString(),
                                 orderType: "Market",
                                 positionIdx: 0,
-
                             }
                         ))
                     }
@@ -402,7 +400,7 @@ const PositionController = {
                 .submitOrder({
                     category: 'spot',
                     symbol: Symbol,
-                    side:  Side === "Sell" ? "Buy" : "Sell",
+                    side: Side === "Sell" ? "Buy" : "Sell",
                     positionIdx: 0,
                     orderType: 'Market',
                     qty: Quantity
@@ -428,7 +426,7 @@ const PositionController = {
                 });
         }
         else {
-            await client.repayLiability({ coin: Symbol.replace("USDT","") }).then((response) => {
+            await client.repayLiability({ coin: Symbol.replace("USDT", "") }).then((response) => {
                 if (response.retCode == 0) {
                     res.customResponse(200, "Repay Successful");
                 }

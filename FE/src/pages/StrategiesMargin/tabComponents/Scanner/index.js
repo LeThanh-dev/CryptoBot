@@ -600,7 +600,7 @@ function Scanner() {
 
     return (
         <div className={styles.strategies}>
-            <AddBreadcrumbs list={["Strategies"]} />
+            <AddBreadcrumbs list={["Scanner"]} />
 
             <div
                 style={{

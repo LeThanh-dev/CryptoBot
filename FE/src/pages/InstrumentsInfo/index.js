@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';
 import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../services/instrumentsInfoService';
 import { LoadingButton } from '@mui/lab';
+import AddBreadcrumbs from '../../components/BreadcrumbsCutom';
 
 function InstrumentsInfo() {
     const tableColumns = [
@@ -111,6 +112,7 @@ function InstrumentsInfo() {
     }, []);
     return (
         <div className={styles.coinContent}>
+            <AddBreadcrumbs list={["InstrumentsInfo"]} />
             <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center" }}>
                 <TextField
                     placeholder='Coin Name...'
