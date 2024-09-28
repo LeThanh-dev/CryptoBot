@@ -15,10 +15,11 @@ const BotController = {
 
     sendDataRealtime: ({
         type,
-        data
+        data,
+        botType
     }) => {
         const { socketServer } = require('../serverConfig');
-        socketServer.emit(type, data)
+        socketServer.to(botType).emit(type, data)
     },
     getAllStrategiesByBotID: async ({
         botID,
@@ -404,7 +405,8 @@ const BotController = {
                                             newData: newDataSocketWithBotData,
                                             botIDMain: botID,
                                             botActive: IsActive
-                                        }
+                                        },
+                                        botType
                                     })
 
                                 }
@@ -419,7 +421,8 @@ const BotController = {
                                                 ApiKey: data.ApiKey,
                                                 SecretKey: data.SecretKey
                                             }
-                                        }
+                                        },
+                                        botType
                                     })
                                 }
                                 else if (type === "telegram") {
@@ -435,7 +438,8 @@ const BotController = {
                                                 telegramToken: data.telegramToken,
                                                 botName: data.botName,
                                             }
-                                        }
+                                        },
+                                        botType
                                     })
                                 }
                             }
@@ -483,7 +487,8 @@ const BotController = {
                                             newData: newDataSocketWithBotData,
                                             botIDMain: botID,
                                             botActive: IsActive
-                                        }
+                                        },
+                                        botType
                                     })
 
                                 }
@@ -498,7 +503,8 @@ const BotController = {
                                                 ApiKey: data.ApiKey,
                                                 SecretKey: data.SecretKey
                                             }
-                                        }
+                                        },
+                                        botType
                                     })
                                 }
                                 else if (type === "telegram") {
@@ -514,7 +520,8 @@ const BotController = {
                                                 telegramToken: data.telegramToken,
                                                 botName: data.botName,
                                             }
-                                        }
+                                        },
+                                        botType
                                     })
                                 }
                             }
@@ -566,7 +573,8 @@ const BotController = {
                             data: {
                                 newData: newDataSocketWithBotData,
                                 botID,
-                            }
+                            },
+                            botType
                         })
                         break
                     case "ByBitV1":
@@ -589,7 +597,8 @@ const BotController = {
                             data: {
                                 newData: newDataSocketWithBotDataV1,
                                 botID,
-                            }
+                            },
+                            botType
                         })
                         break
                 }
@@ -656,7 +665,8 @@ const BotController = {
                 data: {
                     newData: newDataSocketWithBotData,
                     botID,
-                }
+                },
+                botType
             })
 
             res.customResponse(200, "Delete Bot Successful");

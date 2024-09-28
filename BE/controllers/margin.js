@@ -59,8 +59,7 @@ const dataCoinByBitController = {
         data
     }) => {
         const { socketServer } = require('../serverConfig');
-        socketServer.emit(type, data)
-        // socketServer.to("room2").emit(type, data)
+        socketServer.to("ByBitV1").emit(type, data)
     },
     // GET
     closeAllBotForUpCode: async (req, res) => {

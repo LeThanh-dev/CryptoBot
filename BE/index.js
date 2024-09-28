@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
-// mongoose.connect(`mongodb://${process.env.U_MONG}:${process.env.U_MONG}@localhost:27017/crypto-bot`, {
-mongoose.connect(`mongodb://localhost:27017/crypto-bot`, {
+require('dotenv').config();
+
+mongoose.connect(`mongodb://${process.env.MongoIP}:27017/crypto-bot`, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {

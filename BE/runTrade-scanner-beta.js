@@ -2995,6 +2995,13 @@ const socket = require('socket.io-client');
 
 const socketRealtime = socket(process.env.SOCKET_IP);
 
+socketRealtime.emit('joinRoom', 'ByBitV3');
+
+
+socketRealtime.on('bot-test', (data) => {
+    console.log(data);
+    
+});
 socketRealtime.on('connect', () => {
     console.log('[V] Connected Socket Realtime');
 });

@@ -24,6 +24,7 @@ function AddBotType({
     const handleSubmitAddGroup = async formData => {
 
         try {
+            
             const res = await createBotType({
                 ...formData,
                 name: formData.name.trim()

@@ -15,7 +15,7 @@ const PositionController = {
         data
     }) => {
         const { socketServer } = require('../serverConfig');
-        socketServer.emit(type, data)
+        socketServer.to("ByBitV1").emit(type, data)
     },
     // 
     getAllPosition: async (req, res) => {

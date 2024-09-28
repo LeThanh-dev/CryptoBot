@@ -36,6 +36,7 @@ function EditBotType({
                 botTypeID: dataInput.botTypeID,
                 data: {
                     ...formData,
+                    name: formData.name.trim()
                 }
             })
 
@@ -102,7 +103,7 @@ function EditBotType({
 
             </form>
 
-           
+
         </DialogCustom >
     );
 }

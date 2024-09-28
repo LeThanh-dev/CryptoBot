@@ -2871,8 +2871,15 @@ const socket = require('socket.io-client');
 
 const socketRealtime = socket(process.env.SOCKET_IP);
 
+socketRealtime.emit('joinRoom', 'ByBitV1');
+
 socketRealtime.on('connect', () => {
     console.log('[V] Connected Socket Realtime');
+});
+
+socketRealtime.on('bot-test', (data) => {
+    console.log(data);
+    
 });
 
 socketRealtime.on('add', async (newData = []) => {

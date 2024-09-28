@@ -14,7 +14,7 @@ socketServer.on('connection', (socket) => {
   // 
   socket.on('joinRoom', (room) => {
     socket.join(room);
-    console.log(`User joined room: ${room}`);
+    console.log(`Server joined room: ${room}`);
   });
 
   socket.on('disconnect', () => {
