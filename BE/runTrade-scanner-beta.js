@@ -2278,19 +2278,19 @@ const Main = async () => {
 
     // await handleStatistic([{ value: "ARKUSDT" }])
 
-    // await handleStatistic()
+    await handleStatistic()
 
-    // await syncVol24()
+    await syncVol24()
 
-    // allSymbolArray.forEach(item => {
-    //     const listKlineNumber = [1, 3, 5, 15]
-    //     listKlineNumber.forEach(candle => {
-    //         handleScannerDataList({ candle, symbol: item.value })
-    //     })
-    // })
-    // await handleSocketBotApiList(botApiList)
+    allSymbolArray.forEach(item => {
+        const listKlineNumber = [1, 3, 5, 15]
+        listKlineNumber.forEach(candle => {
+            handleScannerDataList({ candle, symbol: item.value })
+        })
+    })
+    await handleSocketBotApiList(botApiList)
 
-    // await handleSocketListKline(listKline)
+    await handleSocketListKline(listKline)
 
 }
 
@@ -3001,11 +3001,6 @@ socketRealtime.on('connect', () => {
     console.log('\n[V] Connected Socket Realtime\n');
 });
 
-socketRealtime.on('bot-test', async (newData = []) => {
-    console.log(newData);
-    
-
-});
 socketRealtime.on('add', async (newData = []) => {
     await handleSocketAddNew(newData)
 
