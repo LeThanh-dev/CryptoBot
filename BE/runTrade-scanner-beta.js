@@ -2997,13 +2997,8 @@ const socketRealtime = socket(process.env.SOCKET_IP);
 
 socketRealtime.emit('joinRoom', 'ByBitV3');
 
-
-socketRealtime.on('bot-test', (data) => {
-    console.log(data);
-    
-});
 socketRealtime.on('connect', () => {
-    console.log('[V] Connected Socket Realtime');
+    console.log('\n[V] Connected Socket Realtime\n');
 });
 
 socketRealtime.on('add', async (newData = []) => {

@@ -2288,9 +2288,9 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
-    await handleSocketBotApiList(botApiList)
+    // await handleSocketBotApiList(botApiList)
 
-    await handleSocketListKline(Object.values(listKline))
+    // await handleSocketListKline(Object.values(listKline))
 
 
 
@@ -2874,13 +2874,9 @@ const socketRealtime = socket(process.env.SOCKET_IP);
 socketRealtime.emit('joinRoom', 'ByBitV1');
 
 socketRealtime.on('connect', () => {
-    console.log('[V] Connected Socket Realtime');
+    console.log('\n[V] Connected Socket Realtime\n');
 });
 
-socketRealtime.on('bot-test', (data) => {
-    console.log(data);
-    
-});
 
 socketRealtime.on('add', async (newData = []) => {
 

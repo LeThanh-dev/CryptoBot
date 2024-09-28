@@ -365,6 +365,12 @@ const BotController = {
 
             }
 
+            newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                type: "bot-test",
+                data: botType,
+                botType
+            })
+            
             if (!dataCheckBotApi) {
 
                 const result = await BotModel.updateOne({ _id: botID }, { $set: data })
