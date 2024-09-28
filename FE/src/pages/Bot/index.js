@@ -300,7 +300,7 @@ function Bot() {
         catch (err) {
             dispatch(addMessageToast({
                 status: 500,
-                message: "Update Bot Error",
+                message: "Set Margin Error",
             }))
         }
         setLoadingSetMargin("")
@@ -389,26 +389,7 @@ function Bot() {
         }
     }
 
-    // const handleDeleteRowSelected = async () => {
-
-    //     try {
-    //         const res = await deleteMultipleBot(dataTableChange, openEditMultiple)
-    //         const { status, message } = res.data
-
-    //         dispatch(addMessageToast({
-    //             status: status,
-    //             message: message,
-    //         }))
-    //         handleGetAllBot()
-    //     }
-    //     catch (err) {
-    //         dispatch(addMessageToast({
-    //             status: 500,
-    //             message: "Delete Bot Error",
-    //         }))
-    //     }
-    //     setOpenEditMultiple(false)
-    // }
+ 
     const handleDeleteBot = async () => {
 
         try {

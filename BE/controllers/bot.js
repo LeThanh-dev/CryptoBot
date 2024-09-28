@@ -369,15 +369,19 @@ const BotController = {
 
                 const result = await BotModel.updateOne({ _id: botID }, { $set: data })
 
-
-
                 if (result.acknowledged && result.matchedCount !== 0) {
                     switch (botType) {
                         case "ByBitV3":
                             if (checkBot) {
-                                const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
+                                const getAllStrategiesActiveByBotID = BotController.getAllStrategiesByBotID({
                                     botID,
                                 })
+
+                                const getScannerV3ByBotID = await ScannerV3Model.find({ botID,IsActive:true }).populate("botID")
+
+                                const resultAll = await Promise.allSettled([getAllStrategiesActiveByBotID, getScannerV3ByBotID])
+                                const newDataSocketWithBotData = resultAll[0].value
+                                const scannerV3List = resultAll[1].value
 
                                 if (type === "Active") {
                                     const IsActive = data.Status === "Running" ? true : false;
@@ -399,10 +403,13 @@ const BotController = {
                                         await Promise.allSettled([deActiveScanner, deActiveStrategies])
                                     }
 
-                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                                         type: "bot-update",
                                         data: {
-                                            newData: newDataSocketWithBotData,
+                                            newData: {
+                                                configData: newDataSocketWithBotData,
+                                                scannerData: scannerV3List
+                                            },
                                             botIDMain: botID,
                                             botActive: IsActive
                                         },
@@ -412,10 +419,13 @@ const BotController = {
                                 }
                                 else if (type === "Api") {
 
-                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                                         type: "bot-api",
                                         data: {
-                                            newData: newDataSocketWithBotData,
+                                            newData: {
+                                                configData: newDataSocketWithBotData,
+                                                scannerData: scannerV3List
+                                            },
                                             botID,
                                             newApiData: {
                                                 ApiKey: data.ApiKey,
@@ -427,10 +437,13 @@ const BotController = {
                                 }
                                 else if (type === "telegram") {
 
-                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                                         type: "bot-telegram",
                                         data: {
-                                            newData: newDataSocketWithBotData,
+                                            newData: {
+                                                configData: newDataSocketWithBotData,
+                                                scannerData: scannerV3List
+                                            },
                                             botID,
                                             newApiData: {
                                                 telegramTokenOld: data.telegramTokenOld,
@@ -446,9 +459,16 @@ const BotController = {
                             break;
                         case "ByBitV1":
                             if (checkBot) {
-                                const newDataSocketWithBotData = await BotController.getAllStrategiesV1ByBotID({
+                                const getAllStrategiesActiveByBotID = BotController.getAllStrategiesV1ByBotID({
                                     botID,
                                 })
+
+                                const getScannerV3ByBotID = await ScannerV1Model.find({ botID,IsActive:true }).populate("botID")
+
+                                const resultAll = await Promise.allSettled([getAllStrategiesActiveByBotID, getScannerV3ByBotID])
+                                const newDataSocketWithBotData = resultAll[0].value
+                                const scannerV3List = resultAll[1].value
+
                                 if (type === "Active") {
                                     const IsActive = data.Status === "Running" ? true : false;
 
@@ -481,10 +501,13 @@ const BotController = {
                                     }
 
 
-                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                                         type: "bot-update",
                                         data: {
-                                            newData: newDataSocketWithBotData,
+                                            newData: {
+                                                configData: newDataSocketWithBotData,
+                                                scannerData: scannerV3List
+                                            },
                                             botIDMain: botID,
                                             botActive: IsActive
                                         },
@@ -494,10 +517,13 @@ const BotController = {
                                 }
                                 else if (type === "Api") {
 
-                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                                         type: "bot-api",
                                         data: {
-                                            newData: newDataSocketWithBotData,
+                                            newData: {
+                                                configData: newDataSocketWithBotData,
+                                                scannerData: scannerV3List
+                                            },
                                             botID,
                                             newApiData: {
                                                 ApiKey: data.ApiKey,
@@ -509,10 +535,13 @@ const BotController = {
                                 }
                                 else if (type === "telegram") {
 
-                                    newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+                                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                                         type: "bot-telegram",
                                         data: {
-                                            newData: newDataSocketWithBotData,
+                                            newData: {
+                                                configData: newDataSocketWithBotData,
+                                                scannerData: scannerV3List
+                                            },
                                             botID,
                                             newApiData: {
                                                 telegramTokenOld: data.telegramTokenOld,
@@ -559,19 +588,30 @@ const BotController = {
 
                 switch (botType) {
                     case "ByBitV3":
-                        const newDataSocketWithBotData = await BotController.getAllStrategiesByBotID({
+                        const getAllStrategiesActiveByBotID = BotController.getAllStrategiesByBotID({
                             botID,
                         })
+
+                        const getScannerV3ByBotID = await ScannerV3Model.find({ botID }).populate("botID")
+
+                        const resultAll = await Promise.allSettled([getAllStrategiesActiveByBotID, getScannerV3ByBotID])
+                        const newDataSocketWithBotData = resultAll[0].value
+                        const scannerV3List = resultAll[1].value
+
                         const deleteAllStrategies = StrategiesModel.updateMany(
                             { "children.botID": botID },
                             { $pull: { children: { botID: botID } } }
                         );
                         const deleteScannerV3 = ScannerV3Model.deleteMany({ botID })
                         await Promise.allSettled([deleteAllStrategies, deleteScannerV3])
-                        newDataSocketWithBotData.length > 0 && BotController.sendDataRealtime({
+
+                        (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                             type: "bot-delete",
                             data: {
-                                newData: newDataSocketWithBotData,
+                                newData: {
+                                    configData: newDataSocketWithBotData,
+                                    scannerData: scannerV3List
+                                },
                                 botID,
                             },
                             botType
@@ -581,6 +621,13 @@ const BotController = {
                         const newDataSocketWithBotDataV1 = await BotController.getAllStrategiesV1ByBotID({
                             botID,
                         })
+
+                        const getScannerV1ByBotID = await ScannerV1Model.find({ botID }).populate("botID")
+
+                        const resultAll2 = await Promise.allSettled([newDataSocketWithBotDataV1, getScannerV1ByBotID])
+                        const newDataSocketWithBotData1 = resultAll2[0].value
+                        const scannerV1List = resultAll2[1].value
+
                         const deleteAllSpot = SpotModel.updateMany(
                             { "children.botID": botID },
                             { $pull: { children: { botID: botID } } }
@@ -592,10 +639,14 @@ const BotController = {
                         const deleteScannerV1 = ScannerV1Model.deleteMany({ botID })
 
                         await Promise.allSettled([deleteAllSpot, deleteAllMargin, deleteScannerV1])
-                        newDataSocketWithBotDataV1.length > 0 && BotController.sendDataRealtime({
+
+                        (newDataSocketWithBotData1?.length > 0 || scannerV1List?.length > 0) && BotController.sendDataRealtime({
                             type: "bot-delete",
                             data: {
-                                newData: newDataSocketWithBotDataV1,
+                                newData: {
+                                    configData: newDataSocketWithBotData1,
+                                    scannerData: scannerV1List
+                                },
                                 botID,
                             },
                             botType

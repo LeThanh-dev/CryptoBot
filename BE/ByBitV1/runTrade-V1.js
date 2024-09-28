@@ -1933,7 +1933,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
             }))
         }
     } catch (error) {
-        console.log("[!] Error BotApi Socket:", e)
+        console.log("[!] Error BotApi Socket:", error)
     }
 }
 
@@ -3020,41 +3020,22 @@ socketRealtime.on('scanner-delete', async (newData = []) => {
 
 socketRealtime.on('bot-update', async (data = {}) => {
     const { newData, botIDMain, botActive } = data;
-    updatingAllMain = true
+
+    const configData = newData.configData
+    const scannerData = newData.scannerData
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
-    console.log(`[...] Bot-Update ( ${botNameExist} ) Strategies From Realtime`, newData.length);
+
+    console.log(`[...] Bot-Update ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData.length} - Scanner: ${scannerData.length}`,);
 
     const newBotApiList = {}
 
     const botApiData = botApiList[botIDMain]
 
-    // if (botApiData) {
-
-    //     const ApiKeyBot = botApiData.ApiKey
-    //     const SecretKeyBot = botApiData.SecretKey
-
-    //     const wsConfigOrder = {
-    //         key: ApiKeyBot,
-    //         secret: SecretKeyBot,
-    //         market: 'v5',
-    //         recvWindow: 100000
-    //     }
-
-    //     const wsOrder = new WebsocketClient(wsConfigOrder);
-
-    //     if (botActive) {
-    //         await wsOrder.subscribeV5(LIST_ORDER, 'spot')
-    //     }
-    //     else {
-    //         console.log(`[V] UnsubscribeV5 ( ${botNameExist} )`);
-    //         await wsOrder.unsubscribeV5(LIST_ORDER, 'spot')
-    //     }
-    // }
     const listOrderOC = {}
     const listOrderTP = []
 
-    await Promise.allSettled(newData.map((strategiesData, index) => {
+    await Promise.allSettled(configData.map((strategiesData, index) => {
 
         const ApiKey = strategiesData.botID.ApiKey
         const SecretKey = strategiesData.botID.SecretKey
@@ -3065,28 +3046,15 @@ socketRealtime.on('bot-update', async (data = {}) => {
         const strategyID = strategiesData.value
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
-        const botSymbolMissID = `${botID}-${symbol}`
-
         !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
         allStrategiesByCandleAndSymbol[symbol][strategyID] = strategiesData
 
         !allStrategiesByBotIDAndOrderID[botID] && (allStrategiesByBotIDAndOrderID[botID] = {});
         !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
 
-
-
-        if (botActive) {
-            if (!botApiList[botID]) {
-
-                botApiList[botID] = {
-                    id: botID,
-                    ApiKey,
-                    SecretKey,
-                    botName,
-                    telegramID: strategiesData.botID.telegramID,
-                    telegramToken: strategiesData.botID.telegramToken,
-                }
-
+        if (!botApiList[botID]) {
+            if (botActive) {
+                
                 newBotApiList[botID] = {
                     id: botID,
                     ApiKey,
@@ -3094,19 +3062,22 @@ socketRealtime.on('bot-update', async (data = {}) => {
                     botName,
                     telegramID: strategiesData.botID.telegramID,
                     telegramToken: strategiesData.botID.telegramToken,
+                    IsActive: true
                 }
-
-                // !allStrategiesByBotIDOrderOC[botID] && (allStrategiesByBotIDOrderOC[botID] = {})
-                // !allStrategiesByBotIDOrderOC[botID][symbol] && (
-                //     allStrategiesByBotIDOrderOC[botID][symbol] = {
-                //         totalOC: 0,
-                //         logError: false
-                //     }
-                // )
             }
         }
-
-
+        else 
+        {
+            botApiList[botID] = {
+                id: botID,
+                ApiKey,
+                SecretKey,
+                botName,
+                telegramID: strategiesData.botID.telegramID,
+                telegramToken: strategiesData.botID.telegramToken,
+                IsActive: botActive
+            }
+        }
 
         const cancelDataObject = {
             ApiKey,
@@ -3151,6 +3122,48 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     }))
 
+    scannerData.forEach(scannerItem => {
+        const ApiKey = scannerItem.botID.ApiKey
+        const SecretKey = scannerItem.botID.SecretKey
+        const botID = scannerItem.botID._id
+        const botName = scannerItem.botID.botName
+
+        const OnlyPairs = scannerItem.OnlyPairs
+        const scannerID = scannerItem._id
+
+        if (!botApiList[botID]) {
+            if (botActive) {
+                
+                newBotApiList[botID] = {
+                    id: botID,
+                    ApiKey,
+                    SecretKey,
+                    botName,
+                    telegramID: scannerItem.botID.telegramID,
+                    telegramToken: scannerItem.botID.telegramToken,
+                    IsActive: true
+                }
+            }
+        }
+        else 
+        {
+            botApiList[botID] = {
+                id: botID,
+                ApiKey,
+                SecretKey,
+                botName,
+                telegramID: scannerItem.botID.telegramID,
+                telegramToken: scannerItem.botID.telegramToken,
+                IsActive: botActive
+            }
+        }
+        
+        OnlyPairs.forEach(symbol=>{
+            delete allScannerDataObject?.[symbol]?.[scannerID]
+        })
+        
+    })
+    
     await handleCancelAllOrderTP({
         items: listOrderTP
     })
@@ -3274,14 +3287,17 @@ socketRealtime.on('bot-delete', async (data) => {
     updatingAllMain = true
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
+    
+    const configData = newData.configData
+    const scannerData = newData.scannerData
 
-    console.log(`[...] Bot Deleted ( ${botNameExist} ) Strategies From Realtime`);
+    console.log(`[...] Bot-Deleted ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData.length} - Scanner: ${scannerData.length}`,);
 
     const listOrderOC = []
     const listOrderTP = []
     const botApiData = botApiList[botIDMain]
 
-    await Promise.allSettled(newData.map(async (strategiesData, index) => {
+    await Promise.allSettled(configData.map(async (strategiesData, index) => {
 
         const ApiKey = strategiesData.botID.ApiKey
         const SecretKey = strategiesData.botID.SecretKey
@@ -3292,9 +3308,6 @@ socketRealtime.on('bot-delete', async (data) => {
         const botName = strategiesData.botID.botName
 
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
-
-        const botSymbolMissID = `${botID}-${symbol}`
-
 
         const cancelDataObject = {
             ApiKey,
@@ -3335,7 +3348,18 @@ socketRealtime.on('bot-delete', async (data) => {
 
         delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
         delete allStrategiesByCandleAndSymbol[symbol]?.[strategyID]
+
     }))
+
+    scannerData.forEach(scannerItem => {
+
+        const OnlyPairs = scannerItem.OnlyPairs
+        const scannerID = scannerItem._id
+
+        OnlyPairs.forEach(symbol=>{
+            delete allScannerDataObject?.[symbol]?.[scannerID]
+        })
+    })
 
     await handleCancelAllOrderTP({
         items: listOrderTP
