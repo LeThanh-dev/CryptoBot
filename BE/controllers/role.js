@@ -72,7 +72,7 @@ const RoleController = {
 
     addMore: async () => {
         try {
-            const result = await RoleModel.updateMany(
+            await RoleModel.updateMany(
                 { name: { $in: ["SuperAdmin", "Admin"] } },
                 {
                     "$addToSet": {
@@ -87,12 +87,7 @@ const RoleController = {
                 },
             );
 
-            if (result.modifiedCount > 0) {
-                console.log("\n[V] Add More Role Successful");
-            }
-            else {
-                console.log("\n[!] Add More Role Failed");
-            }
+            console.log("\n[V] Add More Role Successful");
 
         } catch (err) {
             console.log("\n[!] Add More Role Error:\n", err.message);
