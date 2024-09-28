@@ -3063,7 +3063,6 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
         const symbol = strategiesData.symbol
         const strategyID = strategiesData.value
-        const IsActive = strategiesData.IsActive
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
         const botSymbolMissID = `${botID}-${symbol}`
@@ -3076,7 +3075,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
 
 
-        if (IsActive) {
+        if (botActive) {
             if (!botApiList[botID]) {
 
                 botApiList[botID] = {
@@ -3141,7 +3140,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
         });
 
 
-        if (!strategiesData.IsActive) {
+        if (!botActive) {
 
             allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
                 ...cancelDataObject,
@@ -3182,9 +3181,6 @@ socketRealtime.on('bot-api', async (data) => {
         const botID = strategiesData.botID._id
         const botName = strategiesData.botID.botName
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
-
-
-        const botSymbolMissID = `${botID}-${symbol}`
 
         !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
         allStrategiesByCandleAndSymbol[symbol][strategyID] = strategiesData
