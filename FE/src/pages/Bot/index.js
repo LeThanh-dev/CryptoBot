@@ -262,7 +262,7 @@ function Bot() {
         dataChange: "",
     });
     const [openDeleteBot, setOpenDeleteBot] = useState("");
-    const [openEditMultiple, setOpenEditMultiple] = useState(false);
+    const [loadingGetMoney, setLoadingGetMoney] = useState(false);
     const [confirmActiveBot, setConfirmActiveBot] = useState(false);
     const [loadingSetMargin, setLoadingSetMargin] = useState("");
     const [totalFutureSpot, setTotalFutureSpot] = useState(0);
@@ -389,7 +389,6 @@ function Bot() {
         }
     }
 
- 
     const handleDeleteBot = async () => {
 
         try {
@@ -413,17 +412,17 @@ function Bot() {
                 message: "Delete Bot Error",
             }))
         }
-        setOpenEditMultiple(false)
     }
 
     const handleGetTotalFutureSpot = async () => {
 
+        setLoadingGetMoney(true)
         try {
             const res = await getTotalFutureSpot(userData._id)
             const { data: resData } = res.data
 
             setTotalFutureSpot(resData || 0)
-            totalFutureSpotOfMeDefault.current = resData
+            totalFutureSpotOfMeDefault.current = resData || 0
 
 
         }
@@ -433,9 +432,11 @@ function Bot() {
                 message: "Get Total Future-Spot Error",
             }))
         }
+        setLoadingGetMoney(false)
     }
 
     const handleGetTotalFutureSpotByBot = async (botListData) => {
+        setLoadingGetMoney(true)
 
         if (botListData.length > 0) {
 
@@ -444,6 +445,7 @@ function Bot() {
                 const { data: resData } = res.data
 
                 setTotalFutureSpot(resData || 0)
+                totalFutureSpotOfMeDefault.current = resData || 0
 
             }
             catch (err) {
@@ -456,6 +458,7 @@ function Bot() {
         else {
             setTotalFutureSpot(totalFutureSpotOfMeDefault.current)
         }
+        setLoadingGetMoney(false)
     }
 
 
@@ -561,7 +564,7 @@ function Bot() {
             </div>
             <div className={styles.botTableContainer}>
                 <div className={styles.botTableContainerTitle}>
-                    <b style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Total: {formatNumber(totalFutureSpot)} $</b>
+                    <b style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Total: {!loadingGetMoney ? `${formatNumber(totalFutureSpot)} $` : "..."} </b>
                     <div>
                         {/* {dataTableChange.length > 0 && (
                             <Button
