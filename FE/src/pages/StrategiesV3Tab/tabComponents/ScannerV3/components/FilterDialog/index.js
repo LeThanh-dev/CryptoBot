@@ -28,6 +28,10 @@ function FilterDialog({
 
 
     const positionValueList = [
+         {
+            name: "Long-Short",
+            value: "Long-Short",
+        },
         {
             name: "Long",
             value: "Long"
@@ -61,7 +65,7 @@ function FilterDialog({
         {
             data: {
                 compare: "=",
-                value: "Long"
+                value: positionValueList[0].value
             },
             name: "Position",
             value: "PositionSide",
@@ -88,7 +92,7 @@ function FilterDialog({
         {
             data: {
                 compare: "=",
-                value: ""
+                value: candlestickList[0].value
             },
             name: "Candle",
             value: "Candle",
