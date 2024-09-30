@@ -2981,7 +2981,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
         }
         const setOnlyPairs = new Set(scannerData.OnlyPairs)
         const setBlacklist = new Set(scannerData.Blacklist)
-        if (checkConditionBot(scannerData)) {
             allSymbol.forEach(symbolData => {
 
                 const symbol = symbolData.value
@@ -2998,7 +2997,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
                     delete allScannerDataObject[symbol]?.[scannerID]
                 }
             })
-        }
     })
 });
 
@@ -3170,13 +3168,11 @@ socketRealtime.on('bot-update', async (data = {}) => {
     await cancelAllListOrderOC(listOrderOC)
 
     !botApiData && await handleSocketBotApiList(newBotApiList);
-    updatingAllMain = false
 
 });
 
 socketRealtime.on('bot-api', async (data) => {
     const { newData, botID: botIDMain, newApiData } = data;
-    updatingAllMain = true
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
 
@@ -3277,14 +3273,11 @@ socketRealtime.on('bot-api', async (data) => {
         console.log("[!] Error subscribeV5", error)
     }
 
-    updatingAllMain = false
-
 
 });
 
 socketRealtime.on('bot-delete', async (data) => {
     const { newData, botID: botIDMain } = data;
-    updatingAllMain = true
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
     
@@ -3377,7 +3370,6 @@ socketRealtime.on('bot-delete', async (data) => {
     await wsOrder.unsubscribeV5(LIST_ORDER, 'spot')
 
     delete botApiList[botIDMain]
-    updatingAllMain = false
 
 });
 

@@ -81,7 +81,8 @@ const RoleController = {
                             "Spot",
                             "Margin",
                             "Scanner",
-                            "PositionV1"
+                            "PositionV1",
+                            "InstrumentsInfo",
                         ]
                     }
                 },

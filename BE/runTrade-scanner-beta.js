@@ -3318,7 +3318,6 @@ socketRealtime.on('bot-delete', async (data) => {
 
     console.log(`[...] Bot-Deleted ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData.length} - Scanner: ${scannerData.length}`,);
 
-
     const listOrderOC = []
     const listOrderTP = []
     const botApiData = botApiList[botIDMain]
@@ -3330,7 +3329,6 @@ socketRealtime.on('bot-delete', async (data) => {
 
 
     await Promise.allSettled(configData.map(async (strategiesData) => {
-        if (checkConditionBot(strategiesData)) {
 
             const ApiKey = strategiesData.botID.ApiKey
             const SecretKey = strategiesData.botID.SecretKey
@@ -3381,7 +3379,7 @@ socketRealtime.on('bot-delete', async (data) => {
 
             delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
             delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
-        }
+            
     }))
 
     scannerData.forEach(scannerItem => {
@@ -3408,7 +3406,6 @@ socketRealtime.on('bot-delete', async (data) => {
     const wsOrder = new WebsocketClient(wsConfigOrder);
 
     await wsOrder.unsubscribeV5(LIST_ORDER, 'linear')
-
 
     ["1m", "3m", "5m", "15m"].forEach(candle => {
         delete listOCByCandleBot?.[candle]?.[botIDMain]
@@ -3648,7 +3645,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
 
         const setOnlyPairs = new Set(scannerData.OnlyPairs)
         const setBlacklist = new Set(scannerData.Blacklist)
-        if (checkConditionBot(scannerData)) {
             Object.values(allSymbol).forEach(symbolData => {
 
                 const symbol = symbolData.value
@@ -3666,7 +3662,6 @@ socketRealtime.on('scanner-update', async (newData = []) => {
                     delete allScannerDataObject[candle]?.[symbol]?.[scannerID]
                 }
             })
-        }
     })
 
     await handleSocketBotApiList(newBotApiList)

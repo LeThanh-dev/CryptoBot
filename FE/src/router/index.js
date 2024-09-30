@@ -69,7 +69,7 @@ const routeList = [
                     </>,
             },
             {
-                path: "StrategiesHistory",
+                path: "ConfigV3History",
                 element: <StrategiesHistory />,
             },
 

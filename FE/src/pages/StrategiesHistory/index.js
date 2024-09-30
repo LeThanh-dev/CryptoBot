@@ -287,7 +287,7 @@ function StrategiesHistory() {
 
     useEffect(() => {
         if (openCreateStrategy.dataChange || openEditTreeItemMultipleDialog.dataChange) {
-            navigate("/Strategies")
+            navigate("/ConfigV3")
         }
     }, [openCreateStrategy.dataChange, openEditTreeItemMultipleDialog.dataChange]);
 
@@ -600,7 +600,7 @@ function StrategiesHistory() {
                                                 className={styles.icon}
                                                 onClick={() => {
                                                     setOpenListStrategiesHistory(false)
-                                                    navigate("/StrategiesHistory", {
+                                                    navigate("/ConfigV3History", {
                                                         state: {
                                                             data: data.data,
                                                             timeCreated: data.timeCreated

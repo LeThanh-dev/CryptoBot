@@ -582,87 +582,85 @@ const BotController = {
             const botID = req.params.id;
             const botType = req.query.botType
 
-            const result = await BotModel.deleteOne({ _id: botID })
+            switch (botType) {
+                case "ByBitV3":
+                    const getAllStrategiesActiveByBotID = BotController.getAllStrategiesByBotID({
+                        botID,
+                    })
 
-            if (result.deletedCount !== 0) {
+                    const getScannerV3ByBotID = ScannerV3Model.find({ botID }).populate("botID")
 
-                switch (botType) {
-                    case "ByBitV3":
-                        const getAllStrategiesActiveByBotID = BotController.getAllStrategiesByBotID({
-                            botID,
-                        })
 
-                        const getScannerV3ByBotID = ScannerV3Model.find({ botID }).populate("botID")
+                    const resultAll = await Promise.allSettled([getAllStrategiesActiveByBotID, getScannerV3ByBotID])
 
-                        const resultAll = await Promise.allSettled([getAllStrategiesActiveByBotID, getScannerV3ByBotID])
+                    const newDataSocketWithBotData = resultAll[0].value
+                    const scannerV3List = resultAll[1].value
+                    console.log(scannerV3List);
 
-                        const newDataSocketWithBotData = resultAll[0].value
-                        const scannerV3List = resultAll[1].value
+                    const deleteBot = BotModel.deleteOne({ _id: botID })
 
-                        const deleteAllStrategies = StrategiesModel.updateMany(
-                            { "children.botID": botID },
-                            { $pull: { children: { botID: botID } } }
-                        );
-                        const deleteScannerV3 = ScannerV3Model.deleteMany({ botID })
+                    const deleteAllStrategies = StrategiesModel.updateMany(
+                        { "children.botID": botID },
+                        { $pull: { children: { botID: botID } } }
+                    );
+                    const deleteScannerV3 = ScannerV3Model.deleteMany({ botID })
 
-                        await Promise.allSettled([deleteAllStrategies, deleteScannerV3]);
+                    await Promise.allSettled([deleteBot, deleteAllStrategies, deleteScannerV3]);
 
-                        (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
-                            type: "bot-delete",
-                            data: {
-                                newData: {
-                                    configData: newDataSocketWithBotData,
-                                    scannerData: scannerV3List
-                                },
-                                botID,
+                    (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
+                        type: "bot-delete",
+                        data: {
+                            newData: {
+                                configData: newDataSocketWithBotData,
+                                scannerData: scannerV3List
                             },
-                            botType
-                        })
-                        break
-
-                    case "ByBitV1":
-                        const newDataSocketWithBotDataV1 = BotController.getAllStrategiesV1ByBotID({
                             botID,
-                        })
+                        },
+                        botType
+                    })
+                    break
 
-                        const getScannerV1ByBotID = await ScannerV1Model.find({ botID }).populate("botID")
+                case "ByBitV1":
+                    const newDataSocketWithBotDataV1 = BotController.getAllStrategiesV1ByBotID({
+                        botID,
+                    })
 
-                        const resultAll2 = await Promise.allSettled([newDataSocketWithBotDataV1, getScannerV1ByBotID])
-                        const newDataSocketWithBotData1 = resultAll2[0].value
-                        const scannerV1List = resultAll2[1].value
+                    const getScannerV1ByBotID = ScannerV1Model.find({ botID }).populate("botID")
 
-                        const deleteAllSpot = SpotModel.updateMany(
-                            { "children.botID": botID },
-                            { $pull: { children: { botID: botID } } }
-                        );
-                        const deleteAllMargin = MarginModel.updateMany(
-                            { "children.botID": botID },
-                            { $pull: { children: { botID: botID } } }
-                        );
-                        const deleteScannerV1 = ScannerV1Model.deleteMany({ botID })
+                    const resultAll2 = await Promise.allSettled([newDataSocketWithBotDataV1, getScannerV1ByBotID])
+                    const newDataSocketWithBotData1 = resultAll2[0].value
+                    const scannerV1List = resultAll2[1].value
 
-                        await Promise.allSettled([deleteAllSpot, deleteAllMargin, deleteScannerV1]);
+                    const deleteBotV1 = BotModel.deleteOne({ _id: botID })
 
-                        (newDataSocketWithBotData1?.length > 0 || scannerV1List?.length > 0) && BotController.sendDataRealtime({
-                            type: "bot-delete",
-                            data: {
-                                newData: {
-                                    configData: newDataSocketWithBotData1,
-                                    scannerData: scannerV1List
-                                },
-                                botID,
+                    const deleteAllSpot = SpotModel.updateMany(
+                        { "children.botID": botID },
+                        { $pull: { children: { botID: botID } } }
+                    );
+                    const deleteAllMargin = MarginModel.updateMany(
+                        { "children.botID": botID },
+                        { $pull: { children: { botID: botID } } }
+                    );
+                    const deleteScannerV1 = ScannerV1Model.deleteMany({ botID })
+
+                    await Promise.allSettled([deleteBotV1, deleteAllSpot, deleteAllMargin, deleteScannerV1]);
+
+                    (newDataSocketWithBotData1?.length > 0 || scannerV1List?.length > 0) && BotController.sendDataRealtime({
+                        type: "bot-delete",
+                        data: {
+                            newData: {
+                                configData: newDataSocketWithBotData1,
+                                scannerData: scannerV1List
                             },
-                            botType
-                        })
-                        break
-                }
-
-
-                res.customResponse(200, "Delete Bot Successful");
+                            botID,
+                        },
+                        botType
+                    })
+                    break
             }
-            else {
-                res.customResponse(400, "Delete Bot failed", "");
-            }
+
+            res.customResponse(200, "Delete Bot Successful");
+
 
         } catch (error) {
             res.status(500).json({ message: "Delete Bot Error" });

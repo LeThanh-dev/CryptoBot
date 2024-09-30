@@ -786,7 +786,7 @@ function Strategies() {
                                             <RemoveRedEyeIcon
                                                 className={styles.icon}
                                                 onClick={() => {
-                                                    navigate("/StrategiesHistory", {
+                                                    navigate("/ConfigV3History", {
                                                         state: {
                                                             data: data.data,
                                                             timeCreated: data.timeCreated

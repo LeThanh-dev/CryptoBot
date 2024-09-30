@@ -1,4 +1,3 @@
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import styles from "./TreeChild.module.scss"
 import { deleteStrategiesItem, updateStrategiesByID } from '../../../../../services/dataCoinByBitService';
 import { addMessageToast } from '../../../../../store/slices/Toast';
@@ -206,34 +205,7 @@ function TreeChild({
                             disabled
                             size='small'
                             checked={treeNode.IsActive}
-                            onChange={(e) => {
-                                handleActiveStrategy({
-                                    id: treeNode._id,
-                                    parentID: treeData._id,
-                                    symbol: treeData.value,
-                                    newData: { ...treeNode, IsActive: e.target.checked }
-                                })
-                            }}
                         />
-                        {
-                            !treeNode.IsActive && (
-                                <DeleteOutlineIcon
-                                    className={styles.icon}
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        setOpenDeleteTreeItem({
-                                            isOpen: true,
-                                            data: {
-                                                id: treeNode._id,
-                                                parentID: treeData._id
-                                            }
-                                        })
-                                    }}
-
-                                />
-                            )
-                        }
-                        
                     </div>
                 </TableCell>
                 <TableCell

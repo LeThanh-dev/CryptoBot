@@ -24,7 +24,6 @@ function MainLayout({ children }) {
         "ConfigV3",
         "Coin",
         "Order",
-        "StrategiesHistory",
         "PositionV3"
     ]
 
