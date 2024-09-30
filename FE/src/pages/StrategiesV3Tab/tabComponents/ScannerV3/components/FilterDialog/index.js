@@ -208,6 +208,7 @@ function FilterDialog({
     }
 
     const handleChangeValue = (value, indexInput) => {
+console.log(value);
 
         setFilterDataRowList(filterDataRowList => filterDataRowList.map((item, index) => {
             if (index === indexInput) {

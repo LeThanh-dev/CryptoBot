@@ -22,6 +22,11 @@
             color: var(--blueColor);
             font-family: "Nunito", sans-serif;
         }
+
+        .teleIcon {
+            width: 32px;
+            margin: 0 0 12px 6px;
+        }
     }
 
     .navbar {
@@ -122,6 +127,10 @@
 
             .text {
                 display: none;
+            }
+
+            .teleIcon {
+                margin-left: -6px;
             }
         }
 

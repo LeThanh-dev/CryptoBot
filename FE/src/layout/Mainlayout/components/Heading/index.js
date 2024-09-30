@@ -14,7 +14,7 @@ import styles from "./Heading.module.scss"
 import { formatNumber, removeLocalStorage } from "../../../../functions";
 import { useSelector } from "react-redux";
 import SwitchUserModal from './components/SwitchUserModal';
-
+import teleIcon from "../../../../assets/tele.svg"
 function Heading({
     toggleSidebar,
     userData
@@ -44,6 +44,15 @@ function Heading({
             <NavLink className={styles.headingLogo} to="/">
                 <img src={logoImage} />
                 <span className={styles.text}>CyberBot</span>
+
+                <img
+                    src={teleIcon}
+                    className={styles.teleIcon}
+                    onClick={e => {
+                        e.stopPropagation()
+                        // window.open('https://t.me/yourgroup', '_blank')
+                    }}
+                />
             </NavLink>
             <DensityMediumIcon
                 className={styles.navbar}
@@ -57,7 +66,7 @@ function Heading({
                 <div className={styles.avatar} onClick={(e) => {
                     setAvatarDetailState(e.currentTarget)
                 }}>
-                    <Avatar src={userData?.roleName !== "SuperAdmin" ? avatar : avatarAdmin} style = {{width:"36px"}}/>
+                    <Avatar src={userData?.roleName !== "SuperAdmin" ? avatar : avatarAdmin} style={{ width: "36px" }} />
                     <div className={styles.name}>
                         <span>{userData?.userName || "User"}</span>
                         <ArrowDropDownIcon />
