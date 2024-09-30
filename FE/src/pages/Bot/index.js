@@ -445,7 +445,6 @@ function Bot() {
                 const { data: resData } = res.data
 
                 setTotalFutureSpot(resData || 0)
-                totalFutureSpotOfMeDefault.current = resData || 0
 
             }
             catch (err) {
