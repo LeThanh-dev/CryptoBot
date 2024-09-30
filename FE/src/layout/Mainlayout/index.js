@@ -24,7 +24,9 @@ function MainLayout({ children }) {
         "ConfigV3",
         "Coin",
         "Order",
-        "PositionV3"
+        "PositionV3",
+        "ByBit",
+        "OKX",
     ]
 
     const linkList = [

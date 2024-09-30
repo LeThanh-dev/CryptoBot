@@ -11,14 +11,12 @@ import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 import GroupsIcon from '@mui/icons-material/Groups';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { NavLink } from "react-router-dom"
 import clsx from "clsx";
 import styles from "./SideBar.module.scss"
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { Collapse } from '@mui/material';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 
 
 function SideBar({
@@ -26,85 +24,203 @@ function SideBar({
     roleList
 }, ref) {
 
-    const userData = useSelector(state => state.userDataSlice.userData)
 
-    const [openStrategies, setOpenStrategies] = useState(false);
-    const [openPosition, setOpenPosition] = useState(false);
+    const [openAll, setOpenAll] = useState({
+        config: {
+            state: false,
+            children: {
+                ByBit: false,
+                OKX: false,
+            }
+        },
+        position: {
+            state: false,
+            children: {
+                ByBit: false,
+                OKX: false,
+            }
+        },
+    });
+
     const linkList = [
 
         {
-            linK: "/Users",
+            link: "/Users",
             name: "Users",
             icon: <PersonIcon className={styles.icon} />
         },
         {
-            linK: "/Groups",
+            link: "/Groups",
             name: "Groups",
             icon: <GroupsIcon className={styles.icon} />
         },
         {
-            linK: "/Bots",
+            link: "/Bots",
             name: "Bots",
             icon: <SmartToyIcon className={styles.icon} />
         },
         {
-            linK: "/BotTypes",
+            link: "/BotTypes",
             name: "BotTypes",
             icon: <PrecisionManufacturingIcon className={styles.icon} />
         },
         {
             name: "Config",
             icon: <PermDataSettingIcon className={styles.icon} />,
-            open: openStrategies,
-            openFunc: () => { setOpenStrategies(!openStrategies) },
+            open: openAll.config.state,
+            openFunc: () => {
+                setOpenAll(data => {
+                    const newData = { ...data }
+                    newData.config.state = !newData.config.state
+                    return newData
+                })
+            },
             children: [
                 {
-                    linK: "/Spot",
-                    name: "V1",
-                    icon: <ShoppingCartIcon className={styles.icon} />
+                    link: "ByBit",
+                    name: "ByBit",
+                    icon: <ShoppingCartIcon className={styles.icon} />,
+                    open: openAll.config.children.ByBit,
+                    openFunc: () => {
+                        setOpenAll(data => {
+                            const newData = { ...data }
+                            newData.config.children.ByBit = !newData.config.children.ByBit
+                            return newData
+                        })
+                    },
+                    children: [
+                        {
+                            link: "/Spot",
+                            name: "V1",
+                            icon: <ShoppingCartIcon className={styles.icon} />
+                        },
+                        {
+                            link: "/ConfigV3",
+                            name: "V3",
+                            icon: <LocalMallIcon className={styles.icon} />
+                        },
+                    ]
                 },
                 {
-                    linK: "/ConfigV3",
-                    name: "V3",
-                    icon: <LocalMallIcon className={styles.icon} />
+                    link: "OKX",
+                    name: "OKX",
+                    icon: <ShoppingCartIcon className={styles.icon} />,
+                    open: openAll.config.children.OKX,
+                    openFunc: () => {
+                        setOpenAll(data => {
+                            const newData = { ...data }
+                            newData.config.children.OKX = !newData.config.children.OKX
+                            return newData
+                        })
+                    },
+                    children: [
+                        {
+                            link: "/Spot",
+                            name: "V1",
+                            icon: <ShoppingCartIcon className={styles.icon} />
+                        },
+                        {
+                            link: "/ConfigV3",
+                            name: "V3",
+                            icon: <LocalMallIcon className={styles.icon} />
+                        },
+                    ]
                 },
+
             ]
         },
-        
+
         {
             name: "Positions",
             icon: <ControlCameraIcon className={styles.icon} />,
-            open: openPosition,
-            openFunc: () => { setOpenPosition(!openPosition) },
+            open: openAll.position.state,
+            openFunc: () => {
+                setOpenAll(data => {
+                    const newData = { ...data }
+                    newData.position.state = !newData.position.state
+                    return newData
+                })
+            },
             children: [
                 {
-                    linK: "/PositionV1",
+                    link: "/PositionV1",
                     name: "V1",
                     icon: <RadarIcon className={styles.icon} />
                 },
                 {
-                    linK: "/PositionV3",
+                    link: "/PositionV3",
                     name: "V3",
                     icon: <ViewInArIcon className={styles.icon} />
                 },
             ]
         },
         {
-            linK: "/Coin",
+            link: "/Coin",
             name: "Coin",
             icon: <CurrencyExchangeIcon className={styles.icon} />
         },
         {
-            linK: "/InstrumentsInfo",
+            link: "/InstrumentsInfo",
             name: "InstrumentsInfo",
             icon: <PaymentsIcon className={styles.icon} />
         },
         // {
-        //     linK: "/Order",
+        //     link: "/Order",
         //     name: "Order",
         //     icon: <CreditCardIcon className={styles.icon} />
         // },
     ]
+
+
+    const renderRouterHasChildren = (item) => {
+        return <div key={item.link}>
+            <div
+                className={styles.sidebarItem}
+                onClick={item.openFunc}
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                }}
+            >
+                <div style={{
+                    display: "flex",
+                    alignItems: "center"
+                }}>
+                    {item.icon}
+                    <p className={styles.sidebarItemName}>{item.name}</p>
+                </div>
+                {item.open ? <ExpandLess /> : <ExpandMore />}
+            </div>
+            <Collapse in={item.open} timeout="auto" unmountOnExit>
+                <div style={{ paddingLeft: "16px" }}>
+                    {item.children.map(child => {
+                        if (roleList.includes(`${child?.link?.replace("/", "")}`)) {
+
+                            if (child.children?.length) {
+                                return renderRouterHasChildren(child)
+                            }
+                            else {
+                                if (roleList.includes(`${child.link.replace("/", "")}`)) {
+                                    return <div key={child.link}>
+                                        {
+                                            roleList.includes(child.link.replace("/", "")) && <NavLink
+                                                className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
+                                                to={child.link}
+                                            >
+                                                {child.icon}
+                                                <p className={styles.sidebarItemName}>{child.name}</p>
+                                            </NavLink>
+                                        }
+                                    </div>
+                                }
+                            }
+                        }
+                    })}
+                </div>
+            </Collapse>
+        </div>
+    }
 
     return (
         <div
@@ -129,47 +245,14 @@ function SideBar({
             {
                 linkList.map(item => {
                     if (item.children?.length) {
-                        return <div key={item.linK}>
-                            <div
-                                className={styles.sidebarItem}
-                                onClick={item.openFunc}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between"
-                                }}
-                            >
-                                <div style={{
-                                    display: "flex",
-                                    alignItems: "center"
-                                }}>
-                                    {item.icon}
-                                    <p className={styles.sidebarItemName}>{item.name}</p>
-                                </div>
-                                {item.open ? <ExpandLess /> : <ExpandMore />}
-                            </div>
-                            <Collapse in={item.open} timeout="auto" unmountOnExit>
-                                <div style={{ paddingLeft: "16px" }}>
-                                    {item.children.map(child => (
-                                       roleList.includes(`${child.linK.replace("/","")}`) && <NavLink
-                                            className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
-                                            to={child.linK}
-                                            key = {child.linK}
-                                        >
-                                            {child.icon}
-                                            <p className={styles.sidebarItemName}>{child.name}</p>
-                                        </NavLink>
-                                    ))}
-                                </div>
-                            </Collapse>
-                        </div>
+                        return renderRouterHasChildren(item)
                     }
                     else {
-                        return <div key={item.linK}>
+                        return <div key={item.link}>
                             {
-                                roleList.includes(item.linK.replace("/", "")) && <NavLink
+                                roleList.includes(item.link.replace("/", "")) && <NavLink
                                     className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
-                                    to={item.linK}
+                                    to={item.link}
                                 >
                                     {item.icon}
                                     <p className={styles.sidebarItemName}>{item.name}</p>
