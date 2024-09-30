@@ -19,24 +19,25 @@ function Group() {
     const [tableRows, setTableRows] = useState([]);
 
     useEffect(() => {
-        setTimeout(() => {
-            setTableRows([
-                {
-                    "id": "1000000VINU",
-                    "Group": "1000000VINU",
-                    "Actions": "286.35K"
-                },
-                {
-                    "id": "BTC",
-                    "Group": "BTC",
-                    "Actions": "351.54M"
-                },
-            ])
-        }, 1000)
+        // setTimeout(() => {
+        //     setTableRows([
+        //         {
+        //             "id": "1000000VINU",
+        //             "Group": "1000000VINU",
+        //             "Actions": "286.35K"
+        //         },
+        //         {
+        //             "id": "BTC",
+        //             "Group": "BTC",
+        //             "Actions": "351.54M"
+        //         },
+        //     ])
+        // }, 1000)
     }, []);
     return (
         <div className={styles.group}>
-            <div style={{ textAlign: "right", marginBottom: '16px' }}>
+            <p style={{textAlign:"center"}}>This feature is not yet available</p>
+            {/* <div style={{ textAlign: "right", marginBottom: '16px' }}>
                 <Button variant="contained" startIcon={<AddIcon />}>
                     Group
                 </Button>
@@ -45,7 +46,7 @@ function Group() {
                 tableColumns={tableColumns}
                 tableRows={tableRows}
                 checkboxSelection={false}
-            />
+            /> */}
         </div>
     );
 }

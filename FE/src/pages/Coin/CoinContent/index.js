@@ -21,10 +21,11 @@ function CoinContent() {
             field: 'Coin',
             headerName: 'Coin',
             flex: 1,
+            minWidth:200,
         },
         {
             field: 'volume24h',
-            headerName: 'Volume24h',
+            headerName: 'Vol',
             type: "number",
             flex: 1,
             renderCell: (params) => formatNumberString(params.value)
@@ -90,7 +91,7 @@ function CoinContent() {
     }, []);
     return (
         <div className={styles.coinContent}>
-            <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center",marginBottom:"16px" }}>
                 <TextField
                     placeholder='Coin Name...'
                     size='small'
@@ -109,7 +110,7 @@ function CoinContent() {
               
                 <LoadingButton
                     variant="contained"
-                    size="medium"
+                    size="small"
                     loading={loading}
                     onClick={handleSyncCoin}
                     sx={{

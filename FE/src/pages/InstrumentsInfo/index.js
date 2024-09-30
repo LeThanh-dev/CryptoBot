@@ -20,12 +20,14 @@ function InstrumentsInfo() {
         {
             field: 'Coin',
             headerName: 'Coin',
-            flex: 1,
+            minWidth: 120,
+            flex:1,
         },
         {
             field: 'market',
             headerName: 'Market',
-            flex: 1,
+            minWidth: 150,
+            flex:1,
             renderCell: (params) => {
                 const TradeType = params.value
                 return <p> {TradeType == "Margin" ? "🍁" : "🍀"} {TradeType}</p>
@@ -34,17 +36,20 @@ function InstrumentsInfo() {
         {
             field: 'minOrderQty',
             headerName: 'minOrderQty',
-            flex: 1,
+            minWidth: 180,
+            flex:1,
         },
         {
             field: 'basePrecision',
             headerName: 'BasePrecision',
-            flex: 1,
+            minWidth: 180,
+            flex:1,
         },
         {
             field: 'tickSize',
             headerName: 'TickSize',
-            flex: 1,
+            minWidth: 180,
+            flex:1,
         },
 
     ]
@@ -113,7 +118,7 @@ function InstrumentsInfo() {
     return (
         <div className={styles.coinContent}>
             <AddBreadcrumbs list={["InstrumentsInfo"]} />
-            <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <TextField
                     placeholder='Coin Name...'
                     size='small'
@@ -132,7 +137,7 @@ function InstrumentsInfo() {
 
                 <LoadingButton
                     variant="contained"
-                    size="medium"
+                    size="small"
                     loading={loading}
                     onClick={handleSyncCoin}
                     sx={{
