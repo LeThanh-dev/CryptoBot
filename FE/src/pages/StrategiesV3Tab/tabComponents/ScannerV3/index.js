@@ -45,6 +45,10 @@ function ScannerV3() {
             value: "All",
         },
         {
+            name: "Long-Short",
+            value: "Long-Short",
+        },
+        {
             name: "Long",
             value: "Long",
         },
