@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-mongoose.connect(`mongodb://localhost:27017/crypto-bot`, {
+const mongodbServerIP = "localhost"
+mongoose.connect(`mongodb://${mongodbServerIP}:27017/crypto-bot`, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {

@@ -3024,7 +3024,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
 
-    console.log(`[...] Bot-Update ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData.length} - Scanner: ${scannerData.length}`,);
+    console.log(`[...] Bot-Update ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData?.length} - Scanner: ${scannerData?.length}`,);
 
     const newBotApiList = {}
 
@@ -3284,7 +3284,7 @@ socketRealtime.on('bot-delete', async (data) => {
     const configData = newData.configData
     const scannerData = newData.scannerData
 
-    console.log(`[...] Bot-Deleted ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData.length} - Scanner: ${scannerData.length}`,);
+    console.log(`[...] Bot-Deleted ( ${botNameExist} ) Strategies From Realtime: \nConfig: ${configData?.length} - Scanner: ${scannerData?.length}`,);
 
     const listOrderOC = []
     const listOrderTP = []
