@@ -8,7 +8,7 @@ import LocalMallIcon from '@mui/icons-material/LocalMall';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import { memo, useEffect, useState } from "react";
 import clsx from "clsx";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Breadcrumbs, Typography } from "@mui/material";
 import { verifyLogin } from "../../services/authService";
 import { getByRoleName } from "../../services/roleService";
@@ -21,28 +21,51 @@ function MainLayout({ children }) {
 
     const ROLE_LIST_DEFAULT = [
         "Bots",
-        "ConfigV3",
+        "Configs",
+        "Configs/ByBit",
+        "Configs/ByBit/V3",
+        "Configs/ByBit/V3/Config",
+        "Configs/ByBit/V3/ConfigHistory",
+        // "Configs/ByBit/V3/Scanner",
+        // "Configs/ByBit/V1",
+        // "Configs/ByBit/V1/Spot",
+        // "Configs/ByBit/V1/Margin",
+        // "Configs/ByBit/V1/Scanner",
+        // "Configs/OKX",
+        // "Configs/OKX/V3",
+        // "Configs/OKX/V3/Config",
+        // "Configs/OKX/V3/Scanner",
+        // "Configs/OKX/V1",
+        // "Configs/OKX/V1/Spot",
+        // "Configs/OKX/V1/Margin",
+        // "Configs/OKX/V1/Scanner",
+        "Positions",
+        "Positions/ByBit",
+        "Positions/ByBit/V3",
+        // "Positions/ByBit/V1",
+        // "Positions/OKX",
+        // "Positions/OKX/V3",
+        // "Positions/OKX/V1",
         "Coin",
         "Order",
-        "PositionV3",
-        "ByBit",
-        "OKX",
+        "Positions",
+        "InstrumentsInfo"
     ]
 
     const linkList = [
         {
-            linK: "/Bots",
+            linK: "Bots",
             name: "Bots",
             icon: <SmartToyIcon className={styles.icon} />
         },
         {
-            linK: "/ConfigV3",
+            linK: "Configs/ByBit/V3/Config",
             name: "ConfigV3",
             icon: <LocalMallIcon className={styles.icon} />
         },
 
         {
-            linK: "/PositionV3",
+            linK: "Positions/ByBit/V3",
             name: "PositionsV3",
             icon: <ViewInArIcon className={styles.icon} />
         },
@@ -50,6 +73,7 @@ function MainLayout({ children }) {
     ]
 
     const location = useLocation()
+    const navigate = useNavigate()
 
     const dispatch = useDispatch()
 
@@ -57,7 +81,6 @@ function MainLayout({ children }) {
     const [userData, setUserData] = useState("");
     const [roleList, setRoleList] = useState([]);
 
-    const { listBreadcrumbs } = useSelector(state => state.breadcrumbsSlice)
 
     const getRouteName = () => (
         location.pathname.split("/")[1]
@@ -67,6 +90,15 @@ function MainLayout({ children }) {
     const toggleSidebar = () => {
         setMarginLeft(marginLeft ? "" : "300px")
     }
+
+    const locationPathSplit = location.pathname.split("/")
+
+
+    const renderLinkBreadcrumbs = (item) => {
+        const path = locationPathSplit.slice(0, locationPathSplit.indexOf(item) + 1).join('/');
+        return `${path}`;
+    };
+
 
     const handleBreadcrumbs = () => {
         return <Breadcrumbs
@@ -78,7 +110,7 @@ function MainLayout({ children }) {
         >
 
             {
-                listBreadcrumbs.map((value, index) => {
+                location.pathname.split("/").map((value, index) => {
                     if (index === 0) {
                         return <Link
                             to="/"
@@ -88,7 +120,7 @@ function MainLayout({ children }) {
                             Home
                         </Link>
                     }
-                    else if (index === listBreadcrumbs.length - 1) {
+                    else if (index === locationPathSplit.length - 1) {
                         return <Typography
                             color="text.primary"
                             style={{
@@ -102,7 +134,7 @@ function MainLayout({ children }) {
                     }
                     else {
                         return <Link
-                            to={`/${value}`}
+                            to={renderLinkBreadcrumbs(value)}
                             style={{ fontSize: ".9rem", opacity: .5 }}
                             key={index}
                         >
@@ -114,8 +146,6 @@ function MainLayout({ children }) {
 
         </Breadcrumbs>
     }
-
-    const navigate = useNavigate()
 
     const handleVerifyLogin = async () => {
         try {
@@ -207,7 +237,7 @@ function MainLayout({ children }) {
                                 fontSize: "1.5rem",
                                 fontWeight: "500",
                                 color: "#012970",
-                                marginBottom: "6px"
+                                marginBottom: "6px",
                             }}>{getRouteName()}</p>
                             {
                                 <div role="presentation"  >

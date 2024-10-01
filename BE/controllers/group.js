@@ -4,10 +4,28 @@ const UserModel = require('../models/user.model');
 
 const GroupController = {
     getAll: async (req, res) => {
+
+        const userName = req.user?.userName
+        const userID = req.user?._id
+        const conditionGet = userName !== "SuperAdmin" ? {
+            userID
+        }: {};
+
+
         try {
-            const data = await GroupModel.find({}, ).populate("userID",{ password: 0 })
+            const data = await GroupModel.find(conditionGet).populate("userID", { password: 0 })
             res.customResponse(res.statusCode, "Get All Group Successful", data);
 
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    getGroupByUserIDCreated: async (req, res) => {
+        try {
+            const userID = req.params.id
+            const data = await GroupModel.find({userID})
+            res.customResponse(res.statusCode, "Get Group By UserID Successful", data);
         } catch (err) {
             res.status(500).json({ message: err.message });
         }

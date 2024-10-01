@@ -2742,10 +2742,10 @@ try {
                             let newPriceCompare = 0
                             const oldPriceCompare = allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.priceCompare
                             if (strategy.PositionSide === "Long") {
-                                newPriceCompare = oldPriceCompare - Math.abs(oldPriceCompare - coinCurrent) * (strategy.ReduceTakeProfit / 100)
+                                newPriceCompare = oldPriceCompare - Math.abs(oldPriceCompare - coinCurrent) * (200 / 100)
                             }
                             else {
-                                newPriceCompare = oldPriceCompare + Math.abs(oldPriceCompare - coinCurrent) * (strategy.ReduceTakeProfit / 100)
+                                newPriceCompare = oldPriceCompare + Math.abs(oldPriceCompare - coinCurrent) * (200 / 100)
                             }
 
                             allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.priceCompare = newPriceCompare

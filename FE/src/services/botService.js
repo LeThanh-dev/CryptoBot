@@ -15,6 +15,9 @@ export const getAllBotActiveByUserID = async (userID, botType) => {
 export const getAllBotOnlyApiKeyByUserID = async (userID, botType) => {
     return await api.get(`/bot/getAllBotOnlyApiKeyByUserID/${userID}?botType=${botType}`)
 }
+export const getAllBotByGroupCreatedByUserID = async () => {
+    return await api.post(`/bot/getAllBotByGroupCreatedByUserID`)
+}
 export const getAllBotBySameGroup = async (groupID) => {
     return await api.get(`/bot/getAllBotBySameGroup/${groupID}`)
 }

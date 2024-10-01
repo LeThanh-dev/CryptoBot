@@ -115,31 +115,23 @@ const UserController = {
         }
     },
     getAllUserByGroupID: async (req, res) => {
-        const groupID = req.params.id;
+        const groupIDList = req.body;
         try {
-            if (groupID === "All") {
-                const data = await UserModel.find({}, { password: 0 }).populate("groupID")
-                if (data) {
-                    return res.customResponse(200, "Get All User Successful", data);
-                }
-                else {
-                    return res.customResponse(400, "Get All User Failed", "");
-                }
+
+            const data = await UserModel.find({ "groupID": { $in: groupIDList } }, { password: 0 }).populate("groupID");
+            if (data) {
+                return res.customResponse(200, "Get All User Successful", data);
             }
             else {
-                const data = await UserModel.find({ "groupID": groupID }, { password: 0 }).populate("groupID");
-                if (data) {
-                    return res.customResponse(200, "Get All User Successful", data);
-                }
-                else {
-                    return res.customResponse(400, "Get All User Failed", "");
-                }
+                return res.customResponse(400, "Get All User Failed", "");
             }
+
 
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
     },
+
     getAllUserByRoleName: async (req, res) => {
         try {
             let data = {}
@@ -154,11 +146,15 @@ const UserController = {
                     }, { password: 0 }).populate("groupID");
                     break
                 case "Admin":
-                    data = await UserModel.find({
-                        _id: { $ne: userID },
-                        roleName: { $in: ["Trader", "ManagerTrader","Admin"] },
-                        isActive: true
-                    }, { password: 0 }).populate("groupID");
+                    const groups = await GroupModel.find({ userID }).populate("member.userID");
+
+                    data = groups.flatMap(group => group.member.map(member => {
+                        const { password,...newData } = member.userID.toObject()
+                        return {
+                            ...newData,
+                            groupID: group
+                        }
+                    }));
                     break
                 case "ManagerTrader":
                     data = await UserModel.find({
@@ -183,6 +179,7 @@ const UserController = {
             if (roleName == "SuperAdmin") {
                 throw Error()
             }
+
             const hashedPassword = await bcrypt.hash(password, 10);
             // Tạo người dùng mới
             const newUser = new UserModel({

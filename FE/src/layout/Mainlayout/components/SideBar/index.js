@@ -1,3 +1,4 @@
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import ControlCameraIcon from '@mui/icons-material/ControlCamera';
 import RadarIcon from '@mui/icons-material/Radar';
 import PermDataSettingIcon from '@mui/icons-material/PermDataSetting';
@@ -11,11 +12,11 @@ import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import clsx from "clsx";
 import styles from "./SideBar.module.scss"
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import { Collapse } from '@mui/material';
+import { Collapse, Menu, MenuItem, Popover } from '@mui/material';
 import { useState } from 'react';
 
 
@@ -26,18 +27,18 @@ function SideBar({
 
 
     const [openAll, setOpenAll] = useState({
-        config: {
-            state: false,
+        Config: {
+            open: false,
             children: {
-                ByBit: false,
-                OKX: false,
+                ByBit: "",
+                OKX: "",
             }
         },
-        position: {
-            state: false,
+        Position: {
+            open: false,
             children: {
-                ByBit: false,
-                OKX: false,
+                ByBit: "",
+                OKX: "",
             }
         },
     });
@@ -45,84 +46,81 @@ function SideBar({
     const linkList = [
 
         {
-            link: "/Users",
+            link: "Users",
             name: "Users",
             icon: <PersonIcon className={styles.icon} />
         },
         {
-            link: "/Groups",
+            link: "Groups",
             name: "Groups",
             icon: <GroupsIcon className={styles.icon} />
         },
         {
-            link: "/Bots",
+            link: "Bots",
             name: "Bots",
             icon: <SmartToyIcon className={styles.icon} />
         },
         {
-            link: "/BotTypes",
+            link: "BotTypes",
             name: "BotTypes",
             icon: <PrecisionManufacturingIcon className={styles.icon} />
         },
         {
-            name: "Config",
+            link: "Configs",
+            name: "Configs",
             icon: <PermDataSettingIcon className={styles.icon} />,
-            open: openAll.config.state,
+            open: openAll.Config.open,
             openFunc: () => {
                 setOpenAll(data => {
                     const newData = { ...data }
-                    newData.config.state = !newData.config.state
+                    newData.Config.open = !newData.Config.open
                     return newData
                 })
             },
             children: [
                 {
-                    link: "ByBit",
+                    link: "Configs/ByBit",
                     name: "ByBit",
-                    icon: <ShoppingCartIcon className={styles.icon} />,
-                    open: openAll.config.children.ByBit,
-                    openFunc: () => {
+                    icon: <RadarIcon className={styles.icon} />,
+                    open: openAll.Config.children.ByBit,
+                    openFunc: (target) => {
                         setOpenAll(data => {
                             const newData = { ...data }
-                            newData.config.children.ByBit = !newData.config.children.ByBit
+                            newData.Config.children.ByBit = target
                             return newData
                         })
                     },
                     children: [
                         {
-                            link: "/Spot",
+                            link: "Configs/ByBit/V1/Spot",
                             name: "V1",
-                            icon: <ShoppingCartIcon className={styles.icon} />
                         },
                         {
-                            link: "/ConfigV3",
+                            link: "Configs/ByBit/V3/Config",
                             name: "V3",
-                            icon: <LocalMallIcon className={styles.icon} />
                         },
                     ]
                 },
                 {
-                    link: "OKX",
+                    link: "Configs/OKX",
                     name: "OKX",
-                    icon: <ShoppingCartIcon className={styles.icon} />,
-                    open: openAll.config.children.OKX,
-                    openFunc: () => {
+                    icon: <ViewInArIcon className={styles.icon} />,
+                    open: openAll.Config.children.OKX,
+                    openFunc: (target) => {
                         setOpenAll(data => {
                             const newData = { ...data }
-                            newData.config.children.OKX = !newData.config.children.OKX
+                            newData.Config.children.OKX = target
                             return newData
                         })
                     },
                     children: [
                         {
-                            link: "/Spot",
+                            link: "Configs/OKX/V1/Spot",
                             name: "V1",
-                            icon: <ShoppingCartIcon className={styles.icon} />
                         },
                         {
-                            link: "/ConfigV3",
+                            link: "Configs/OKX/V3/Config",
                             name: "V3",
-                            icon: <LocalMallIcon className={styles.icon} />
                         },
                     ]
                 },
@@ -131,36 +129,74 @@ function SideBar({
         },
 
         {
+            link: "Positions",
             name: "Positions",
             icon: <ControlCameraIcon className={styles.icon} />,
-            open: openAll.position.state,
+            open: openAll.Position.open,
             openFunc: () => {
                 setOpenAll(data => {
                     const newData = { ...data }
-                    newData.position.state = !newData.position.state
+                    newData.Position.open = !newData.Position.open
                     return newData
                 })
             },
             children: [
                 {
-                    link: "/PositionV1",
-                    name: "V1",
-                    icon: <RadarIcon className={styles.icon} />
+                    link: "Positions/ByBit",
+                    name: "ByBit",
+                    icon: <RadarIcon className={styles.icon} />,
+                    open: openAll.Position.children.ByBit,
+                    openFunc: (target) => {
+                        setOpenAll(data => {
+                            const newData = { ...data }
+                            newData.Position.children.ByBit = target
+                            return newData
+                        })
+                    },
+                    children: [
+                        {
+                            link: "Positions/ByBit/V1",
+                            name: "V1",
+                        },
+                        {
+                            link: "Positions/ByBit/V3",
+                            name: "V3",
+                        },
+                    ]
                 },
                 {
-                    link: "/PositionV3",
-                    name: "V3",
-                    icon: <ViewInArIcon className={styles.icon} />
+                    link: "Positions/OKX",
+                    name: "OKX",
+                    icon: <ViewInArIcon className={styles.icon} />,
+                    open: openAll.Position.children.OKX,
+                    openFunc: (target) => {
+                        setOpenAll(data => {
+                            const newData = { ...data }
+                            newData.Position.children.OKX = target
+                            return newData
+                        })
+                    },
+                    children: [
+                        {
+                            link: "Positions/OKX/V1",
+                            name: "V1",
+                        },
+                        {
+                            link: "Positions/OKX/V3",
+                            name: "V3",
+                        },
+                    ]
                 },
+
             ]
         },
         {
-            link: "/Coin",
+            link: "Coin",
             name: "Coin",
             icon: <CurrencyExchangeIcon className={styles.icon} />
         },
         {
-            link: "/InstrumentsInfo",
+            link: "InstrumentsInfo",
             name: "InstrumentsInfo",
             icon: <PaymentsIcon className={styles.icon} />
         },
@@ -171,57 +207,12 @@ function SideBar({
         // },
     ]
 
+    const location = useLocation()
 
-    const renderRouterHasChildren = (item) => {
-        return <div key={item.link}>
-            <div
-                className={styles.sidebarItem}
-                onClick={item.openFunc}
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                }}
-            >
-                <div style={{
-                    display: "flex",
-                    alignItems: "center"
-                }}>
-                    {item.icon}
-                    <p className={styles.sidebarItemName}>{item.name}</p>
-                </div>
-                {item.open ? <ExpandLess /> : <ExpandMore />}
-            </div>
-            <Collapse in={item.open} timeout="auto" unmountOnExit>
-                <div style={{ paddingLeft: "16px" }}>
-                    {item.children.map(child => {
-                        if (roleList.includes(`${child?.link?.replace("/", "")}`)) {
-
-                            if (child.children?.length) {
-                                return renderRouterHasChildren(child)
-                            }
-                            else {
-                                if (roleList.includes(`${child.link.replace("/", "")}`)) {
-                                    return <div key={child.link}>
-                                        {
-                                            roleList.includes(child.link.replace("/", "")) && <NavLink
-                                                className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
-                                                to={child.link}
-                                            >
-                                                {child.icon}
-                                                <p className={styles.sidebarItemName}>{child.name}</p>
-                                            </NavLink>
-                                        }
-                                    </div>
-                                }
-                            }
-                        }
-                    })}
-                </div>
-            </Collapse>
-        </div>
+    const checkRoleList = link=>{
+        return roleList?.includes(link)
     }
-
+    
     return (
         <div
             className={styles.sidebar}
@@ -244,13 +235,106 @@ function SideBar({
             </NavLink>
             {
                 linkList.map(item => {
-                    if (item.children?.length) {
-                        return renderRouterHasChildren(item)
+                    if (item.children?.length && checkRoleList(item.link)) {
+                        return <div key={item.link} >
+                            <div
+                                className={clsx(styles.sidebarItem,location.pathname.includes(item.link) && styles.active)}
+                                onClick={item.openFunc}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
+                                }}
+                            >
+                                <div style={{
+                                    display: "flex",
+                                    alignItems: "center"
+                                }}>
+                                    {item.icon}
+                                    <p className={styles.sidebarItemName}>{item.name}</p>
+                                </div>
+                                {item.open ? <ExpandLess /> : <ExpandMore />}
+                            </div>
+                            <Collapse in={item.open} timeout="auto" unmountOnExit>
+                                <div style={{ paddingLeft: "16px" }}>
+                                    {item.children.map(child => {
+                                        if (roleList.includes(`${child.link}`)) {
+
+                                            if (child.children?.length && checkRoleList(child.link)) {
+                                                return <>
+                                                    <div
+                                                       className={clsx(styles.sidebarItem,location.pathname.includes(child.link) && styles.active)}
+                                                        onClick={e => {
+                                                            child.openFunc(e.currentTarget)
+                                                        }}
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "space-between"
+                                                        }}
+                                                    >
+                                                        <div style={{
+                                                            display: "flex",
+                                                            alignItems: "center"
+                                                        }}>
+                                                            {child.icon}
+                                                            <p className={styles.sidebarItemName}>{child.name}</p>
+                                                        </div>
+                                                        <KeyboardArrowRightIcon />
+                                                    </div>
+                                                    <Popover
+                                                        open={child.open}
+                                                        anchorEl={child.open}
+                                                        onClose={() => {
+                                                            child.openFunc("")
+                                                        }}
+                                                        anchorOrigin={{
+                                                            vertical: 'top',
+                                                            horizontal: 'right',
+                                                        }}
+                                                        sx={{
+                                                            ".MuiPopover-paper": {
+                                                                boxShadow: "0 5px 25px 0 #60606033"
+                                                            }
+                                                        }}
+                                                    >
+                                                        {child.children.map(childItem => (
+                                                            checkRoleList(childItem.link) && <NavLink
+                                                                className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
+                                                                to={childItem.link}
+                                                                style={{ margin: 0 }}
+                                                            >
+                                                                {childItem.name}
+                                                            </NavLink>
+                                                        ))}
+                                                    </Popover>
+                                                </>
+                                            }
+                                            else {
+                                                if (checkRoleList(child.link)) {
+                                                    return <div key={child.link}>
+                                                        {
+                                                            roleList.includes(child.link) && <NavLink
+                                                                className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
+                                                                to={child.link}
+                                                            >
+                                                                {child.icon}
+                                                                <p className={styles.sidebarItemName}>{child.name}</p>
+                                                            </NavLink>
+                                                        }
+                                                    </div>
+                                                }
+                                            }
+                                        }
+                                    })}
+                                </div>
+                            </Collapse>
+                        </div>
                     }
                     else {
                         return <div key={item.link}>
                             {
-                                roleList.includes(item.link.replace("/", "")) && <NavLink
+                                checkRoleList(item.link) && <NavLink
                                     className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
                                     to={item.link}
                                 >

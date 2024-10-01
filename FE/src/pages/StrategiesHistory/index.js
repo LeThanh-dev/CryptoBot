@@ -287,7 +287,7 @@ function StrategiesHistory() {
 
     useEffect(() => {
         if (openCreateStrategy.dataChange || openEditTreeItemMultipleDialog.dataChange) {
-            navigate("/ConfigV3")
+            navigate("/Configs/ByBit/V3/Config")
         }
     }, [openCreateStrategy.dataChange, openEditTreeItemMultipleDialog.dataChange]);
 
@@ -600,7 +600,7 @@ function StrategiesHistory() {
                                                 className={styles.icon}
                                                 onClick={() => {
                                                     setOpenListStrategiesHistory(false)
-                                                    navigate("/ConfigV3History", {
+                                                    navigate("/Configs/ByBit/V3/ConfigHistory", {
                                                         state: {
                                                             data: data.data,
                                                             timeCreated: data.timeCreated

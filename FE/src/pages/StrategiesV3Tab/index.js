@@ -17,17 +17,17 @@ function StrategiesV3Tab() {
     const tabList = [
         {
             label: "Config",
-            value: "ConfigV3",
+            value: "Configs/ByBit/V3/Config",
         },
         {
             label: "Scanner",
-            value: "ScannerV3",
+            value: "Configs/ByBit/V3/Scanner",
         }
     ]
-    return (
-        <div>
 
-            <Tabs value={location.pathname.split("/")[1]} onChange={handleChangeTab}>
+    
+    return (
+            <Tabs value={location.pathname?.replace("/","")} onChange={handleChangeTab}>
                 {
                     tabList.map(item => {
                         const value = item.value
@@ -37,7 +37,6 @@ function StrategiesV3Tab() {
                     })
                 }
             </Tabs>
-        </div>
     );
 }
 

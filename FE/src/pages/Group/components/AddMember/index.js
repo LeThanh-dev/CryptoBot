@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAllUserByUserIDList, getAllUserLowerGroup, getAllUserWithoutGroup } from "../../../../services/userService";
+import { getAllUserByUserIDList, getAllUserWithoutGroup } from "../../../../services/userService";
 import DialogCustom from "../../../../components/DialogCustom";
 import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import styles from "./AddMember.module.scss"

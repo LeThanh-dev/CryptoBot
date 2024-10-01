@@ -11,6 +11,7 @@ router.get('/getAllBotActiveByUserID/:id', MiddlewareController.verifyToken, Bot
 router.get('/getAllBotOnlyApiKeyByUserID/:id', MiddlewareController.verifyToken, BotController.getAllBotOnlyApiKeyByUserID);
 router.get('/getAllBotBySameGroup/:id', MiddlewareController.verifyToken, BotController.getAllBotBySameGroup);
 router.get('/:id', MiddlewareController.verifyToken, BotController.getByID);
+router.post('/getAllBotByGroupCreatedByUserID', MiddlewareController.verifyToken, BotController.getAllBotByGroupCreatedByUserID);
 
 router.post('/', MiddlewareController.verifyToken, BotController.createBot);
 router.put('/:id', MiddlewareController.verifyToken, BotController.updateBot);

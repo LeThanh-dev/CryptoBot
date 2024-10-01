@@ -13,10 +13,7 @@
     box-shadow: 0px 0px 20px rgba(1, 41, 112, 0.1);
     background-color: #fff;
 
-    .active {
-        color: var(--blueLightColor);
-        background: #f6f9ff;
-    }
+   
 
     &Item {
         display: flex;
@@ -45,4 +42,8 @@
             opacity: .8;
         }
     }
+}
+.active {
+    color: var(--blueLightColor);
+    background: #f6f9ff;
 }

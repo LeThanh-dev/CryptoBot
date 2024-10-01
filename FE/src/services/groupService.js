@@ -4,6 +4,9 @@ export const getAllGroup = async () => {
     return await api.get("/group/getAll")
 }
 
+export const getGroupByUserIDCreated = async (userID) => {
+    return await api.get(`/group/getGroupByUserIDCreated/${userID}`)
+}
 export const getGroupByID = async (groupID) => {
     return await api.get(`/group/getGroupByID/${groupID}`)
 }

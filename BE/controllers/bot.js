@@ -1,5 +1,6 @@
 // const { ObjectId } = require('mongodb');
 const BotModel = require('../models/bot.model');
+const GroupModel = require('../models/group.model');
 const UserModel = require('../models/user.model');
 const StrategiesModel = require('../models/strategies.model');
 const SpotModel = require('../models/spot.model');
@@ -302,15 +303,30 @@ const BotController = {
             res.status(500).json({ message: err.message });
         }
     },
+    getAllBotByGroupCreatedByUserID: async (req, res) => {
+        try {
+            const userID = req.user._id;
+
+            const resultGetAllGroup = await GroupModel.find({ userID })
+
+            const userIDList = resultGetAllGroup.flatMap((group) => group.member.map((member => member.userID)))
+
+            const data = await BotModel.find({ userID: { $in: [...userIDList, userID] } }).sort({ Created: -1 }).populate("userID", "userName roleName");
+
+            res.customResponse(res.statusCode, "Get All Bot Successful", data);
+
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
     getAllBotBySameGroup: async (req, res) => {
         try {
             const groupID = req.params.id;
 
             const resultGetAllUsersID = await UserModel.find({ groupID }, { telegramToken: 0 }).select('_id');
 
-            // ref: .populate({ path: "coinID", models: "Coin" })
             const data = await BotModel.find({ userID: { $in: resultGetAllUsersID } }).sort({ Created: -1 }).populate("userID", "userName roleName");
-            res.customResponse(res.statusCode, "Get All Bot Successful", data);
+            res.customResponse(200, "Get All Bot Successful", data);
 
         } catch (err) {
             res.status(500).json({ message: err.message });
@@ -320,7 +336,7 @@ const BotController = {
         try {
             const botID = req.params.id;
             const data = await BotModel.findById(botID).sort({ Created: -1 });
-            res.customResponse(res.statusCode, "Get Bot By ID Successful", data);
+            res.customResponse(200, "Get Bot By ID Successful", data);
 
         } catch (err) {
             res.status(500).json({ message: err.message });
@@ -339,7 +355,7 @@ const BotController = {
 
             const savedBot = await newBot.save();
 
-            res.customResponse(res.statusCode, "Add New Bot Successful", savedBot);
+            res.customResponse(200, "Add New Bot Successful", savedBot);
 
         } catch (error) {
             // Xử lý lỗi nếu có
@@ -787,6 +803,7 @@ const BotController = {
             const data = await BotModel.find(
                 {
                     Status: "Running",
+                    botType: "ByBitV3",
                     ApiKey: { $exists: true, $ne: null },
                     SecretKey: { $exists: true, $ne: null }
                 }

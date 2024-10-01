@@ -10,8 +10,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';
 import DialogCustom from '../../components/DialogCustom';
 import AddGroup from './components/AddGroup';
-import { deleteMultipleGroup, getAllGroup, getGroupByID } from '../../services/groupService';
-import { deleteUser, getAllUserByGroupID, updateUser } from '../../services/userService';
+import { deleteMultipleGroup, getAllGroup, getGroupByID, getGroupByUserIDCreated } from '../../services/groupService';
+import { deleteUser, getAllUser, getAllUserByGroupID, updateUser } from '../../services/userService';
 import clsx from 'clsx';
 import EditUser from './components/EditUser';
 
@@ -50,7 +50,7 @@ function Group() {
     const [openDeleteUser, setOpenDeleteUser] = useState(false);
     const [groupSelected, setGroupSelected] = useState("");
     const [userList, setUserList] = useState([]);
-
+    const userListDefault = useRef([])
     const dispatch = useDispatch()
 
     const tableColumns = [
@@ -163,10 +163,17 @@ function Group() {
         return []
     }, [userList])
 
-    const handleGetUserByGroup = async (groupSelectedInput) => {
+    const handleGetUserByGroup = async (groupListInput) => {
         try {
 
-            const res = await getAllUserByGroupID(groupSelectedInput ? groupSelectedInput : groupSelected)
+            let res
+            if (userData?.roleName != "SuperAdmin") {
+
+                res = await getAllUserByGroupID(groupListInput ? groupListInput : [groupSelected])
+            }
+            else {
+                res = await getAllUser()
+            }
             const { status, data: resData } = res.data
             if (status === 200) {
                 const newData = resData?.map(item => (
@@ -176,6 +183,7 @@ function Group() {
                         id: item._id,
                     }
                 ))
+                userListDefault.current = newData
                 setUserList(newData)
             }
         } catch (error) {
@@ -190,8 +198,12 @@ function Group() {
         try {
             let res
             let checkUserGroup = true
-            if (checkAdminTrue) {
+            const roleName = userData?.roleName
+            if (roleName === "SuperAdmin") {
                 res = await getAllGroup()
+            }
+            else if (roleName === "Admin") {
+                res = await getGroupByUserIDCreated(userData._id)
             }
             else {
                 const groupIDUser = userData?.groupID
@@ -205,7 +217,6 @@ function Group() {
 
             if (checkUserGroup) {
                 const { status, data: resData } = res.data
-
                 const newResData = checkAdminTrue ? resData : [resData]
                 if (status === 200) {
                     const newData = newResData?.map(item => (
@@ -214,25 +225,24 @@ function Group() {
                             value: item._id,
                         }
                     ))
-                    if (checkAdminTrue) {
-                        newData.unshift({
-                            name: "All",
-                            value: "All",
-                        })
-                    }
+
+                    newData.unshift({
+                        name: "All",
+                        value: "All",
+                    })
                     setGroupSelected(newData[0].value)
                     setGroupList(newData)
-                    handleGetUserByGroup(newData[0].value)
+                    handleGetUserByGroup(newData.slice(1).map(item => item.value))
                 }
             }
-            else {
-                setUserList([
-                    {
-                        ...userData,
-                        id: userData._id
-                    }
-                ])
-            }
+            // else {
+            //     setUserList([
+            //         {
+            //             ...userData,
+            //             id: userData._id
+            //         }
+            //     ])
+            // }
         } catch (error) {
             dispatch(addMessageToast({
                 status: 500,
@@ -316,11 +326,19 @@ function Group() {
     const handleChangeGroup = (e) => {
         const value = e.target.value
         setGroupSelected(value)
-        handleGetUserByGroup(value)
+        setUserList(userList => {
+            if (value == "All") {
+                return userListDefault.current
+            }
+            else {
+                return userListDefault.current.filter(item => item.groupID?._id == value)
+            }
+        })
+
     }
 
     useEffect(() => {
-        userData.userName &&  handleGetAllGroup()
+        userData.userName && handleGetAllGroup()
     }, [userData.userName]);
 
     useEffect(() => {

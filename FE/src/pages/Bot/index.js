@@ -6,7 +6,7 @@ import { useState, memo, useEffect, useRef } from "react";
 import AddBreadcrumbs from "../../components/BreadcrumbsCutom";
 import DataGridCustom from "../../components/DataGridCustom";
 import AddBot from "./components/AddBot";
-import { deleteBot, getAllBot, getAllBotBySameGroup, getAllBotByUserID, setMargin, updateBot } from "../../services/botService";
+import { deleteBot, getAllBot, getAllBotByGroupCreatedByUserID, getAllBotBySameGroup, getAllBotByUserID, setMargin, updateBot } from "../../services/botService";
 import styles from "./Bot.module.scss"
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';
@@ -131,7 +131,7 @@ function Bot() {
             flex: window.innerWidth <= 740 ? undefined : 1,
             renderCell: e => {
                 return (
-                    <Link to={`Detail/${e.id}`} style={{
+                    <Link to={`${e.id}`} style={{
                         color: "var(--blueLightColor)",
                         textDecoration: "none"
                     }
@@ -352,8 +352,12 @@ function Bot() {
     const handleGetAllBot = async () => {
         try {
             let res
-            if (roleName === "Admin" || roleName === "SuperAdmin") {
+            if (  roleName === "SuperAdmin") {
                 res = await getAllBot()
+            }
+            else if(roleName === "Admin")
+            {
+                res = await getAllBotByGroupCreatedByUserID()
             }
             else if (roleName === "ManagerTrader" && userData.groupID) {
                 res = await getAllBotBySameGroup(userData.groupID)

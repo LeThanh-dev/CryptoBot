@@ -21,6 +21,7 @@ import StrategiesHistory from "../pages/StrategiesHistory"
 import InstrumentsInfo from "../pages/InstrumentsInfo"
 import StrategiesV3Tab from "../pages/StrategiesV3Tab"
 import ScannerV3 from "../pages/StrategiesV3Tab/tabComponents/ScannerV3"
+import { Outlet } from "react-router-dom"
 
 
 const routeList = [
@@ -49,54 +50,205 @@ const routeList = [
                 element: <BotType />,
             },
             {
-                path: "Bots/Detail/:botID",
-                element: <BotDetail />,
+                path: "Bots",
+                element: <>
+                    <Outlet />
+                </>,
+                children: [
+                    {
+                        path: ":botID",
+                        element: <BotDetail />,
+                    }
+                ]
             },
             {
-                path: "ConfigV3",
-                element:
-                    <>
-                        <StrategiesV3Tab />
-                        <Strategies />
-                    </>,
-            },
-            {
-                path: "ScannerV3",
-                element:
-                    <>
-                        <StrategiesV3Tab />
-                        <ScannerV3 />
-                    </>,
-            },
-            {
-                path: "ConfigV3History",
-                element: <StrategiesHistory />,
+                path: "Configs",
+                element: <>
+                    <Outlet />
+                </>,
+                children: [
+                    {
+                        path: "ByBit",
+                        element: <>
+                            <Outlet />
+                        </>,
+                        children: [
+                            {
+                                path: "V3",
+                                element: <>
+                                    <Outlet />
+                                </>,
+                                children: [
+                                    {
+                                        path: "Config",
+                                        element:
+                                            <>
+                                                <StrategiesV3Tab />
+                                                <Strategies />
+                                            </>,
+                                    },
+                                    {
+                                        path: "Scanner",
+                                        element:
+                                            <>
+                                                <StrategiesV3Tab />
+                                                <ScannerV3 />
+                                            </>,
+                                    },
+                                    {
+                                        path: "ConfigHistory",
+                                        element: <StrategiesHistory />,
+                                    },
+                                ]
+                            },
+                            {
+                                path: "V1",
+                                element: <>
+                                    <Outlet />
+                                </>,
+                                children: [
+                                    {
+                                        path: "Spot",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Spot />
+                                            </>
+                                    },
+                                    {
+                                        path: "Margin",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Margin />
+                                            </>
+                                    },
+                                    {
+                                        path: "Scanner",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Scanner />
+                                            </>
+                                    },
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        path: "OKX",
+                        element: <>
+                            <Outlet />
+                        </>,
+                        children: [
+                            {
+                                path: "V3",
+                                element: <>
+                                    <Outlet />
+                                </>,
+                                children: [
+                                    {
+                                        path: "Config",
+                                        element:
+                                            <>
+                                                <StrategiesV3Tab />
+                                                <Strategies />
+                                            </>,
+                                    },
+                                    {
+                                        path: "Scanner",
+                                        element:
+                                            <>
+                                                <StrategiesV3Tab />
+                                                <ScannerV3 />
+                                            </>,
+                                    },
+                                    {
+                                        path: "ConfigHistory",
+                                        element: <StrategiesHistory />,
+                                    },
+                                ]
+                            },
+                            {
+                                path: "V1",
+                                element: <>
+                                    <Outlet />
+                                </>,
+                                children: [
+                                    {
+                                        path: "Spot",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Spot />
+                                            </>
+                                    },
+                                    {
+                                        path: "Margin",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Margin />
+                                            </>
+                                    },
+                                    {
+                                        path: "Scanner",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Scanner />
+                                            </>
+                                    },
+                                ]
+                            }
+                        ]
+                    },
+
+                ]
             },
 
             {
-                path: "Spot",
-                element:
-                    <>
-                        <StrategiesMargin />
-                        <Spot />
-                    </>
+                path: "Positions",
+                element: <>
+                    <Outlet />
+                </>,
+                children: [
+                    {
+                        path: "ByBit",
+                        element: <>
+                            <Outlet />
+                        </>,
+                        children: [
+                            {
+                                path: "V3",
+                                element:<PositionV3/>
+                            },
+                            {
+                                path: "V1",
+                                element:<PositionV1/>
+                            },
+                        ]
+                    },
+                    {
+                        path: "OKX",
+                        element: <>
+                            <Outlet />
+                        </>,
+                        children: [
+                            {
+                                path: "V3",
+                                element:<PositionV3/>
+                            },
+                            {
+                                path: "V1",
+                                element:<PositionV1/>
+                            },
+                        ]
+                    },
+
+                ]
             },
-            {
-                path: "Margin",
-                element:
-                    <>
-                        <StrategiesMargin />
-                        <Margin />
-                    </>
-            },
-            {
-                path: "Scanner",
-                element:
-                    <>
-                        <StrategiesMargin />
-                        <Scanner />
-                    </>
-            },
+
             {
                 path: "InstrumentsInfo",
                 element: <InstrumentsInfo />,
@@ -104,14 +256,6 @@ const routeList = [
             {
                 path: "Coin",
                 element: <Coin />,
-            },
-            {
-                path: "PositionV1",
-                element: <PositionV1 />,
-            },
-            {
-                path: "PositionV3",
-                element: <PositionV3 />,
             },
             {
                 path: "Order",

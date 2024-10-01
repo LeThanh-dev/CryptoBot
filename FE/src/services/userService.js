@@ -13,11 +13,11 @@ export const getAllUserWithoutGroup = async () => {
 export const getUserByID = async (roleName) => {
   return await api.get(`/user/getUserByID/${roleName}`)
 }
-export const getAllUserByGroupID = async (groupID) => {
-  return await api.get(`/user/getAllUserByGroupID/${groupID}`)
+export const getAllUserByGroupID = async (groupIDList) => {
+  return await api.post(`/user/getAllUserByGroupID`, groupIDList)
 }
-export const getAllUserByRoleName = async ({roleName,groupID}) => {
-  return await api.post(`/user/getAllUserByRoleName`, { roleName,groupID })
+export const getAllUserByRoleName = async ({ roleName, groupID }) => {
+  return await api.post(`/user/getAllUserByRoleName`, { roleName, groupID })
 }
 
 export const getAllUserByUserIDList = async (list) => {
