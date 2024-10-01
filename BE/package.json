@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "archiver": "^7.0.1",
+    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "big.js": "^6.2.1",
     "bybit-api": "^3.10.3",
