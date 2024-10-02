@@ -2071,9 +2071,14 @@ const tinhOC = (symbol, dataAll = []) => {
 
         listScannerObject && Object.values(listScannerObject)?.length > 0 && Promise.allSettled(Object.values(listScannerObject).map(async scannerData => {
 
-            // if (scannerData.OrderConfig) {
-            //     console.log("TRUE", symbol);
-            // }
+            scannerData.OrderChange = Math.abs(scannerData.OrderChange)
+            scannerData.Elastic = Math.abs(scannerData.Elastic)
+            scannerData.Turnover = Math.abs(scannerData.Turnover)
+            scannerData.Numbs = Math.abs(scannerData.Numbs)
+            scannerData.Amount = Math.abs(scannerData.Amount)
+            scannerData.Limit = Math.abs(scannerData.Limit)
+            scannerData.Expire = Math.abs(scannerData.Expire)
+
             const PositionSide = scannerData.PositionSide
             const OrderChange = Math.abs(scannerData.OrderChange)
             const Elastic = Math.abs(scannerData.Elastic)
@@ -2312,6 +2317,14 @@ try {
 
                 // console.log("strategy.Amount", strategy.Amount);
                 // console.log("strategy.OrderChange", strategy.OrderChange);
+
+                strategy.Amount = Math.abs(strategy.Amount)
+                strategy.OrderChange = Math.abs(strategy.OrderChange)
+                strategy.AmountAutoPercent = Math.abs(strategy.AmountAutoPercent)
+                strategy.AmountExpire = Math.abs(strategy.AmountExpire)
+                strategy.AmountIncreaseOC = Math.abs(strategy.AmountIncreaseOC)
+                strategy.Limit = Math.abs(strategy.Limit)
+                strategy.Expire = Math.abs(strategy.Expire)
 
                 const strategyID = strategy.value
 

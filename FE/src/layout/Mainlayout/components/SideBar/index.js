@@ -209,10 +209,10 @@ function SideBar({
 
     const location = useLocation()
 
-    const checkRoleList = link=>{
+    const checkRoleList = link => {
         return roleList?.includes(link)
     }
-    
+
     return (
         <div
             className={styles.sidebar}
@@ -238,7 +238,7 @@ function SideBar({
                     if (item.children?.length && checkRoleList(item.link)) {
                         return <div key={item.link} >
                             <div
-                                className={clsx(styles.sidebarItem,location.pathname.includes(item.link) && styles.active)}
+                                className={clsx(styles.sidebarItem, location.pathname.includes(item.link) && styles.active)}
                                 onClick={item.openFunc}
                                 style={{
                                     display: "flex",
@@ -263,7 +263,7 @@ function SideBar({
                                             if (child.children?.length && checkRoleList(child.link)) {
                                                 return <>
                                                     <div
-                                                       className={clsx(styles.sidebarItem,location.pathname.includes(child.link) && styles.active)}
+                                                        className={clsx(styles.sidebarItem, location.pathname.includes(child.link) && styles.active)}
                                                         onClick={e => {
                                                             child.openFunc(e.currentTarget)
                                                         }}
@@ -303,6 +303,9 @@ function SideBar({
                                                                 className={({ isActive }) => clsx(styles.sidebarItem, isActive ? styles.active : undefined)}
                                                                 to={childItem.link}
                                                                 style={{ margin: 0 }}
+                                                                onClick={() => {
+                                                                    child.openFunc("")
+                                                                }}
                                                             >
                                                                 {childItem.name}
                                                             </NavLink>

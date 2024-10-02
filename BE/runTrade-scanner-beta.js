@@ -1145,11 +1145,11 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
                                                 // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
-                                                
+
                                                 const qty = +dataMain.qty;
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
-                                                
-                                                
+
+
                                                 if (missTPDataBySymbol[botSymbolMissID]?.sizeTotal - missTPDataBySymbol[botSymbolMissID].size > 0) {
                                                     missTPDataBySymbol[botSymbolMissID].gongLai = true
                                                     updatePositionBE({
@@ -1553,9 +1553,11 @@ const handleSocketAddNew = async (newData = []) => {
 
     await handleSocketBotApiList(newBotApiList)
 }
-const handleSocketUpdate = async (newData = []) => {
+const handleSocketUpdate = async (newData = [], showLog = true) => {
 
-    console.log("[...] Update Strategies From Realtime", newData.length);
+    if (showLog) {
+        console.log("[...] Update Strategies From Realtime", newData.length);
+    }
 
     const newBotApiList = {}
 
@@ -1973,6 +1975,14 @@ const handleScannerDataList = async ({
     allScannerData && Object.values(allScannerData)?.length > 0 && await Promise.allSettled(Object.values(allScannerData).map(async scannerData => {
         try {
 
+            scannerData.OCLength = Math.abs(scannerData.OCLength)
+            scannerData.OrderChange = Math.abs(scannerData.OrderChange)
+            scannerData.Adjust = Math.abs(scannerData.Adjust)
+            scannerData.Amount = Math.abs(scannerData.Amount)
+            scannerData.Expire = Math.abs(scannerData.Expire)
+            scannerData.Limit = Math.abs(scannerData.Limit)
+            scannerData.Turnover = Math.abs(scannerData.Turnover)
+
             const scannerID = scannerData._id
             const botData = scannerData.botID
             const botID = botData._id
@@ -2080,7 +2090,7 @@ const handleScannerDataList = async ({
 
                         if (OCAvg >= Math.abs(scannerData.OrderChange)) {
 
-                            const newOC = (OCAvg * Adjust).toFixed(3)
+                            const newOC = Math.abs((OCAvg * Adjust).toFixed(3))
                             const OCAdjust = `${OCAvg} x ${Adjust}`
 
                             const listConfigIDByScannerData = listConfigIDByScanner[scannerID]?.[symbol]
@@ -2093,15 +2103,14 @@ const handleScannerDataList = async ({
                                     symbol,
                                     PositionSide,
                                     OCAdjust,
-                                    newOC
                                 })
 
                                 if (res.success) {
-                                    console.log(changeColorConsole.cyanBright("\n", res.message));
+                                    // console.log(changeColorConsole.cyanBright("\n", res.message));
                                     await handleSocketUpdate(listConfigIDByScannerData.map(item => {
                                         item.OrderChange = newOC
                                         return item
-                                    }))
+                                    }), false)
                                 }
                             } else {
                                 const res = await createStrategiesMultipleStrategyBE({
@@ -2361,6 +2370,16 @@ try {
                 const botID = strategy.botID._id
 
                 if (checkConditionBot(strategy) && botApiList[botID]?.IsActive) {
+
+                    strategy.Amount = Math.abs(strategy.Amount)
+                    strategy.OrderChange = Math.abs(strategy.OrderChange)
+                    strategy.TakeProfit = Math.abs(strategy.TakeProfit)
+                    strategy.ReduceTakeProfit = Math.abs(strategy.ReduceTakeProfit)
+                    strategy.ExtendedOCPercent = Math.abs(strategy.ExtendedOCPercent)
+                    strategy.Ignore = Math.abs(strategy.Ignore)
+                    strategy.EntryTrailing = Math.abs(strategy.EntryTrailing)
+                    strategy.StopLose = Math.abs(strategy.StopLose)
+
                     const strategyID = strategy.value
 
                     strategy.digit = digitAllCoinObject[strategy.symbol]
@@ -2506,7 +2525,7 @@ try {
 
                                 }
 
-                                if (conditionPre && price2P <= newOC && newOC <= MaxOC) {
+                                if (conditionPre && Math.abs(price2P) <= newOC && newOC <= Math.abs(MaxOC)) {
 
                                     const dataInput = {
                                         strategy,
@@ -2527,10 +2546,10 @@ try {
 
 
                                     if (side === "Buy") {
-                                        (+conditionOrder) >= coinCurrent && (coinOpen - coinCurrent) > 0 && handleSubmitOrder(dataInput);
+                                        (+conditionOrder) >= coinCurrent && coinOpen > coinCurrent && handleSubmitOrder(dataInput);
                                     }
                                     else {
-                                        (+conditionOrder) <= coinCurrent && (coinOpen - coinCurrent) < 0 && handleSubmitOrder(dataInput);
+                                        (+conditionOrder) <= coinCurrent && coinOpen < coinCurrent && handleSubmitOrder(dataInput);
                                     }
                                 }
 
@@ -3330,56 +3349,56 @@ socketRealtime.on('bot-delete', async (data) => {
 
     await Promise.allSettled(configData.map(async (strategiesData) => {
 
-            const ApiKey = strategiesData.botID.ApiKey
-            const SecretKey = strategiesData.botID.SecretKey
+        const ApiKey = strategiesData.botID.ApiKey
+        const SecretKey = strategiesData.botID.SecretKey
 
-            const symbol = strategiesData.symbol
-            const strategyID = strategiesData.value
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
+        const symbol = strategiesData.symbol
+        const strategyID = strategiesData.value
+        const botID = strategiesData.botID._id
+        const botName = strategiesData.botID.botName
 
-            const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
-            const CandlestickMain = strategiesData.Candlestick
-            const Candlestick = strategiesData.Candlestick.split("m")[0]
+        const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
+        const CandlestickMain = strategiesData.Candlestick
+        const Candlestick = strategiesData.Candlestick.split("m")[0]
 
-            const cancelDataObject = {
-                ApiKey,
-                SecretKey,
-                strategyID,
-                symbol: symbol,
-                candle: CandlestickMain,
-                side,
-                botName,
-                botID
-            }
+        const cancelDataObject = {
+            ApiKey,
+            SecretKey,
+            strategyID,
+            symbol: symbol,
+            candle: CandlestickMain,
+            side,
+            botName,
+            botID
+        }
 
-            !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
-            !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
-            !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
-                listOC: {},
-                ApiKey,
-                SecretKey,
-            });
-            allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
-                strategyID,
-                candle: CandlestickMain,
-                symbol,
-                side,
-                botName,
-                botID,
-                orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
-            })
+        !listOrderOC[CandlestickMain] && (listOrderOC[CandlestickMain] = {});
+        !listOrderOC[CandlestickMain][botID] && (listOrderOC[CandlestickMain][botID] = {});
+        !listOrderOC[CandlestickMain][botID].listOC && (listOrderOC[CandlestickMain][botID] = {
+            listOC: {},
+            ApiKey,
+            SecretKey,
+        });
+        allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId && (listOrderOC[CandlestickMain][botID].listOC[strategyID] = {
+            strategyID,
+            candle: CandlestickMain,
+            symbol,
+            side,
+            botName,
+            botID,
+            orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
+        })
 
-            allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
-                ...cancelDataObject,
-                orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
-                gongLai: true
-            })
+        allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID && listOrderTP.push({
+            ...cancelDataObject,
+            orderId: allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]?.TP?.orderID,
+            gongLai: true
+        })
 
 
-            delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
-            delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
-            
+        delete allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
+        delete allStrategiesByCandleAndSymbol[symbol]?.[Candlestick]?.[strategyID]
+
     }))
 
     scannerData.forEach(scannerItem => {
@@ -3639,23 +3658,23 @@ socketRealtime.on('scanner-update', async (newData = []) => {
 
         const setOnlyPairs = new Set(scannerData.OnlyPairs)
         const setBlacklist = new Set(scannerData.Blacklist)
-            Object.values(allSymbol).forEach(symbolData => {
+        Object.values(allSymbol).forEach(symbolData => {
 
-                const symbol = symbolData.value
-                if (IsActive && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
+            const symbol = symbolData.value
+            if (IsActive && setOnlyPairs.has(symbol) && !setBlacklist.has(symbol)) {
 
-                    allScannerDataObject[candle] = allScannerDataObject[candle] || {}
-                    allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
+                allScannerDataObject[candle] = allScannerDataObject[candle] || {}
+                allScannerDataObject[candle][symbol] = allScannerDataObject[candle][symbol] || {}
 
-                    const newScannerData = { ...scannerData }
-                    newScannerData.ExpirePre = new Date()
+                const newScannerData = { ...scannerData }
+                newScannerData.ExpirePre = new Date()
 
-                    allScannerDataObject[candle][symbol][scannerID] = newScannerData
-                }
-                else {
-                    delete allScannerDataObject[candle]?.[symbol]?.[scannerID]
-                }
-            })
+                allScannerDataObject[candle][symbol][scannerID] = newScannerData
+            }
+            else {
+                delete allScannerDataObject[candle]?.[symbol]?.[scannerID]
+            }
+        })
     })
 
     await handleSocketBotApiList(newBotApiList)

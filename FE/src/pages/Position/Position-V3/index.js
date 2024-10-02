@@ -202,6 +202,7 @@ function PositionV3() {
     });
 
     const positionDataDefault = useRef([])
+    const botListObject = useRef({})
 
     const dispatch = useDispatch()
 
@@ -210,14 +211,17 @@ function PositionV3() {
         getAllBotOnlyApiKeyByUserID(userData._id, "ByBitV3")
             .then(res => {
                 const data = res.data.data;
-                const newData = data?.map(item => (
-                    {
+                const newData = data?.map(item => {
+                    const botID = item?._id
+                    const newData = {
                         name: item?.botName,
-                        value: item?._id,
+                        value: botID,
                         ApiKey: item?.ApiKey,
                         SecretKey: item?.SecretKey,
                     }
-                ))
+                    botListObject.current[botID] = newData
+                    return newData
+                })
                 const newMain = [
                     {
                         name: "All",
@@ -225,6 +229,7 @@ function PositionV3() {
                     },
                     ...newData
                 ]
+
                 setBotList(newMain)
                 handleRefreshData(newMain)
 
@@ -460,7 +465,9 @@ function PositionV3() {
                         }}
                         onSubmit={async () => {
                             setLoading(true)
-                            const res = await closeAllPosition(botList.slice(1))
+                            const botListID = botSelected == "All" ? botList.slice(1) : [botListObject.current[botSelected]]
+
+                            const res = await closeAllPosition(botListID)
                             const { message } = res.data
 
                             dispatch(addMessageToast({

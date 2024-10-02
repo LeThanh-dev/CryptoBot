@@ -152,6 +152,7 @@ function EditUser({
                         error={errors.password?.type === 'required'}
                         type="password"
                         size="small"
+                        placeholder="**********"
                         {...register("password", { required: false, minLength: 5 })}
                     />
                     {errors.password?.type === 'minLength' && <p className="formControlErrorLabel">Minimum length is 5 characters.</p>}
