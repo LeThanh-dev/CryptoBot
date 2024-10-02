@@ -7,8 +7,6 @@ const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 
-console.log(process.env.SOCKET_IP);
-
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, syncSymbolBE, deleteAllScannerBE, deleteAllForUPcode } = require('../../../controllers/dataCoinByBit');
 const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbol } = require('../../../controllers/position');

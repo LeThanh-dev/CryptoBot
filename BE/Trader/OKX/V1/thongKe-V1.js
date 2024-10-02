@@ -1,4 +1,7 @@
-require('dotenv').config();
+require('dotenv').config({
+    path: "../../../.env"
+});
+
 const { exec } = require('child_process');
 
 const TelegramBot = require('node-telegram-bot-api');
@@ -7,7 +10,7 @@ const { WebsocketClient } = require('okx-api');
 var cron = require('node-cron');
 const OKX_API = require('../Doc/api');
 
-const bot = new TelegramBot("6992407921:AAFS2wimsauyuoj1eXJFN_XxRFhs5wWtp7c", {
+const bot = new TelegramBot(process.env.OKX_BOT_TOKEN_THONG_KE, {
     polling: false,
     request: {
         agentOptions: {
@@ -16,9 +19,7 @@ const bot = new TelegramBot("6992407921:AAFS2wimsauyuoj1eXJFN_XxRFhs5wWtp7c", {
     }
 });
 
-const CHANNEL_ID = "-1002178225625"
-const MAX_ORDER_LIMIT = 20
-
+const CHANNEL_ID = process.env.OKX_CHANNEL_ID_THONG_KE
 
 var sendTeleCount = {
     logError: false,
@@ -66,7 +67,6 @@ async function sendMessageWithRetry(messageText, retries = 5) {
     throw new Error('Failed to send message after multiple retries');
 
 }
-
 async function getListSymbol() {
 
     let listSymbol = []
@@ -112,11 +112,11 @@ async function getListSymbol() {
         console.log(`[!] Error get symbol: ${error.message}`);
     }
 
-    // return listSymbol
-    return [{
-        channel: "tickers",
-        instId: "DEGEN-USDT"
-    }]
+    return listSymbol
+    // return [{
+    //     channel: "tickers",
+    //     instId: "DEGEN-USDT"
+    // }]
 }
 
 
@@ -149,7 +149,6 @@ const sendMessageTinhOC = async (messageList) => {
 const tinhOC = (symbol, dataAll = []) => {
 
     // console.log(dataAll, symbol, new Date().toLocaleString());
-
 
     if (dataAll.length > 0) {
 
@@ -226,28 +225,28 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
         const timeOC = new Date(timestamp).toLocaleString()
-        // if (vol >= 5000) {
-        if (OCRound >= .1) {
-            const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
-            messageList.push(ht)
-            console.log(ht);
-            console.log(dataAll);
-        }
+        if (vol >= 5000) {
+            if (OCRound >= 1) {
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
+                messageList.push(ht)
+                console.log(ht);
+                console.log(dataAll);
+            }
 
-        if (OCLongRound <= -.1) {
-            const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
-            messageList.push(htLong)
-            console.log(htLong);
-            console.log(dataAll);
+            if (OCLongRound <= -1) {
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
+                messageList.push(htLong)
+                console.log(htLong);
+                console.log(dataAll);
+            }
         }
-        // }
 
 
 
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                // sendMessageTinhOC(messageList)
+                sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
@@ -268,13 +267,9 @@ let Main = async () => {
     wsSymbol.on('update', (dataCoin) => {
 
         const dataMainAll = dataCoin.data
-        if(dataMainAll.length > 1)
-        {
+        if (dataMainAll.length > 1) {
             console.log("CO 2 gias");
-            
         }
-        
-
         dataMainAll.forEach(dataMain => {
 
             const coinCurrent = +dataMain.last

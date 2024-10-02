@@ -16,7 +16,6 @@ import Spot from "../pages/Configs/ByBit/V1/tabComponents/Spot"
 import Margin from "../pages/Configs/ByBit/V1/tabComponents/Margin"
 import Scanner from "../pages/Configs/ByBit/V1/tabComponents/Scanner"
 import PositionV3 from "../pages/Position/ByBit/V3"
-import InstrumentsInfo from "../pages/InstrumentsInfo"
 import StrategiesV3Tab from "../pages/Configs/ByBit/V3"
 import ScannerV3 from "../pages/Configs/ByBit/V3/tabComponents/Scanner"
 import { Outlet } from "react-router-dom"
@@ -27,6 +26,8 @@ import ConfigV3Tab from "../pages/Configs/OKX/V3"
 import SpotOKX from "../pages/Configs/OKX/V1/tabComponents/Spot"
 import ScannerV1OKX from "../pages/Configs/OKX/V1/tabComponents/Scanner"
 import MarginOKX from "../pages/Configs/OKX/V1/tabComponents/Margin"
+import InstrumentOKXV1 from "../pages/Instruments/OKX/V1"
+import InstrumentsInfo from "../pages/Instruments/ByBit/V1"
 
 
 const routeList = [
@@ -255,9 +256,41 @@ const routeList = [
             },
 
             {
-                path: "InstrumentsInfo",
-                element: <InstrumentsInfo />,
+                path: "Instruments",
+                element: <>
+                    <Outlet />
+                </>,
+                children: [
+                    {
+                        path: "ByBit",
+                        element: <>
+                            <Outlet />
+                        </>,
+                        children: [
+                           
+                            {
+                                path: "V1",
+                                element:<InstrumentsInfo/>
+                            },
+                        ]
+                    },
+                    {
+                        path: "OKX",
+                        element: <>
+                            <Outlet />
+                        </>,
+                        children: [
+                           
+                            {
+                                path: "V1",
+                                element:<InstrumentOKXV1/>
+                            },
+                        ]
+                    },
+
+                ]
             },
+         
             {
                 path: "Coin",
                 element: <Coin />,

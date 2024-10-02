@@ -1,12 +1,12 @@
 import { TextField } from '@mui/material';
 import styles from './CoinContent.module.scss'
 import { useEffect, useRef, useState } from 'react';
-import DataGridCustom from '../../components/DataGridCustom';
 import { useDispatch } from 'react-redux';
-import { addMessageToast } from '../../store/slices/Toast';
-import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../services/instrumentsInfoService';
 import { LoadingButton } from '@mui/lab';
-import AddBreadcrumbs from '../../components/BreadcrumbsCutom';
+import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
+import DataGridCustom from '../../../../components/DataGridCustom';
+import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../../../services/instrumentsInfoService';
+import { addMessageToast } from '../../../../store/slices/Toast';
 
 function InstrumentsInfo() {
     const tableColumns = [
