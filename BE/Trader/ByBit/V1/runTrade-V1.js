@@ -299,11 +299,11 @@ const handleSubmitOrder = async ({
                     console.log(text)
                     console.log(changeColorConsole.greenBright(`[_OC orderID_] ( ${botName} - ${side} - ${symbol} ): ${newOrderLinkID}`));
 
-                    // sendMessageWithRetry({
-                    //     messageText: text,
-                    //     telegramID,
-                    //     telegramToken
-                    // })
+                    sendMessageWithRetry({
+                        messageText: text,
+                        telegramID,
+                        telegramToken
+                    })
 
                 }
                 else {
