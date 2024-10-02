@@ -1,4 +1,4 @@
-const mongoose = require('..');
+const mongoose = require('../mongo');
 
 const botSchema = new mongoose.Schema({
   botName: String,

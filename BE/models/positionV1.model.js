@@ -1,4 +1,4 @@
-const mongoose = require('..');
+const mongoose = require('../mongo');
 
 const positionV1Schema = new mongoose.Schema({
   Symbol: {

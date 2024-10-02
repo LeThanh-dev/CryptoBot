@@ -1,0 +1,124 @@
+.strategies {
+
+    &Header {
+        flex-basis: 60%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+
+        &Item {
+            flex-basis: 15%;
+            margin: 8px !important;
+
+            .formLabel {
+                margin-bottom: 6px;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    &Filter {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+
+
+
+
+    &Data {
+        margin-top: 16px;
+
+        .bookmarkAll {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+    }
+
+
+
+    &BtnAction {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+
+        &Item {
+            cursor: pointer;
+
+            &:nth-child(n + 2) {
+                margin-top: 14px;
+            }
+        }
+    }
+
+    .icon {
+        color: #1976d2;
+        cursor: pointer;
+    }
+
+    .checkboxStyle {
+        width: 16px;
+        height: 16px;
+        margin-right: 10px;
+        accent-color: #1976d2;
+        cursor: pointer;
+    }
+
+    .scrollDownIcon {
+        position: fixed;
+        bottom: 16px;
+        left: 60%;
+        color: #b5b5b5;
+        animation: scrollDown 1s linear infinite;
+        font-size: 2rem;
+    }
+}
+
+@keyframes scrollDown {
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(6px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+
+@media (max-width: 740px) {
+    .strategies {
+        &Header {
+            margin: 0 -8px;
+            margin-bottom: 16px;
+            flex-basis: 100%;
+            justify-content: space-between;
+
+            &Item {
+                flex: 1
+            }
+        }
+
+        &Filter {
+            flex-basis: 50%;
+        }
+
+        &BtnAction {
+            bottom: 90px;
+            right: 6%;
+        }
+
+        .scrollDownIcon {
+            bottom: 90px;
+            left: 50%;
+        }
+    }
+
+    .tableCell {
+        max-width: 60px;
+    }
+}

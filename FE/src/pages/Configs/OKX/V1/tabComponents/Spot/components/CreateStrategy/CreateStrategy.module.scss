@@ -1,0 +1,46 @@
+.dialogForm {
+    display: flex;
+    flex-direction: column;
+    color: black;
+
+    .formControl {
+        margin-bottom: 16px;
+    }
+
+    .label {
+        margin-bottom: 6px;
+    }
+
+    .formMainData {
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+
+        &Item {
+            flex-basis: 48%;
+        }
+    }
+}
+    
+.icon {
+    color: #1976d2;
+    cursor: pointer;
+}
+.addMember {
+    th,td {
+        padding: 10px 6px !important;
+        text-align: center;
+    }
+}
+
+
+@media (max-width:740px) {
+    .dialogForm {
+        .formMainData {
+            &Item {
+                flex-basis: 100%;
+            }
+        }
+    }
+}

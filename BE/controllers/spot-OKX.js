@@ -3,7 +3,7 @@ const SpotModel = require('../models/spot.model')
 const BotModel = require('../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
-const OKX_API = require('.././OKX/V1/Doc/api');
+const OKX_API = require('../OKX/Doc/api');
 
 const dataCoinByBitController = {
     // SOCKET

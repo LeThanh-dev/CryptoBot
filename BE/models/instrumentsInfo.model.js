@@ -1,4 +1,4 @@
-const mongoose = require('..');
+const mongoose = require('../mongo');
 
 const instrumentsInfoSchema = new mongoose.Schema({
   symbol: String,

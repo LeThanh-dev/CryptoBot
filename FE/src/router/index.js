@@ -1,5 +1,5 @@
 import Bot from "../pages/Bot"
-import Strategies from "../pages/StrategiesV3Tab/tabComponents/StrategiesV3"
+import Strategies from "../pages/Configs/ByBit/V3/tabComponents/Config"
 import Coin from "../pages/Coin"
 import Order from "../pages/Order"
 import MainLayout from "../layout/Mainlayout"
@@ -11,17 +11,22 @@ import Group from "../pages/Group"
 import BotType from "../pages/BotType"
 import User from "../pages/User"
 import Dashboard from "../pages/Dashboard"
-import StrategiesMargin from "../pages/StrategiesMargin"
-import Spot from "../pages/StrategiesMargin/tabComponents/Spot"
-import Margin from "../pages/StrategiesMargin/tabComponents/Margin"
-import Scanner from "../pages/StrategiesMargin/tabComponents/Scanner"
-import PositionV3 from "../pages/Position/Position-V3"
-import PositionV1 from "../pages/Position/Position-V1"
-import StrategiesHistory from "../pages/StrategiesHistory"
+import StrategiesMargin from "../pages/Configs/ByBit/V1"
+import Spot from "../pages/Configs/ByBit/V1/tabComponents/Spot"
+import Margin from "../pages/Configs/ByBit/V1/tabComponents/Margin"
+import Scanner from "../pages/Configs/ByBit/V1/tabComponents/Scanner"
+import PositionV3 from "../pages/Position/ByBit/V3"
 import InstrumentsInfo from "../pages/InstrumentsInfo"
-import StrategiesV3Tab from "../pages/StrategiesV3Tab"
-import ScannerV3 from "../pages/StrategiesV3Tab/tabComponents/ScannerV3"
+import StrategiesV3Tab from "../pages/Configs/ByBit/V3"
+import ScannerV3 from "../pages/Configs/ByBit/V3/tabComponents/Scanner"
 import { Outlet } from "react-router-dom"
+import PositionV1 from "../pages/Position/ByBit/V1"
+import StrategiesHistory from "../store/slices/StrategiesHistory"
+import ConfigV1Tab from "../pages/Configs/OKX/V1"
+import ConfigV3Tab from "../pages/Configs/OKX/V3"
+import SpotOKX from "../pages/Configs/OKX/V1/tabComponents/Spot"
+import ScannerV1OKX from "../pages/Configs/OKX/V1/tabComponents/Scanner"
+import MarginOKX from "../pages/Configs/OKX/V1/tabComponents/Margin"
 
 
 const routeList = [
@@ -151,7 +156,7 @@ const routeList = [
                                         path: "Config",
                                         element:
                                             <>
-                                                <StrategiesV3Tab />
+                                                <ConfigV3Tab />
                                                 <Strategies />
                                             </>,
                                     },
@@ -159,7 +164,7 @@ const routeList = [
                                         path: "Scanner",
                                         element:
                                             <>
-                                                <StrategiesV3Tab />
+                                                <ConfigV3Tab />
                                                 <ScannerV3 />
                                             </>,
                                     },
@@ -179,24 +184,24 @@ const routeList = [
                                         path: "Spot",
                                         element:
                                             <>
-                                                <StrategiesMargin />
-                                                <Spot />
+                                                <ConfigV1Tab />
+                                                <SpotOKX />
                                             </>
                                     },
                                     {
                                         path: "Margin",
                                         element:
                                             <>
-                                                <StrategiesMargin />
-                                                <Margin />
+                                                <ConfigV1Tab />
+                                                <MarginOKX />
                                             </>
                                     },
                                     {
                                         path: "Scanner",
                                         element:
                                             <>
-                                                <StrategiesMargin />
-                                                <Scanner />
+                                                <ConfigV1Tab />
+                                                <ScannerV1OKX />
                                             </>
                                     },
                                 ]

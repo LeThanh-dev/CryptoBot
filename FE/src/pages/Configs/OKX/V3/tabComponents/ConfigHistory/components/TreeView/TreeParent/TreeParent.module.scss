@@ -1,0 +1,112 @@
+.treeParent {
+    margin-top: 12px;
+
+    .label {
+        font-weight: bold;
+        color: black;
+        border: 1px solid lightgrey;
+        padding: 3px;
+        border-radius: 6px;
+        margin-left: 6px;
+    }
+
+
+    .tableHeadCell,
+    .tableBodyCell {
+        min-width: 80px;
+        text-align: center;
+        padding:  12px;
+    }
+
+    .tableHeadCell {
+        color: black;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .tableBodyCell {
+        font-size: 1rem;
+        white-space: normal;
+    }
+
+    .tableDataContainer {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: none;
+    }
+
+    .iconArrow {
+        font-size: 1.8rem;
+    }
+
+    .iconArrowUp {
+        display: none;
+    }
+
+    .icon {
+        color: #1976d2;
+        cursor: pointer;
+    }
+
+    .checkboxStyle {
+        width: 16px;
+        height: 16px;
+        accent-color: #1976d2;
+        margin-right: 6px;
+        cursor: pointer;
+    }
+}
+
+.showNoteContent {
+    .tableDataContainer {
+        display: block;
+    }
+
+    .iconArrowDown {
+        display: none;
+    }
+
+    .iconArrowUp {
+        display: block;
+    }
+}
+
+.settingNode {
+
+    &Item {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        transition: .1s;
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--borderColor);
+        }
+
+        &Text {
+            font-size: 1rem;
+            margin-left: 10px;
+        }
+
+        &Icon {
+            font-size: 1.3rem;
+            color: #0d6efd
+        }
+    }
+}
+
+@media (max-width: 740px) {
+    .treeParent {
+        .label {
+
+            font-size: 1.1rem;
+
+        }
+
+        .tableHeadCell {
+            font-size: 1.1rem;
+        }
+    }
+}

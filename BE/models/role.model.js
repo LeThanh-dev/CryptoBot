@@ -1,4 +1,4 @@
-const mongoose = require('..');
+const mongoose = require('../mongo');
 
 const roleSchema = new mongoose.Schema({
   name: {

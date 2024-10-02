@@ -1,0 +1,47 @@
+.dialogForm {
+    display: flex;
+    flex-direction: column;
+    color: black;
+
+    .formControl {
+        margin-bottom: 16px;
+    }
+
+    .label {
+        margin-bottom: 6px;
+    }
+
+    .formMainData {
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+
+        &Item {
+            flex-basis: 48%;
+        }
+    }
+
+    .formMainDataSmall {
+        display: flex;
+        justify-content: space-between;
+
+        &Item {
+            flex: 1;
+
+            &:nth-child(n+2) {
+                margin-left: 12px;
+            }
+        }
+    }
+}
+
+@media (max-width:740px) {
+    .dialogForm {
+        .formMainData {
+            &Item {
+                flex-basis: 100%;
+            }
+        }
+    }
+}
