@@ -227,11 +227,11 @@ const routeList = [
                         children: [
                             {
                                 path: "V3",
-                                element:<PositionV3/>
+                                element: <PositionV3 />
                             },
                             {
                                 path: "V1",
-                                element:<PositionV1/>
+                                element: <PositionV1 />
                             },
                         ]
                     },
@@ -243,11 +243,11 @@ const routeList = [
                         children: [
                             {
                                 path: "V3",
-                                element:<PositionV3/>
+                                element: <PositionV3 />
                             },
                             {
                                 path: "V1",
-                                element:<PositionV1/>
+                                element: <PositionV1 />
                             },
                         ]
                     },
@@ -263,34 +263,17 @@ const routeList = [
                 children: [
                     {
                         path: "ByBit",
-                        element: <>
-                            <Outlet />
-                        </>,
-                        children: [
-                           
-                            {
-                                path: "V1",
-                                element:<InstrumentsInfo/>
-                            },
-                        ]
+                        element: <InstrumentsInfo/>
+
                     },
                     {
                         path: "OKX",
-                        element: <>
-                            <Outlet />
-                        </>,
-                        children: [
-                           
-                            {
-                                path: "V1",
-                                element:<InstrumentOKXV1/>
-                            },
-                        ]
+                        element: <InstrumentOKXV1 />
                     },
 
                 ]
             },
-         
+
             {
                 path: "Coin",
                 element: <Coin />,

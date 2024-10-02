@@ -16,6 +16,7 @@ const scannerRouter = require('./scanner.route');
 const scannerV3Router = require('./scannerV3.route');
 const coinRouter = require('./coin.route');
 const instrumentsInfoRouter = require('./instrumentsInfo.route');
+const InstrumentOKXV1Router = require('./InstrumentOKXV1.route');
 
 router.use('/auth', authRouter);
 router.use('/user', userRouter);
@@ -32,6 +33,7 @@ router.use('/scanner', scannerRouter);
 router.use('/scannerV3', scannerV3Router);
 router.use('/coin', coinRouter);
 router.use('/instrumentsInfo', instrumentsInfoRouter);
+router.use('/InstrumentOKXV1', InstrumentOKXV1Router);
 
 // Sử dụng các route khác tương tự
 

@@ -219,47 +219,11 @@ function SideBar({
                     link: "Instruments/ByBit",
                     name: "ByBit",
                     icon: <RadarIcon className={styles.icon} />,
-                    open: openAll.Instruments.children.ByBit,
-                    openFunc: (target) => {
-                        setOpenAll(data => {
-                            const newData = { ...data }
-                            newData.Instruments.children.ByBit = target
-                            return newData
-                        })
-                    },
-                    children: [
-                        {
-                            link: "Instruments/ByBit/V1",
-                            name: "V1",
-                        },
-                        // {
-                        //     link: "Instruments/ByBit/V3",
-                        //     name: "V3",
-                        // },
-                    ]
                 },
                 {
                     link: "Instruments/OKX",
                     name: "OKX",
                     icon: <ViewInArIcon className={styles.icon} />,
-                    open: openAll.Instruments.children.OKX,
-                    openFunc: (target) => {
-                        setOpenAll(data => {
-                            const newData = { ...data }
-                            newData.Instruments.children.OKX = target
-                            return newData
-                        })
-                    },
-                    children: [
-                        {
-                            link: "Instruments/OKX/V1",
-                            name: "V1",
-                        },
-                        // {
-                        //     link: "Instruments/OKX/V3",
-                        //     name: "V3",
-                        // },
-                    ]
                 },
 
             ]

@@ -5,8 +5,8 @@ import { useDispatch } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
 import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
 import DataGridCustom from '../../../../components/DataGridCustom';
-import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../../../services/instrumentsInfoService';
 import { addMessageToast } from '../../../../store/slices/Toast';
+import { getAllInstrumentOKXV1, syncInstrumentOKXV1 } from '../../../../services/InstrumentOKXV1Service';
 
 function InstrumentOKXV1() {
     const tableColumns = [
@@ -34,20 +34,20 @@ function InstrumentOKXV1() {
             }
         },
         {
-            field: 'minOrderQty',
-            headerName: 'minOrderQty',
+            field: 'minSz',
+            headerName: 'MinSz',
             minWidth: 180,
             flex:1,
         },
         {
-            field: 'basePrecision',
-            headerName: 'BasePrecision',
+            field: 'lotSz',
+            headerName: 'LotSz',
             minWidth: 180,
             flex:1,
         },
         {
-            field: 'tickSize',
-            headerName: 'TickSize',
+            field: 'tickSz',
+            headerName: 'TickSz',
             minWidth: 180,
             flex:1,
         },
@@ -63,18 +63,18 @@ function InstrumentOKXV1() {
 
     const handleGetSymbolList = async () => {
         try {
-            const res = await getAllInstrumentsInfo()
+            const res = await getAllInstrumentOKXV1()
             const { status, message, data: symbolListDataRes } = res.data
 
             const newSymbolList = symbolListDataRes.map(item => (
                 {
                     id: item._id,
-                    Coin: item.symbol.split("USDT")[0],
+                    Coin: item.symbol.split("-USDT")[0],
                     Symbol: item.symbol,
-                    minOrderQty: item.minOrderQty,
-                    basePrecision: item.basePrecision,
+                    minSz: item.minSz,
+                    lotSz: item.lotSz,
                     market: item.market,
-                    tickSize: item.tickSize,
+                    tickSz: item.tickSz,
                 }))
             tableRowsDefault.current = newSymbolList
             setTableRows(newSymbolList)
@@ -91,7 +91,7 @@ function InstrumentOKXV1() {
     const handleSyncCoin = async () => {
         setLoading(true)
         try {
-            const res = await syncInstrumentsInfo()
+            const res = await syncInstrumentOKXV1()
             const { status, message } = res.data
 
             if (status === 200) {
