@@ -896,7 +896,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 const symbolItem = strategyData.symbol
                                                 if (symbol == symbolItem && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
                                                     {
-                                                        console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                                                        console.log(`[V] RESET-Filled | ${symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
                                                         cancelAll({ botID, strategyID })
                                                         delete listOCByCandleBot[candle][botID].listOC[strategyID]
 
@@ -1145,11 +1145,11 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = ""
                                                 // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
-
+                                                
                                                 const qty = +dataMain.qty;
                                                 missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
-
-
+                                                
+                                                
                                                 if (missTPDataBySymbol[botSymbolMissID]?.sizeTotal - missTPDataBySymbol[botSymbolMissID].size > 0) {
                                                     missTPDataBySymbol[botSymbolMissID].gongLai = true
                                                     updatePositionBE({
@@ -3506,10 +3506,8 @@ socketRealtime.on('closeAllPosition', async (botListData = []) => {
                 const candle = strategyData.candle
                 const botName = strategyData.botName
 
-                console.log("symbolItem",symbolItem);
-                
                 if (symbolList.includes(symbolItem)) {
-                    console.log(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${side} - ${candle} - Bot: ${botName}`);
+                    console.log(changeColorConsole.magentaBright(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${side} - ${candle} - Bot: ${botName}`));
                     blockContinueOrderOCByStrategiesID[strategyID] = true
                 }
             })

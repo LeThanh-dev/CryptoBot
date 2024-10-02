@@ -167,7 +167,6 @@ const PositionController = {
 
                         const viTheList = response.result.list;
 
-
                         if (viTheList?.length > 0) {
                             const dataPosition = await PositionModel.find({ botID: botID }).populate("botID")
 
@@ -300,12 +299,12 @@ const PositionController = {
                     })
                 })
             }))
-            await PositionController.handleCancelAllPosition(
-                Object.values(allViThe))
             PositionController.sendDataRealtime({
                 type: "closeAllPosition",
                 data: botListData
             })
+            await PositionController.handleCancelAllPosition(
+                Object.values(allViThe))
 
             res.customResponse(200, "Close All Position Successful", "");
 
