@@ -1,4 +1,4 @@
-const mongoose = require('../index');
+const mongoose = require('..');
 
 const coinSchema = new mongoose.Schema({
   symbol: String,

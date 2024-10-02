@@ -1,4 +1,4 @@
-const mongoose = require('../index');
+const mongoose = require('..');
 
 const groupSchema = new mongoose.Schema({
   name: String,

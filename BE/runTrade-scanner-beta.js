@@ -847,7 +847,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 const ApiKey = botApiData.ApiKey
                 const SecretKey = botApiData.SecretKey
                 const botID = botApiData.id
-                const botName = botApiList[botID].botName
+                const botName = botApiList[botID]?.botName
 
                 const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey })
 
@@ -2742,10 +2742,10 @@ try {
                             let newPriceCompare = 0
                             const oldPriceCompare = allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.priceCompare
                             if (strategy.PositionSide === "Long") {
-                                newPriceCompare = oldPriceCompare - Math.abs(oldPriceCompare - coinCurrent) * (200 / 100)
+                                newPriceCompare = oldPriceCompare - Math.abs(oldPriceCompare - coinCurrent) * (strategy.ReduceTakeProfit / 100)
                             }
                             else {
-                                newPriceCompare = oldPriceCompare + Math.abs(oldPriceCompare - coinCurrent) * (200 / 100)
+                                newPriceCompare = oldPriceCompare + Math.abs(oldPriceCompare - coinCurrent) * (strategy.ReduceTakeProfit / 100)
                             }
 
                             allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.priceCompare = newPriceCompare
@@ -3497,7 +3497,8 @@ socketRealtime.on('closeAllPosition', async (botListData = []) => {
             const botID = botData.botID
             const symbolList = botData.symbolList
 
-            const listObject = listOCByCandleBot?.[candle]?.[botID]?.listOC
+            const listOCByBot = listOCByCandleBot?.[candle]?.[botID]
+            const listObject = listOCByBot?.listOC
             listObject && Object.values(listObject).map(strategyData => {
                 const symbolItem = strategyData.symbol
                 const strategyID = strategyData.strategyID
@@ -3505,21 +3506,16 @@ socketRealtime.on('closeAllPosition', async (botListData = []) => {
                 const candle = strategyData.candle
                 const botName = strategyData.botName
 
+                console.log("symbolItem",symbolItem);
+                
                 if (symbolList.includes(symbolItem)) {
                     console.log(`[V] BLOCK Continue Order OC | ${symbolItem.replace("USDT", "")} - ${side} - ${candle} - Bot: ${botName}`);
                     blockContinueOrderOCByStrategiesID[strategyID] = true
-                    handleCancelOrderOC({
-                        ApiKey: botData.ApiKey,
-                        botID,
-                        botName,
-                        SecretKey: botData.SecretKey,
-                        side,
-                        strategyID,
-                        symbol: symbolItem,
-                        candle
-                    })
                 }
             })
+
+            listOCByBot && handleCancelAllOrderOC([listOCByBot])
+
         })
     }))
 

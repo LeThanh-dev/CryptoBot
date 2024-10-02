@@ -1,4 +1,4 @@
-const mongoose = require('../index');
+const mongoose = require('..');
 
 const childrenStrategiesSchema = new mongoose.Schema({
   PositionSide: String,

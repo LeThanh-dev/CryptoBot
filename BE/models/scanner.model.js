@@ -1,4 +1,4 @@
-const mongoose = require('../index');
+const mongoose = require('..');
 
 const strategiesSchema = new mongoose.Schema({
   Label: String,
