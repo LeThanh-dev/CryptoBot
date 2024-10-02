@@ -90,7 +90,7 @@ const RoleController = {
                             // "Configs/OKX/V1/Spot",
                             // "Configs/OKX/V1/Margin",
                             // "Configs/OKX/V1/Scanner",
-                            // "Positions/ByBit/V1",
+                            "Positions/ByBit/V1",
                             // "Positions/OKX",
                             // "Positions/OKX/V3",
                             // "Positions/OKX/V1",
