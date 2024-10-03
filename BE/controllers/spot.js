@@ -63,12 +63,6 @@ const dataCoinByBitController = {
     },
     // GET OTHER
 
-    closeAllBotForUpCode: async (req, res) => {
-        dataCoinByBitController.sendDataRealtime({
-            type: "close-upcode"
-        })
-        res.customResponse(200, "Send Successful", "");
-    },
     getSymbolFromCloud: async (userID) => {
         try {
 

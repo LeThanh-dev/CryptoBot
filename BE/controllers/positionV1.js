@@ -187,7 +187,6 @@ const PositionController = {
 
                         const viTheList = response.result.list.flatMap(item => item.coin);
 
-
                         if (viTheList?.length > 0) {
                             const dataPosition = await PositionV1Model.find({ botID: botID }).populate("botID")
 
@@ -200,6 +199,7 @@ const PositionController = {
 
                                 const Quantity = +viTheListItem.walletBalance
                                 const Symbol = viTheListItem.coin
+
                                 const positionID = `${botID}-${Symbol}`
                                 const positionData = dataPositionObject[positionID]
                                 const usdValue = viTheListItem.usdValue
@@ -213,7 +213,7 @@ const PositionController = {
                                     botID,
                                     botName: dataBotItem?.name,
                                     botData: dataBotItem,
-                                    Side: Quantity > 0 ? "Buy": "Sell"
+                                    Side: Quantity > 0 ? "Buy" : "Sell"
                                 }
 
                                 if (Symbol !== "USDT") {
@@ -245,6 +245,10 @@ const PositionController = {
                                         _id: resNew?.id || positionID,
                                     }
                                 }
+
+                                // if (Symbol.includes("WIF")) {
+                                //     console.log(viTheListItem,Math.abs(data.Quantity), minOrderQtyObject[`${data.Symbol}USDT`].minOrderQty);
+                                // }
 
                                 return data
                             })))

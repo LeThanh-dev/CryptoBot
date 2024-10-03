@@ -5,7 +5,9 @@ import api from "../utils/api"
 export const getAllConfigScanner = async (botListInput) => {
     return await api.post("/scanner/getAllConfigScanner", { botListInput })
 }
-
+export const closeAllBotForUpCodeV1 = async () => {
+    return await api.get("/scanner/closeAllBotForUpCode")
+}
 
 // CREATE
 export const createConfigScanner = async (data) => {

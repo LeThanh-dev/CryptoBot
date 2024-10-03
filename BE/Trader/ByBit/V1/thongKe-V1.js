@@ -86,8 +86,8 @@ async function ListCoinFT() {
         .then((rescoin) => {
             rescoin.result.list.forEach((e) => {
                 const symbol = e.symbol
-                if (symbol.split("USDT")[1] === "") {
-                // if (e.marginTrading != "none" && e.symbol.split("USDT")[1] === "") {
+                // if (symbol.split("USDT")[1] === "") {
+                if (e.marginTrading != "none" && e.symbol.split("USDT")[1] === "") {
                     ListCoin1m.push(`kline.D.${symbol}`)
                 }
 
@@ -244,7 +244,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }

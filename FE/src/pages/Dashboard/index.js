@@ -4,23 +4,64 @@ import { closeAllBotForUpCode } from "../../services/dataCoinByBitService";
 import { addMessageToast } from "../../store/slices/Toast";
 import { useState } from "react";
 import DialogCustom from "../../components/DialogCustom";
+import { closeAllBotForUpCodeV1 } from "../../services/scannerService";
 
 function Dashboard() {
     const dispatch = useDispatch()
     const userData = useSelector(state => state.userDataSlice.userData)
-    const [confirmOFF, setConfirmOFF] = useState(false);
+    const [confirmOFF, setConfirmOFF] = useState("");
+
+    const handleCloseOffAll = async () => {
+        let res
+        switch (confirmOFF) {
+            case "ByBitV3":
+                res = await closeAllBotForUpCode()
+                break;
+            case "ByBitV1":
+                res = await closeAllBotForUpCodeV1()
+                break;
+            default:
+                return;
+        }
+
+        const { message } = res.data
+
+        dispatch(addMessageToast({
+            status: 200,
+            message,
+        }))
+        setConfirmOFF("")
+    }
     return (
         <div>
             <p>Dashboard</p>
             {userData.roleName === "SuperAdmin" && (
-                <Button 
-                variant="contained"
-                 size="large"
-                 color="error"
-                 onClick={() => {
-                    setConfirmOFF(true)
-                }}>OFF All</Button>
-            )}
+                <div>
+                    <Button
+                        variant="contained"
+                        size="medium"
+                        color="error"
+                        onClick={() => {
+                            setConfirmOFF("ByBitV3")
+                        }}
+                    >
+                        Off ByBit V3
+                    </Button>
+
+                    <Button
+                        variant="contained"
+                        size="medium"
+                        color="warning"
+                        onClick={() => {
+                            setConfirmOFF("ByBitV1")
+                        }}
+                        style={{ marginLeft: "12px" }}
+                    >
+                        Off ByBit V1
+                    </Button>
+                </div>
+            )
+            }
             {
                 confirmOFF && (
                     <DialogCustom
@@ -29,16 +70,7 @@ function Dashboard() {
                         onClose={() => {
                             setConfirmOFF(false)
                         }}
-                        onSubmit={async () => {
-                            const res = await closeAllBotForUpCode()
-                            const { message } = res.data
-
-                            dispatch(addMessageToast({
-                                status: 200,
-                                message,
-                            }))
-                            setConfirmOFF(false)
-                        }}
+                        onSubmit={handleCloseOffAll}
                         dialogTitle="The action requires confirmation"
                         submitBtnColor="error"
                         submitBtnText="Off"

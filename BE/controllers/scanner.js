@@ -17,7 +17,12 @@ const dataCoinByBitController = {
         const { socketServer } = require('../serverConfig');
         socketServer.to("ByBitV1").emit(type, data)
     },
-
+    closeAllBotForUpCode: async (req, res) => {
+        dataCoinByBitController.sendDataRealtime({
+            type: "close-upcode"
+        })
+        res.customResponse(200, "Send Successful", "");
+    },
     getSymbolFromCloud: async (userID) => {
         try {
 
@@ -1168,12 +1173,28 @@ const dataCoinByBitController = {
             const cancelPositionV3 = PositionV1Model.deleteMany({})
             await Promise.allSettled([cancelPositionV3])
 
-            console.log("[V] RESET All For UPcode Successful");
+            console.log("[V] RESET All For New Successful");
 
         } catch (error) {
-            console.log("[V] RESET All For UPcode error:", error);
+            console.log("[V] RESET All For New error:", error);
         }
-    }
+    },
+    addSymbolToBlacklistBE: async ({
+        scannerID,
+        symbol,
+    }) => {
+        try {
+            const result = await ScannerModel.updateOne(
+                { _id: scannerID },
+                { $addToSet: { Blacklist: symbol } }
+            );
+            console.log(`[Mongo] Add ${symbol} to blacklist successful`);
+            return true
+        } catch (error) {
+            console.log(`[Mongo] Add ${symbol} to blacklist error: ${error}`);
+        }
+    },
+
 }
 
 module.exports = dataCoinByBitController 

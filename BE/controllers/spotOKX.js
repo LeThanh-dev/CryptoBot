@@ -1,9 +1,9 @@
 const { RestClientV5 } = require('bybit-api');
-const SpotModel = require('../models/spot.model')
+const SpotModel = require('../models/spotOKX.model')
 const BotModel = require('../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
-const OKX_API = require('../OKX/Doc/api');
+const OKX_API = require('../Trader/OKX/Doc/api');
 
 const dataCoinByBitController = {
     // SOCKET
@@ -70,50 +70,29 @@ const dataCoinByBitController = {
         })
         res.customResponse(200, "Send Successful", "");
     },
-    getSymbolFromCloud: async (userID) => {
+    getSymbolFromCloud: async () => {
         try {
 
-            const result = await OKX_API.publicData.restAPI.getInstruments({instType:"SPOT"})
-            
-            console.log("result",result.length);
+            // const result = await OKX_API.publicData.restAPI.getInstruments({instType:"SPOT"})
+            const result = await OKX_API.orderBookTrading.marketData.getTickers({ instType: "SPOT" })
 
             let data = []
 
-            let vol24Object = {}
-
-            // await CoinInfo.getTickers({ category: 'spot' })
-            //     .then((rescoin) => {
-            //         rescoin.result.list.forEach((e) => {
-            //             if (e.symbol.indexOf("USDT") > 0) {
-            //                 vol24Object[e.symbol] = e.turnover24h || 0
-            //             }
-            //         })
-            //     })
-            //     .catch((error) => {
-            //         console.error(error);
-            //     });
-
-
-            // await CoinInfo.getInstrumentsInfo({ category: 'spot' })
-            //     .then((rescoin) => {
-            //         rescoin.result.list.forEach((e) => {
-            //             if (e.symbol.split("USDT")[1] === "" && e.marginTrading !== "utaOnly" && e.marginTrading !== "both") {
-            //                 data.push({
-            //                     symbol: e.symbol,
-            //                     volume24h: vol24Object[e.symbol],
-            //                 })
-            //             }
-            //         })
-            //     })
-            //     .catch((error) => {
-            //         console.error(error);
-            //     });
+            result.forEach(coinData => {
+                const symbol = coinData.instId
+                if (symbol.includes("USDT")) {
+                    data.push({
+                        symbol,
+                        volume24h: coinData.vol24h,
+                    })
+                }
+            })
 
             return data
 
         } catch (err) {
             console.log(err);
-            
+
             return []
         }
     },
@@ -849,9 +828,8 @@ const dataCoinByBitController = {
 
     syncSymbolSpot: async (req, res) => {
         try {
-            const userID = req.user._id
 
-            const listSymbolObject = await dataCoinByBitController.getSymbolFromCloud(userID);
+            const listSymbolObject = await dataCoinByBitController.getSymbolFromCloud();
 
             if (listSymbolObject?.length) {
 

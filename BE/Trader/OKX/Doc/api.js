@@ -16,8 +16,6 @@ const OKX_API = {
                             instType
                         }
                     })
-                    console.log(result.code);
-
                     return res.data?.data || []
 
                 } catch (error) {

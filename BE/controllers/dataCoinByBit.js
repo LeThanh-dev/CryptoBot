@@ -1540,10 +1540,10 @@ const dataCoinByBitController = {
             const cancelPositionV3 = PositionV3Model.deleteMany({})
             await Promise.allSettled([cancelPositionV3])
 
-            console.log("[V] RESET All For UPcode Successful");
+            console.log("[V] RESET All For New Successful");
 
         } catch (error) {
-            console.log("[V] RESET All For UPcode error:", error);
+            console.log("[V] RESET All For New error:", error);
         }
     }
 

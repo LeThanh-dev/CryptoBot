@@ -363,7 +363,7 @@ function CreateStrategy({
                                     <Checkbox
                                         checked={selected || symbolGroupData.findIndex(item => item.value === option.value) > -1}
                                     />
-                                    {option.name}
+                                    {option.name.split("USDT")[0]}
                                 </li>
                             </>
                         )}
@@ -475,7 +475,7 @@ function CreateStrategy({
                                     min
                                 </InputAdornment>
                             }}
-                            {...register("Expire", )}
+                            {...register("Expire",)}
                         />
 
                     </FormControl>
@@ -635,7 +635,7 @@ function CreateStrategy({
                             <TableBody>
                                 {
                                     showSpotBorrowList.map((data, index) => (
-                                    <TableRow key={index}>
+                                        <TableRow key={index}>
                                             <TableCell>
                                                 {index + 1}
                                             </TableCell>

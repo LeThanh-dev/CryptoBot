@@ -570,6 +570,9 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} ) failed `, codeData.msg));
+                            if (allStrategiesByBotIDAndStrategiesID?.[botIDTemp]?.[strategyIDTemp]?.OC?.orderID) {
+                                console.log(changeColorConsole.magentaBright(`[!] Tồn đọng OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} )`));
+                            }
                         }
                     })
 
@@ -1066,24 +1069,24 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 if (side === "Buy") {
                                                     if (priceWin > 0) {
-                                                        textWinLose = `\n✅ [WIN - LONG]: ${priceWin} | ${priceWinPercent}%\n`
+                                                        textWinLose = `\n[WIN - LONG]: ${priceWin} | ${priceWinPercent}%\n`
                                                         textWinLoseShort = "✅"
                                                         console.log(changeColorConsole.greenBright(textWinLose));
                                                     }
                                                     else {
-                                                        textWinLose = `\n❌ [LOSE - LONG]: ${priceWin} | ${priceWinPercent}%\n`
+                                                        textWinLose = `\n[LOSE - LONG]: ${priceWin} | ${priceWinPercent}%\n`
                                                         textWinLoseShort = "❌"
                                                         console.log(changeColorConsole.magentaBright(textWinLose));
                                                     }
                                                 }
                                                 else {
                                                     if (priceWin > 0) {
-                                                        textWinLose = `\n❌ [LOSE - SHORT]: ${-1 * priceWin} | ${priceWinPercent}%\n`
+                                                        textWinLose = `\n[LOSE - SHORT]: ${-1 * priceWin} | ${priceWinPercent}%\n`
                                                         textWinLoseShort = "❌"
                                                         console.log(changeColorConsole.magentaBright(textWinLose));
                                                     }
                                                     else {
-                                                        textWinLose = `\n✅ [WIN - SHORT]: ${Math.abs(priceWin)} | ${priceWinPercent}%\n`
+                                                        textWinLose = `\n[WIN - SHORT]: ${Math.abs(priceWin)} | ${priceWinPercent}%\n`
                                                         textWinLoseShort = "✅"
                                                         console.log(changeColorConsole.greenBright(textWinLose));
                                                     }
@@ -2178,10 +2181,11 @@ const Main = async () => {
     let allSymbolBE = getAllSymbolBE()
     const getAllConfigScanner = getAllStrategiesActiveScannerV3BE()
     const deleteAll = deleteAllScannerBE()
+    const deleteAllUPcode = deleteAllForUPcode()
 
 
 
-    const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner, deleteAll])
+    const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner, deleteAll, deleteAllUPcode])
 
     const allStrategiesActiveObject = result[0].value || []
     const allSymbolArray = result[1].value || []
@@ -3551,7 +3555,7 @@ socketRealtime.on('close-upcode', async () => {
     await Promise.allSettled([cancelOC, deleteAll])
 
     console.log("PM2 Kill Successful");
-    exec("pm2 stop runTrade-scanner-beta")
+    exec("pm2 stop runTrade-V3")
 
 });
 

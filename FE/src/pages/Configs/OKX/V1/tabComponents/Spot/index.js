@@ -19,7 +19,7 @@ import { getAllBotActiveByUserID } from '../../../../../../services/botService';
 import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
-import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/spotService';
+import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/spotOKXService';
 
 
 function SpotOKX() {

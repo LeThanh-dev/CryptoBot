@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { createStrategiesSpot, getAllSymbolSpot, getSpotBorrowCheck } from "../../../../../../../../services/spotService";
+import { createStrategiesSpot, getAllSymbolSpot, getSpotBorrowCheck } from "../../../../../../../../services/spotOKXService";
 import { formatNumberString } from "../../../../../../../../functions"
 
 function CreateStrategy({
@@ -224,8 +224,7 @@ function CreateStrategy({
         if (symbolGroupData.length === 1 && botList.length > 0) {
             handleGetSpotBorrowCheck()
         }
-        else 
-        {
+        else {
             setSpotMaxTradeAmountList([])
         }
     }, [symbolGroupData, botList]);
@@ -361,7 +360,7 @@ function CreateStrategy({
                                     <Checkbox
                                         checked={selected || symbolGroupData.findIndex(item => item.value === option.value) > -1}
                                     />
-                                    {option.name}
+                                    {option.name.split("-USDT")[0]}
                                 </li>
                             </>
                         )}
@@ -428,12 +427,13 @@ function CreateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Amount", { required: true, min: formControlMinValue,   ...(spotMaxTradeAmountList[0]?.spotMaxTradeAmount > 0 && { max: spotMaxTradeAmountList[0].spotMaxTradeAmount })
-                        })}
+                            {...register("Amount", {
+                                required: true, min: formControlMinValue, ...(spotMaxTradeAmountList[0]?.spotMaxTradeAmount > 0 && { max: spotMaxTradeAmountList[0].spotMaxTradeAmount })
+                            })}
                         />
                         {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
                         {errors.Amount?.type === "min" && <p className="formControlErrorLabel">The Amount must bigger 0.01.</p>}
-                        {errors.Amount?.type === "max" && <p className="formControlErrorLabel">The Amount must smaller {spotMaxTradeAmountList[0].spotMaxTradeAmount }.</p>}
+                        {errors.Amount?.type === "max" && <p className="formControlErrorLabel">The Amount must smaller {spotMaxTradeAmountList[0].spotMaxTradeAmount}.</p>}
 
                     </FormControl>
 
@@ -468,7 +468,7 @@ function CreateStrategy({
                                     min
                                 </InputAdornment>
                             }}
-                            {...register("Expire", )}
+                            {...register("Expire",)}
                         />
                         {/* {errors.Expire?.type === 'required' && <p className="formControlErrorLabel">The Expire Required.</p>} */}
 
@@ -581,10 +581,10 @@ function CreateStrategy({
             </form>
 
             {spotMaxTradeAmountList.length === 1 && <b><b style={{
-                        margin: "0 3px 0 10px",
-                        color: " #db2f2f",
-                        fontSize: "1rem",
-                    }}>MAX</b>: {spotMaxTradeAmountList[0].spotMaxTradeAmount}$</b>}
+                margin: "0 3px 0 10px",
+                color: " #db2f2f",
+                fontSize: "1rem",
+            }}>MAX</b>: {spotMaxTradeAmountList[0].spotMaxTradeAmount}$</b>}
             {spotMaxTradeAmountList.length > 1 && (
                 <div style={{
                     display: "flex",
