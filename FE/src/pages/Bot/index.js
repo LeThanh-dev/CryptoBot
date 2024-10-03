@@ -18,6 +18,29 @@ import { LoadingButton } from '@mui/lab';
 
 function Bot() {
 
+    const handleSetAuto = ({
+        rowData,
+        botType
+    }) => {
+        let text = ""
+        let func
+        switch (botType) {
+            case "ByBitV1": {
+                text = "Set Margin"
+                func = () => { handleSetMargin(rowData) }
+                break
+            }
+            case "OKX_V1": {
+                text = "Set Lever"
+                func = () => { handleSetLever(rowData) }
+                break
+            }
+        }
+        return {
+            text,
+            func
+        }
+    }
     const statusList = [
         {
             name: "All",
@@ -220,36 +243,42 @@ function Bot() {
     });
 
     (roleName === "Admin" || roleName === "SuperAdmin") && tableColumns.push({
-        field: 'Set Margin',
-        headerName: 'Set Margin',
+        field: 'Set Auto',
+        headerName: 'Set Auto',
         type: "actions",
         minWidth: 150,
         flex: window.innerWidth <= 740 ? undefined : 1,
         renderCell: params => {
             const rowData = params.row;
             const botType = rowData['botType']
+            const listAuto = [
+                "ByBitV1",
+                "OKX_V1"
+            ]
+            if (listAuto.includes(botType)) {
+                const data = handleSetAuto({
+                    rowData,
+                    botType
+                })
 
-            return (
-                <LoadingButton
-                    variant="contained"
-                    size="small"
-                    loading={loadingSetMargin == rowData["_id"]}
-                    sx={{
-                        ".MuiLoadingButton-label": {
+                return (
+                    <LoadingButton
+                        variant="contained"
+                        size="small"
+                        loading={loadingSetMargin == rowData["_id"]}
+                        sx={{
+                            ".MuiLoadingButton-label": {
 
-                            fontSize: "12px !important",
-                        }
-                    }}
-                    onClick={() => {
-                        handleSetMargin(rowData)
-                    }}
-                    style={{
-                        display: botType === "ByBitV1" ? "block" : "none"
-                    }}
-                >
-                    Set Margin
-                </LoadingButton >
-            )
+                                fontSize: "12px !important",
+                            }
+                        }}
+                        onClick={data.func}
+                    >
+                        {data.text}
+                    </LoadingButton >
+                )
+            }
+
 
         },
     });
@@ -305,6 +334,28 @@ function Bot() {
         }
         setLoadingSetMargin("")
     }
+
+    const handleSetLever = async (botData) => {
+        setLoadingSetMargin(botData._id)
+        try {
+            const res = await setMargin(botData)
+            const { status, message } = res.data
+
+            dispatch(addMessageToast({
+                status: status,
+                message: message,
+            }))
+
+        }
+        catch (err) {
+            dispatch(addMessageToast({
+                status: 500,
+                message: "Set Lever Error",
+            }))
+        }
+        setLoadingSetMargin("")
+    }
+
     const handleUpdateBot = async ({ botID, data }) => {
         try {
             const res = await updateBot({
@@ -352,11 +403,10 @@ function Bot() {
     const handleGetAllBot = async () => {
         try {
             let res
-            if (  roleName === "SuperAdmin") {
+            if (roleName === "SuperAdmin") {
                 res = await getAllBot()
             }
-            else if(roleName === "Admin")
-            {
+            else if (roleName === "Admin") {
                 res = await getAllBotByGroupCreatedByUserID()
             }
             else if (roleName === "ManagerTrader" && userData.groupID) {

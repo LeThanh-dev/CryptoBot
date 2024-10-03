@@ -16,6 +16,7 @@ router.post('/getAllBotByGroupCreatedByUserID', MiddlewareController.verifyToken
 router.post('/', MiddlewareController.verifyToken, BotController.createBot);
 router.put('/:id', MiddlewareController.verifyToken, BotController.updateBot);
 router.post('/setMargin', MiddlewareController.verifyToken, BotController.setMargin);
+router.post('/setLever', MiddlewareController.verifyToken, BotController.setLever);
 
 router.delete('/:id', MiddlewareController.verifyToken, BotController.deleteBot);
 

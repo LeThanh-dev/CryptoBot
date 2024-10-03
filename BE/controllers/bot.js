@@ -8,6 +8,7 @@ const MarginModel = require('../models/margin.model');
 const ScannerV3Model = require('../models/scannerV3.model');
 const ScannerV1Model = require('../models/scanner.model');
 const { default: mongoose } = require('mongoose');
+const OKX_API = require('../Trader/OKX/Doc/api');
 
 // ByBitV3
 
@@ -745,6 +746,23 @@ const BotController = {
         }
     },
 
+    setLever: async (req, res) => {
+        try {
+
+            const resSet = await OKX_API.orderBookTrading.copyTrading.setLever(
+                {
+                    "instId": "BTC-USDT-USDT",
+                    "mgnMode": "isolated",
+                    "lever": "5"
+                }
+            )
+            console.log(resSet);
+            
+        } catch (error) {
+            // Xử lý lỗi nếu có
+            res.status(500).json({ message: `Set Lever Error: ${error.message}` });
+        }
+    },
     setMargin: async (req, res) => {
         try {
 
