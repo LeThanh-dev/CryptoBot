@@ -49,7 +49,7 @@ function MainLayout({ children }) {
         "Coin",
         "Order",
         "Positions",
-        "Instruments",
+        // "Instruments",
         // "Instruments/ByBit",
         // "Instruments/OKX",
     ]
