@@ -2,8 +2,6 @@ require('dotenv').config({
     path: "../../../.env"
 });
 
-const { exec } = require('child_process');
-
 const TelegramBot = require('node-telegram-bot-api');
 
 const { WebsocketClient } = require('okx-api');
@@ -372,11 +370,11 @@ let Main = async () => {
 try {
     Main()
 
-    // setTimeout(() => {
-    //     cron.schedule('0 */3 * * *', async () => {
-    //         process.exit(0);
-    //     });
-    // }, 1000)
+    setTimeout(() => {
+        cron.schedule('0 */3 * * *', async () => {
+            process.exit(0);
+        });
+    }, 1000)
 }
 
 catch (e) {

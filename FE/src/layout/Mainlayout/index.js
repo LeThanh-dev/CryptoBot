@@ -49,7 +49,9 @@ function MainLayout({ children }) {
         "Coin",
         "Order",
         "Positions",
-        "InstrumentsInfo"
+        "Instruments",
+        // "Instruments/ByBit",
+        // "Instruments/OKX",
     ]
 
     const linkList = [

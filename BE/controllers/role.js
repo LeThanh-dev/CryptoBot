@@ -73,33 +73,27 @@ const RoleController = {
     addMore: async () => {
         try {
             await RoleModel.updateMany(
-                { name: { $in: ["Admin"] } },
+                { name: { $in: ["SuperAdmin"] } },
                 {
                     "$addToSet": {
                         roleList: [
-                            // "Configs/ByBit/V3/Scanner",
+                            "Configs/ByBit/V3/Scanner",
                             "Configs/ByBit/V1",
                             "Configs/ByBit/V1/Spot",
                             "Configs/ByBit/V1/Margin",
                             "Configs/ByBit/V1/Scanner",
-                            // "Configs/OKX",
-                            // "Configs/OKX/V3",
-                            // "Configs/OKX/V3/Config",
-                            // "Configs/OKX/V3/Scanner",
-                            // "Configs/OKX/V1",
-                            // "Configs/OKX/V1/Spot",
-                            // "Configs/OKX/V1/Margin",
-                            // "Configs/OKX/V1/Scanner",
+                            "Configs/OKX",
+                            "Configs/OKX/V3",
+                            "Configs/OKX/V3/Config",
+                            "Configs/OKX/V3/Scanner",
+                            "Configs/OKX/V1",
+                            "Configs/OKX/V1/Spot",
+                            "Configs/OKX/V1/Margin",
+                            "Configs/OKX/V1/Scanner",
                             "Positions/ByBit/V1",
-                            // "Positions/OKX",
-                            // "Positions/OKX/V3",
-                            // "Positions/OKX/V1",
-                            // "Instruments",
-                            // "Instruments/ByBit",
-                            // "Instruments/ByBit/V1",
-                            // "Instruments/OKX",
-                            // "Instruments/OKX/V1",
-
+                            "Positions/OKX",
+                            "Positions/OKX/V3",
+                            "Positions/OKX/V1",
                         ]
                     }
                 },
