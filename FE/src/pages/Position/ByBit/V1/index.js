@@ -10,7 +10,7 @@ import AddBreadcrumbs from "../../../../components/BreadcrumbsCutom";
 import DataGridCustom from "../../../../components/DataGridCustom";
 import { formatNumber } from "../../../../functions";
 import { getAllBotOnlyApiKeyByUserID } from "../../../../services/botService";
-import { updatePL } from "../../../../services/positionService";
+import { updatePL } from "../../../../services/positionV1Service";
 import { addMessageToast } from "../../../../store/slices/Toast";
 
 function PositionV1() {

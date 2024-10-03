@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import styles from "../../../../../Bot/components/AddBot/AddBot.module.scss"
 import DialogCustom from "../../../../../../components/DialogCustom";
-import { closeLimit, getPriceLimitCurrent } from "../../../../../../services/positionService";
+import { closeLimit, getPriceLimitCurrent } from "../../../../../../services/positionV1Service";
 import { addMessageToast } from "../../../../../../store/slices/Toast";
 
 

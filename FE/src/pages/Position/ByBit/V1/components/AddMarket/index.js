@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import styles from "../../../../../Bot/components/AddBot/AddBot.module.scss"
 import { useState } from "react";
 import DialogCustom from "../../../../../../components/DialogCustom";
-import { closeMarket } from "../../../../../../services/positionService";
+import { closeMarket } from "../../../../../../services/positionV1Service";
 import { addMessageToast } from "../../../../../../store/slices/Toast";
 
 
