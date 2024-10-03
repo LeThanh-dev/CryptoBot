@@ -67,7 +67,7 @@ function PositionV1() {
 
         {
             field: 'TradeType',
-            headerName: 'TradeType',
+            headerName: 'Type',
             minWidth: 150,
             maxWidth: 150,
             flex: window.innerWidth <= 740 ? undefined : 1,
@@ -78,7 +78,7 @@ function PositionV1() {
         },
         {
             field: 'Quantity',
-            headerName: 'Quantity',
+            headerName: 'Qty',
             maxWidth: 170,
             minWidth: 170,
             flex: window.innerWidth <= 740 ? undefined : 1,
