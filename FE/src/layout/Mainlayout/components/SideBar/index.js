@@ -41,6 +41,13 @@ function SideBar({
                 OKX: "",
             }
         },
+        Coins: {
+            open: false,
+            children: {
+                ByBit: "",
+                OKX: "",
+            }
+        },
         Instruments: {
             open: false,
             children: {
@@ -197,10 +204,32 @@ function SideBar({
 
             ]
         },
+
         {
-            link: "Coin",
-            name: "Coin",
-            icon: <CurrencyExchangeIcon className={styles.icon} />
+            link: "Coins",
+            name: "Coins",
+            icon: <CurrencyExchangeIcon className={styles.icon} />,
+            open: openAll.Coins.open,
+            openFunc: () => {
+                setOpenAll(data => {
+                    const newData = { ...data }
+                    newData.Coins.open = !newData.Coins.open
+                    return newData
+                })
+            },
+            children: [
+                {
+                    link: "Coins/ByBit",
+                    name: "ByBit",
+                    icon: <RadarIcon className={styles.icon} />,
+                },
+                {
+                    link: "Coins/OKX",
+                    name: "OKX",
+                    icon: <ViewInArIcon className={styles.icon} />,
+                },
+
+            ]
         },
         {
             link: "Instruments",

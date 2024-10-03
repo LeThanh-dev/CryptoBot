@@ -49,7 +49,8 @@ var listKlineObject = {}
 
 var allSymbol = []
 var updatingAllMain = false
-var connectErrorMain = false
+var connectKlineError = false
+var connectByBotError = {}
 var repayCoinObject = {}
 
 
@@ -1029,7 +1030,7 @@ const handleCreateMultipleConfigMargin = async ({
     OC
 }) => {
 
-    
+
     const scannerID = scannerData._id
     const PositionSide = scannerData.PositionSide
     const botData = scannerData.botID
@@ -1928,19 +1929,39 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                     });
 
                     wsOrder.on('reconnected', () => {
-                        console.log('Reconnected order successful')
-                        connectErrorMain = false
+                        if (connectByBotError[botID]) {
+                            const telegramID = botApiList[botID]?.telegramID
+                            const telegramToken = botApiList[botID]?.telegramToken
+
+                            const text = `🔰 ${botName} khôi phục kết nối thành công`
+                            console.log(text);
+                            console.log(`[V] Reconnected Bot ( ${botName} ) successful`)
+                            connectByBotError[botID] = false
+                            sendMessageWithRetry({
+                                messageText: text,
+                                telegramID,
+                                telegramToken
+                            })
+                        }
                     });
 
                     wsOrder.on('error', (err) => {
-                        if (!connectErrorMain) {
-                            const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
+                        if (!connectByBotError[botID]) {
+                            const telegramID = botApiList[botID]?.telegramID
+                            const telegramToken = botApiList[botID]?.telegramToken
+
+                            const text = `🚫 [ Cảnh báo ] ${botName} đang bị gián đoạn kết nối`
                             console.log(text);
-                            // sendAllBotTelegram(text)
-                            console.log('Connection order error');
+                            console.log(`[!] Connection bot ( ${botName} ) error`);
                             console.log(err);
-                            connectErrorMain = true
+                            connectByBotError[botID] = true
                             wsOrder.connectAll()
+
+                            sendMessageWithRetry({
+                                messageText: text,
+                                telegramID,
+                                telegramToken
+                            })
                         }
                     });
                 }).catch(err => {
@@ -2609,19 +2630,24 @@ try {
     });
 
     wsSymbol.on('reconnected', () => {
-        console.log('[V] Reconnected listKline successful')
-        connectErrorMain = false
+        if (connectKlineError) {
+            const text = "🔰 Hệ thống khôi phục kết nối thành công"
+            console.log(text);
+            sendAllBotTelegram(text)
+            console.log('[V] Reconnected kline successful')
+            connectKlineError = false
+        }
 
     });
 
     wsSymbol.on('error', (err) => {
-        if (!connectErrorMain) {
+        if (!connectKlineError) {
             const text = "🚫 [ Cảnh báo ] Hệ thống đang bị gián đoạn kết nối"
             console.log(text);
-            // sendAllBotTelegram(text)
-            console.log('[!] Connection listKline error');
+            sendAllBotTelegram(text)
+            console.log('[!] Connection kline error');
             console.log(err);
-            connectErrorMain = true
+            connectKlineError = true
             wsSymbol.connectAll()
         }
     });

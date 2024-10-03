@@ -1,11 +1,11 @@
 import { Button, TextField } from '@mui/material';
 import styles from './CoinContent.module.scss'
 import { useEffect, useRef, useState } from 'react';
-import DataGridCustom from '../../../components/DataGridCustom';
+import DataGridCustom from '../../../../components/DataGridCustom';
 import { useDispatch } from 'react-redux';
-import { addMessageToast } from '../../../store/slices/Toast';
-import { formatNumberString } from '../../../functions';
-import { getAllCoin, syncCoin } from '../../../services/coinService';
+import { addMessageToast } from '../../../../store/slices/Toast';
+import { formatNumberString } from '../../../../functions';
+import { getAllCoin, syncCoin } from '../../../../services/coinService';
 import { LoadingButton } from '@mui/lab';
 
 function CoinContent() {

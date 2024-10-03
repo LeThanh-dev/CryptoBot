@@ -1,6 +1,6 @@
 import Bot from "../pages/Bot"
 import Strategies from "../pages/Configs/ByBit/V3/tabComponents/Config"
-import Coin from "../pages/Coin"
+import Coin from "../pages/Coins/ByBit"
 import Order from "../pages/Order"
 import MainLayout from "../layout/Mainlayout"
 import NotFound from "../pages/NotFound"
@@ -28,6 +28,7 @@ import ScannerV1OKX from "../pages/Configs/OKX/V1/tabComponents/Scanner"
 import MarginOKX from "../pages/Configs/OKX/V1/tabComponents/Margin"
 import InstrumentOKXV1 from "../pages/Instruments/OKX/V1"
 import InstrumentsInfo from "../pages/Instruments/ByBit/V1"
+import CoinOKX from "../pages/Coins/OKX"
 
 
 const routeList = [
@@ -273,10 +274,23 @@ const routeList = [
 
                 ]
             },
-
             {
-                path: "Coin",
-                element: <Coin />,
+                path: "Coins",
+                element: <>
+                    <Outlet />
+                </>,
+                children: [
+                    {
+                        path: "ByBit",
+                        element: <Coin/>
+
+                    },
+                    // {
+                    //     path: "OKX",
+                    //     element: <CoinOKX />
+                    // },
+
+                ]
             },
             {
                 path: "Order",

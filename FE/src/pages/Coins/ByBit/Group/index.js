@@ -1,7 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import styles from './Group.module.scss'
 import { useState, useEffect } from 'react';
-import DataGridCustom from '../../../components/DataGridCustom';
+import DataGridCustom from '../../../../components/DataGridCustom';
 import { Button } from '@mui/material';
 
 function Group() {

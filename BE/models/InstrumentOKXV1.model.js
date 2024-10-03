@@ -6,6 +6,8 @@ const InstrumentOKXV1Schema = new mongoose.Schema({
   lotSz: String,
   market: String,
   tickSz: String,
+  lever:String,
+  vol:String,
 });
 
 

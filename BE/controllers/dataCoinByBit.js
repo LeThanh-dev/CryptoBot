@@ -904,7 +904,6 @@ const dataCoinByBitController = {
             }
             else {
                 res.customResponse(400, "Sync Failed", []);
-
             }
 
         } catch (error) {

@@ -46,12 +46,13 @@ function MainLayout({ children }) {
         // "Positions/OKX",
         // "Positions/OKX/V3",
         // "Positions/OKX/V1",
-        "Coin",
+        "Coins",
+        "Coins/ByBit",
         "Order",
         "Positions",
-        // "Instruments",
-        // "Instruments/ByBit",
-        // "Instruments/OKX",
+        "Instruments",
+        "Instruments/ByBit",
+        "Instruments/OKX",
     ]
 
     const linkList = [

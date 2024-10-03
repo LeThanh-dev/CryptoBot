@@ -1,15 +1,14 @@
-import { TextField } from '@mui/material';
+import { Button, TextField } from '@mui/material';
 import styles from './CoinContent.module.scss'
 import { useEffect, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { LoadingButton } from '@mui/lab';
-import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
 import DataGridCustom from '../../../../components/DataGridCustom';
+import { useDispatch } from 'react-redux';
 import { addMessageToast } from '../../../../store/slices/Toast';
-import { getAllInstrumentOKXV1, syncInstrumentOKXV1 } from '../../../../services/InstrumentOKXV1Service';
 import { formatNumberString } from '../../../../functions';
+import { getAllCoin, syncCoin } from '../../../../services/coinService';
+import { LoadingButton } from '@mui/lab';
 
-function InstrumentOKXV1() {
+function CoinContent() {
     const tableColumns = [
         {
             field: 'stt',
@@ -21,52 +20,25 @@ function InstrumentOKXV1() {
         {
             field: 'Coin',
             headerName: 'Coin',
-            minWidth: 120,
-            flex:1,
+            flex: 1,
+            minWidth:200,
         },
         {
-            field: 'market',
-            headerName: 'Market',
-            minWidth: 150,
-            flex:1,
+            field: 'type',
+            headerName: 'Type',
+            flex: 1,
             renderCell: (params) => {
                 const TradeType = params.value
                 return <p> {TradeType == "Margin" ? "🍁" : "🍀"} {TradeType}</p>
             }
         },
         {
-            field: 'lever',
-            headerName: 'Lever',
-            minWidth: 120,
-            flex:1,
-        },
-        {
-            field: 'vol',
-            headerName: 'vol',
-            minWidth: 150,
-            flex:1,
+            field: 'volume24h',
+            headerName: 'Vol',
+            type: "number",
+            flex: 1,
             renderCell: (params) => formatNumberString(params.value)
         },
-        {
-            field: 'minSz',
-            headerName: 'MinSz',
-            minWidth: 180,
-            flex:1,
-        },
-        {
-            field: 'lotSz',
-            headerName: 'LotSz',
-            minWidth: 180,
-            flex:1,
-        },
-        {
-            field: 'tickSz',
-            headerName: 'TickSz',
-            minWidth: 180,
-            flex:1,
-        },
-        
-
     ]
 
     const [tableRows, setTableRows] = useState([]);
@@ -78,20 +50,16 @@ function InstrumentOKXV1() {
 
     const handleGetSymbolList = async () => {
         try {
-            const res = await getAllInstrumentOKXV1()
+            const res = await getAllCoin()
             const { status, message, data: symbolListDataRes } = res.data
 
             const newSymbolList = symbolListDataRes.map(item => (
                 {
                     id: item._id,
-                    Coin: item.symbol.split("-USDT")[0],
+                    Coin: item.symbol.split("USDT")[0],
                     Symbol: item.symbol,
-                    minSz: item.minSz,
-                    lotSz: item.lotSz,
-                    market: item.market,
-                    tickSz: item.tickSz,
-                    lever: item.lever,
-                    vol: +item.vol,
+                    type: item.type,
+                    volume24h: item.volume24h,
                 }))
             tableRowsDefault.current = newSymbolList
             setTableRows(newSymbolList)
@@ -104,15 +72,14 @@ function InstrumentOKXV1() {
             }))
         }
     }
-
     const handleSyncCoin = async () => {
         setLoading(true)
         try {
-            const res = await syncInstrumentOKXV1()
+            const res = await syncCoin()
             const { status, message } = res.data
 
             if (status === 200) {
-                await handleGetSymbolList()
+                handleGetSymbolList()
             }
             dispatch(addMessageToast({
                 status,
@@ -134,8 +101,7 @@ function InstrumentOKXV1() {
     }, []);
     return (
         <div className={styles.coinContent}>
-            <AddBreadcrumbs list={["InstrumentsInfo"]} />
-            <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div style={{ display: "flex", "justifyContent": "space-between", alignItems: "center",marginBottom:"16px" }}>
                 <TextField
                     placeholder='Coin Name...'
                     size='small'
@@ -151,7 +117,7 @@ function InstrumentOKXV1() {
                         })
                     }}
                 />
-
+              
                 <LoadingButton
                     variant="contained"
                     size="small"
@@ -177,4 +143,4 @@ function InstrumentOKXV1() {
     );
 }
 
-export default InstrumentOKXV1;
+export default CoinContent;

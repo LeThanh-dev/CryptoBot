@@ -1,6 +1,6 @@
 import { Tab , Tabs} from "@mui/material";
 import  { useState } from "react";
-import AddBreadcrumbs from "../../components/BreadcrumbsCutom";
+import AddBreadcrumbs from "../../../components/BreadcrumbsCutom";
 import CoinContent from "./CoinContent";
 import Group from "./Group";
 
