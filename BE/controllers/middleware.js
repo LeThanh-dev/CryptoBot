@@ -4,8 +4,6 @@ const UserModel = require('../models/user.model')
 
 const secretKey = process.env.JWT_SECRET_KEY;
 
-console.log(secretKey);
-
 const MiddlewareController = {
     // Tạo JWT token
     verifyToken: async (req, res, next) => {

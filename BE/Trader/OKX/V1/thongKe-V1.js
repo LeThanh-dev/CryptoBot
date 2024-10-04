@@ -1,5 +1,5 @@
 require('dotenv').config({
-    path: "../../../.env"
+    path:"../../../.env"
 });
 
 const TelegramBot = require('node-telegram-bot-api');
