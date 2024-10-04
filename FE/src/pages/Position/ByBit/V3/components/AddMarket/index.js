@@ -1,7 +1,7 @@
 import { FormControl, FormLabel, TextField, Select, MenuItem } from "@mui/material";
 import { useDispatch } from "react-redux";
 import DialogCustom from "../../../../../../components/DialogCustom";
-import { closeMarket } from "../../../../../../services/positionService";
+import { closeMarket } from "../../../../../../services/Positions/ByBIt/V3/positionService";
 import { addMessageToast } from "../../../../../../store/slices/Toast";
 import styles from "../../../../../Bot/components/AddBot/AddBot.module.scss"
 import { useState } from "react";

@@ -8,7 +8,7 @@ import { verifyTokenVIP } from '../../../../../../../../services/authService';
 import { getAllBotActive } from '../../../../../../../../services/botService';
 import { getUserByID } from '../../../../../../../../services/userService';
 import { addMessageToast } from '../../../../../../../../store/slices/Toast';
-import { updateStrategiesMultipleSpot, getAllSymbolSpot, deleteStrategiesMultipleSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../../../services/spotOKXService';
+import { updateStrategiesMultipleSpot, getAllSymbolSpot, deleteStrategiesMultipleSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../../../services/Configs/OKX/V1/spotService';
 
 function EditMulTreeItem({
     onClose,

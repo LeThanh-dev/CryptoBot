@@ -13,7 +13,7 @@ import TreeChild from '../TreeChild';
 import { memo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { handleCheckAllCheckBox } from '../../../../../../../../../functions';
-import { updateStrategiesMultiple, addToBookmark, removeToBookmark } from '../../../../../../../../../services/dataCoinByBitService';
+import { updateStrategiesMultiple, addToBookmark, removeToBookmark } from '../../../../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../../../../store/slices/Toast';
 
 

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useDispatch } from "react-redux";
 import DialogCustom from "../../../../../../../../components/DialogCustom";
-import { getAllSymbol, createStrategies } from "../../../../../../../../services/dataCoinByBitService";
+import { getAllSymbol, createStrategies } from "../../../../../../../../services/Configs/ByBIt/V3/configService";
 import { setStrategiesHistoryData } from "../../../../../../../../store/slices/StrategiesHistory";
 import { addMessageToast } from "../../../../../../../../store/slices/Toast";
 

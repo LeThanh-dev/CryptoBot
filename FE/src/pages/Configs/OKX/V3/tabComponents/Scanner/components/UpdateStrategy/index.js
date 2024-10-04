@@ -7,8 +7,8 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { updateConfigByIDV3 } from '../../../../../../../../services/scannerV3Service';
-import { getAllSymbol, syncSymbol } from '../../../../../../../../services/dataCoinByBitService';
+import { updateConfigByIDV3 } from '../../../../../../../../services/Configs/ByBIt/V3/scannerService';
+import { getAllSymbol, syncSymbol } from '../../../../../../../../services/Configs/ByBIt/V3/configService';
 
 function UpdateStrategy({
     onClose,

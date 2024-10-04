@@ -16,10 +16,10 @@ import AddBreadcrumbs from '../../../../../../components/BreadcrumbsCutom';
 import { formatNumberString } from '../../../../../../functions';
 import useDebounce from '../../../../../../hooks/useDebounce';
 import { getAllBotActiveByUserID } from '../../../../../../services/botService';
-import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitService';
+import { getTotalFutureByBot } from '../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
-import { deleteStrategiesMultipleScanner, getAllConfigScanner, handleBookmarkScanner, updateStrategiesMultipleScanner } from '../../../../../../services/scannerService';
+import { deleteStrategiesMultipleScanner, getAllConfigScanner, handleBookmarkScanner, updateStrategiesMultipleScanner } from '../../../../../../services/Configs/OKX/V1/scannerService';
 import DataGridCustom from '../../../../../../components/DataGridCustom';
 import DialogCustom from '../../../../../../components/DialogCustom';
 import UpdateStrategy from './components/UpdateStrategy';
@@ -422,7 +422,7 @@ function ScannerV1OKX() {
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotActiveByUserID(userData._id, "ByBitV1")
+        getAllBotActiveByUserID(userData._id, "OKX_V1")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (

@@ -8,8 +8,8 @@ import { verifyTokenVIP } from '../../../../../../../../services/authService';
 import { getAllBotActive } from '../../../../../../../../services/botService';
 import { getUserByID } from '../../../../../../../../services/userService';
 import { addMessageToast } from '../../../../../../../../store/slices/Toast';
-import { getAllSymbolSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../../../services/spotService';
-import { copyMultipleStrategiesToBotScanner, deleteStrategiesMultipleScanner, updateStrategiesMultipleScanner } from '../../../../../../../../services/scannerService';
+import { getAllSymbolSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../../../services/Configs/OKX/V1/spotService';
+import { copyMultipleStrategiesToBotScanner, deleteStrategiesMultipleScanner, updateStrategiesMultipleScanner } from '../../../../../../../../services/Configs/OKX/V1/scannerService';
 import { NumericFormat } from 'react-number-format';
 
 function EditMulTreeItem({

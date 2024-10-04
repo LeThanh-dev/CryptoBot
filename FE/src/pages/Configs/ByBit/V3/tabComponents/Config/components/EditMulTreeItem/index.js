@@ -5,7 +5,7 @@ import { Autocomplete, Button, Checkbox, FormControl, FormControlLabel, MenuItem
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyTokenVIP } from '../../../../../../../../services/authService';
 import { getAllBotActive } from '../../../../../../../../services/botService';
-import { updateStrategiesMultiple, deleteStrategiesMultiple, copyMultipleStrategiesToSymbol, copyMultipleStrategiesToBot, getAllSymbol } from '../../../../../../../../services/dataCoinByBitService';
+import { updateStrategiesMultiple, deleteStrategiesMultiple, copyMultipleStrategiesToSymbol, copyMultipleStrategiesToBot, getAllSymbol } from '../../../../../../../../services/Configs/ByBIt/V3/configService';
 import { getUserByID } from '../../../../../../../../services/userService';
 import { setStrategiesHistoryData } from '../../../../../../../../store/slices/StrategiesHistory';
 import DialogCustom from '../../../../../../../../components/DialogCustom';

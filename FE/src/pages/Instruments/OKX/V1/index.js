@@ -6,7 +6,7 @@ import { LoadingButton } from '@mui/lab';
 import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
 import DataGridCustom from '../../../../components/DataGridCustom';
 import { addMessageToast } from '../../../../store/slices/Toast';
-import { getAllInstrumentOKXV1, syncInstrumentOKXV1 } from '../../../../services/InstrumentOKXV1Service';
+import { getAllInstrumentOKXV1, syncInstrumentOKXV1 } from '../../../../services/Instruments/OKX/V1/instrumentService';
 import { formatNumberString } from '../../../../functions';
 
 function InstrumentOKXV1() {

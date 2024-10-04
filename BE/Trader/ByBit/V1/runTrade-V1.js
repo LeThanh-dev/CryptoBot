@@ -8,11 +8,36 @@ require('dotenv').config({
 const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
-const { getAllSymbolMarginBE, getAllStrategiesActiveMarginBE, createStrategiesMultipleMarginBE, deleteStrategiesMultipleMarginBE, offConfigMarginBE } = require('../../../controllers/margin');
-const { getAllSymbolSpotBE, getAllStrategiesActiveSpotBE, createStrategiesMultipleSpotBE, deleteStrategiesMultipleSpotBE, offConfigSpotBE } = require('../../../controllers/spot');
-const { createPositionBE, getPositionBySymbol, deletePositionBE, updatePositionBE } = require('../../../controllers/positionV1');
-const { getAllStrategiesActiveScannerBE, deleteAllForUPcodeV1, deleteAllScannerV1BE, addSymbolToBlacklistBE } = require('../../../controllers/scanner');
+const {
+    getAllSymbolMarginBE,
+    getAllStrategiesActiveMarginBE,
+    createStrategiesMultipleMarginBE,
+    deleteStrategiesMultipleMarginBE,
+    offConfigMarginBE
+} = require('../../../controllers/Configs/ByBit/V1/margin');
 
+const {
+    getAllSymbolSpotBE,
+    getAllStrategiesActiveSpotBE,
+    createStrategiesMultipleSpotBE,
+    deleteStrategiesMultipleSpotBE,
+    offConfigSpotBE
+} = require('../../../controllers/Configs/ByBit/V1/spot');
+
+
+const {
+    getAllStrategiesActiveScannerBE,
+    deleteAllForUPcodeV1,
+    deleteAllScannerV1BE,
+    addSymbolToBlacklistBE
+} = require('../../../controllers/Configs/ByBit/V1/scanner');
+
+const {
+    createPositionBE,
+    getPositionBySymbol,
+    deletePositionBE,
+    updatePositionBE
+} = require('../../../controllers/Positions/ByBit/V1/position');
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 
@@ -918,7 +943,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 SecretKey: data.SecretKey,
                             })
                         }
-                        
+
                         messageText.push(teleText)
 
                         cancelAll({

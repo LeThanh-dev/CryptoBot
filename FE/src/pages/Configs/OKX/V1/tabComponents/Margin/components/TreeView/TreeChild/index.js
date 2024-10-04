@@ -10,7 +10,7 @@ import DialogCustom from '../../../../../../../../../components/DialogCustom';
 import { handleCheckAllCheckBox, formatNumberString } from '../../../../../../../../../functions';
 import { addMessageToast } from '../../../../../../../../../store/slices/Toast';
 import UpdateStrategy from '../../UpdateStrategy';
-import { updateStrategiesSpotByID,deleteStrategiesItemSpot } from '../../../../../../../../../services/marginOKXService';
+import { updateStrategiesSpotByID,deleteStrategiesItemSpot } from '../../../../../../../../../services/Configs/OKX/V1/marginService';
 
 
 function TreeChild({

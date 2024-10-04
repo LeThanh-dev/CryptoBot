@@ -3,7 +3,7 @@ import styles from "./Transfer.module.scss"
 import { useForm } from "react-hook-form";
 import { memo, useState } from "react";
 import DialogCustom from "../../../../../../../../components/DialogCustom";
-import { balanceWallet } from "../../../../../../../../services/dataCoinByBitService";
+import { balanceWallet } from "../../../../../../../../services/Configs/ByBIt/V3/configService";
 import { useDispatch } from "react-redux";
 import { addMessageToast } from "../../../../../../../../store/slices/Toast";
 import { formatNumber } from "../../../../../../../../functions";

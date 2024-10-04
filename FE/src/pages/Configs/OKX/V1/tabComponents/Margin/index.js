@@ -18,11 +18,11 @@ import AddBreadcrumbs from '../../../../../../components/BreadcrumbsCutom';
 import { handleCheckAllCheckBox } from '../../../../../../functions';
 import useDebounce from '../../../../../../hooks/useDebounce';
 import { getAllBotActiveByUserID } from '../../../../../../services/botService';
-import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitService';
+import { getTotalFutureByBot } from '../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
-import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/marginOKXService';
-import { syncInstrumentOKXV1 } from '../../../../../../services/InstrumentOKXV1Service';
+import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/Configs/OKX/V1/marginService';
+import { syncInstrumentOKXV1 } from '../../../../../../services/Instruments/OKX/V1/instrumentService';
 
 
 function MarginOKX() {
@@ -237,7 +237,7 @@ function MarginOKX() {
                 setLoadingUploadSymbol(true)
                 const resSync = await syncInstrumentOKXV1()
                 
-                const res = await syncSymbolSpot(resSync.data?.data?.listMargin || [])
+                const res = await syncSymbolSpot(resSync.data?.data?.filter(item=>item.market === "Margin") || [])
                 const { status, message, data: resData } = res.data
 
                 dispatch(addMessageToast({

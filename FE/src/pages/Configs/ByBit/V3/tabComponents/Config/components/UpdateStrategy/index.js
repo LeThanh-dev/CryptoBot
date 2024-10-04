@@ -5,7 +5,7 @@ import styles from "../CreateStrategy/CreateStrategy.module.scss"
 import { useDispatch } from "react-redux";
 import { useRef } from "react";
 import DialogCustom from "../../../../../../../../components/DialogCustom";
-import { updateStrategiesByID } from "../../../../../../../../services/dataCoinByBitService";
+import { updateStrategiesByID } from "../../../../../../../../services/Configs/ByBIt/V3/configService";
 import { addMessageToast } from "../../../../../../../../store/slices/Toast";
 
 function UpdateStrategy({

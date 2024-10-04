@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { getAllBotOnlyApiKeyByUserID } from "../../../../services/botService";
 import DataGridCustom from "../../../../components/DataGridCustom";
 import CheckIcon from '@mui/icons-material/Check';
-import { closeAllPosition, updatePL } from "../../../../services/positionService";
+import { closeAllPosition, updatePL } from "../../../../services/Positions/ByBIt/V3/positionService";
 import { addMessageToast } from "../../../../store/slices/Toast";
 import { useDispatch, useSelector } from "react-redux";
 

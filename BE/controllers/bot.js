@@ -2,11 +2,11 @@
 const BotModel = require('../models/bot.model');
 const GroupModel = require('../models/group.model');
 const UserModel = require('../models/user.model');
-const StrategiesModel = require('../models/strategies.model');
-const SpotModel = require('../models/spot.model');
-const MarginModel = require('../models/margin.model');
-const ScannerV3Model = require('../models/scannerV3.model');
-const ScannerV1Model = require('../models/scanner.model');
+const StrategiesModel = require('../models/Configs/ByBit/V3/config.model');
+const SpotModel = require('../models/Configs/ByBit/V1/spot.model');
+const MarginModel = require('../models/Configs/ByBit/V1/margin.model');
+const ScannerV3Model = require('../models/Configs/ByBit/V3/scanner.model');
+const ScannerV1Model = require('../models/Configs/ByBit/V1/scanner.model');
 const { default: mongoose } = require('mongoose');
 const OKX_API = require('../Trader/OKX/Doc/api');
 

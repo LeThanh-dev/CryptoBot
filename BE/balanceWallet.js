@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const TelegramBot = require('node-telegram-bot-api');
 const { getAllBotActiveBE } = require('./controllers/bot');
-const { getFutureSpotBE, balanceWalletBE } = require('./controllers/dataCoinByBit');
+const { getFutureSpotBE, balanceWalletBE } = require('./controllers/Configs/ByBit/V3/config');
 
 var botListTelegram = {}
 

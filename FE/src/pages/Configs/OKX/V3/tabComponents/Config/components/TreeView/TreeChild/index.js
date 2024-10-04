@@ -8,7 +8,7 @@ import UpdateStrategy from '../../UpdateStrategy';
 import clsx from 'clsx';
 import DialogCustom from '../../../../../../../../../components/DialogCustom';
 import { handleCheckAllCheckBox, formatNumberString } from '../../../../../../../../../functions';
-import { deleteStrategiesItem, updateStrategiesByID } from '../../../../../../../../../services/dataCoinByBitService';
+import { deleteStrategiesItem, updateStrategiesByID } from '../../../../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../../../../store/slices/Toast';
 
 

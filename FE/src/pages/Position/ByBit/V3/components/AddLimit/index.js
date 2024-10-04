@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import DialogCustom from "../../../../../../components/DialogCustom";
-import { closeLimit, getPriceLimitCurrent } from "../../../../../../services/positionService";
+import { closeLimit, getPriceLimitCurrent } from "../../../../../../services/Positions/ByBIt/V3/positionService";
 import { addMessageToast } from "../../../../../../store/slices/Toast";
 import styles from "../../../../../Bot/components/AddBot/AddBot.module.scss"
 

@@ -20,7 +20,7 @@ import DialogCustom from '../../../../../../components/DialogCustom';
 import { handleCheckAllCheckBox } from '../../../../../../functions';
 import useDebounce from '../../../../../../hooks/useDebounce';
 import { getAllBotActiveByUserID } from '../../../../../../services/botService';
-import { getTotalFutureByBot, getAllStrategies, syncSymbol } from '../../../../../../services/dataCoinByBitService';
+import { getTotalFutureByBot, getAllStrategies, syncSymbol } from '../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
 

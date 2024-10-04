@@ -9,7 +9,7 @@ import { getBotByID, updateBot } from '../../../../../../services/botService';
 import { useDispatch } from 'react-redux';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { formatNumber } from '../../../../../../functions';
-import { balanceWallet, getFutureAvailable, getSpotTotal } from '../../../../../../services/dataCoinByBitService';
+import { balanceWallet, getFutureAvailable, getSpotTotal } from '../../../../../../services/Configs/ByBIt/V3/configService';
 import CurrencyFormat from 'react-currency-format';
 
 function Wallet() {

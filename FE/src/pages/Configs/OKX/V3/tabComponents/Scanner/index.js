@@ -20,7 +20,7 @@ import { addMessageToast } from '../../../../../../store/slices/Toast';
 import DataGridCustom from '../../../../../../components/DataGridCustom';
 import DialogCustom from '../../../../../../components/DialogCustom';
 import UpdateStrategy from './components/UpdateStrategy';
-import { deleteStrategiesMultipleScannerV3, getAllConfigScannerV3, handleBookmarkScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../../../services/scannerV3Service';
+import { deleteStrategiesMultipleScannerV3, getAllConfigScannerV3, handleBookmarkScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../../../services/Configs/ByBIt/V3/scannerService';
 
 
 function ScannerV3() {

@@ -14,7 +14,7 @@ import { memo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { handleCheckAllCheckBox } from '../../../../../../../../../functions';
 import { addMessageToast } from '../../../../../../../../../store/slices/Toast';
-import { updateStrategiesMultipleSpot, addToBookmarkSpot, removeToBookmarkSpot } from '../../../../../../../../../services/marginService';
+import { updateStrategiesMultipleSpot, addToBookmarkSpot, removeToBookmarkSpot } from '../../../../../../../../../services/Configs/ByBIt/V1/marginService';
 
 function TreeParent({
     treeData,

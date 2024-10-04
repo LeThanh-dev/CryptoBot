@@ -16,7 +16,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import DialogCustom from '../../../../../../../../../components/DialogCustom';
 import { handleCheckAllCheckBox } from '../../../../../../../../../functions';
 import { addMessageToast } from '../../../../../../../../../store/slices/Toast';
-import { updateStrategiesMultipleSpot,deleteStrategiesSpot,addToBookmarkSpot,removeToBookmarkSpot } from '../../../../../../../../../services/spotService';
+import { updateStrategiesMultipleSpot,deleteStrategiesSpot,addToBookmarkSpot,removeToBookmarkSpot } from '../../../../../../../../../services/Configs/ByBIt/V1/spotService';
 
 function TreeParent({
     treeData,

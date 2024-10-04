@@ -1,10 +1,10 @@
 import { Button } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { closeAllBotForUpCode } from "../../services/dataCoinByBitService";
+import { closeAllBotForUpCode } from "../../services/Configs/ByBIt/V3/configService";
 import { addMessageToast } from "../../store/slices/Toast";
 import { useState } from "react";
 import DialogCustom from "../../components/DialogCustom";
-import { closeAllBotForUpCodeV1 } from "../../services/scannerService";
+import { closeAllBotForUpCodeV1 } from "../../services/Configs/ByBIt/V1/scannerService";
 
 function Dashboard() {
     const dispatch = useDispatch()

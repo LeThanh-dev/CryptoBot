@@ -11,7 +11,7 @@ import styles from "./Bot.module.scss"
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';
 import DialogCustom from '../../components/DialogCustom';
-import { getTotalFutureSpot, getTotalFutureSpotByBot } from '../../services/dataCoinByBitService';
+import { getTotalFutureSpot, getTotalFutureSpotByBot } from '../../services/Configs/ByBIt/V3/configService';
 import { formatNumber } from '../../functions';
 import { getAllBotType } from '../../services/botTypeService';
 import { LoadingButton } from '@mui/lab';

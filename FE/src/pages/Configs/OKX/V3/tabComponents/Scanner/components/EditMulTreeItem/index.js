@@ -8,9 +8,9 @@ import { verifyTokenVIP } from '../../../../../../../../services/authService';
 import { getAllBotActive } from '../../../../../../../../services/botService';
 import { getUserByID } from '../../../../../../../../services/userService';
 import { addMessageToast } from '../../../../../../../../store/slices/Toast';
-import { copyMultipleStrategiesToBotScannerV3, deleteStrategiesMultipleScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../../../../../services/scannerV3Service';
+import { copyMultipleStrategiesToBotScannerV3, deleteStrategiesMultipleScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../../../../../services/Configs/ByBIt/V3/scannerService';
 import { NumericFormat } from 'react-number-format';
-import { getAllSymbol } from '../../../../../../../../services/dataCoinByBitService';
+import { getAllSymbol } from '../../../../../../../../services/Configs/ByBIt/V3/configService';
 
 function EditMulTreeItem({
     onClose,

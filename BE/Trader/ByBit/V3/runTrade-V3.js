@@ -8,8 +8,24 @@ const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
-const { getAllStrategiesActive, getAllSymbolBE, getFutureBE, createStrategiesMultipleStrategyBE, updateStrategiesMultipleStrategyBE, deleteStrategiesMultipleStrategyBE, syncSymbolBE, deleteAllScannerBE, deleteAllForUPcode } = require('../../../controllers/dataCoinByBit');
-const { createPositionBE, updatePositionBE, deletePositionBE, getPositionBySymbol } = require('../../../controllers/position');
+const {
+    getAllStrategiesActive,
+    getAllSymbolBE,
+    getFutureBE,
+    createStrategiesMultipleStrategyBE,
+    updateStrategiesMultipleStrategyBE,
+    deleteStrategiesMultipleStrategyBE,
+    syncSymbolBE,
+    deleteAllScannerBE,
+    deleteAllForUPcode
+} = require('../../../controllers/Configs/ByBit/V3/config');
+const {
+    createPositionBE,
+    updatePositionBE,
+    deletePositionBE,
+    getPositionBySymbol
+} = require('../../../controllers/Positions/ByBit/V3/position');
+
 const { getAllStrategiesActiveScannerV3BE } = require('../../../controllers/scannerV3');
 
 const wsConfig = {
@@ -643,8 +659,8 @@ const handleCancelOrderTP = async ({
         .catch((error) => {
             console.log(`[!] Cancel TP ( ${botName} - ${side} - ${symbol} - ${candle} ) error `, error)
         });
-        cancelAll({ strategyID, botID })
-        delete listOCByCandleBot[candle]?.[botID]?.listOC?.[strategyID]
+    cancelAll({ strategyID, botID })
+    delete listOCByCandleBot[candle]?.[botID]?.listOC?.[strategyID]
 
 
 }
@@ -711,7 +727,7 @@ const cancelAll = (
 ) => {
     if (botID && strategyID) {
         const data = allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
-        
+
         if (data) {
             const OCOrderID = data?.OC?.orderLinkId
             const TPOrderID = data?.TP?.orderLinkId

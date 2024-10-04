@@ -7,9 +7,9 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { updateConfigByID } from '../../../../../../../../services/scannerService';
-import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../../../services/spotService';
-import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../../../services/marginService';
+import { updateConfigByID } from '../../../../../../../../services/Configs/OKX/V1/scannerService';
+import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../../../services/Configs/OKX/V1/spotService';
+import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../../../services/Configs/OKX/V1/marginService';
 
 function UpdateStrategy({
     onClose,

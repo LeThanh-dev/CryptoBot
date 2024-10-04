@@ -16,11 +16,11 @@ import AddBreadcrumbs from '../../../../../../components/BreadcrumbsCutom';
 import { handleCheckAllCheckBox } from '../../../../../../functions';
 import useDebounce from '../../../../../../hooks/useDebounce';
 import { getAllBotActiveByUserID } from '../../../../../../services/botService';
-import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitService';
+import { getTotalFutureByBot } from '../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
-import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/spotOKXService';
-import { syncInstrumentOKXV1 } from '../../../../../../services/InstrumentOKXV1Service';
+import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/Configs/OKX/V1/spotService';
+import { syncInstrumentOKXV1 } from '../../../../../../services/Instruments/OKX/V1/instrumentService';
 
 
 function SpotOKX() {
@@ -235,8 +235,8 @@ function SpotOKX() {
                 setLoadingUploadSymbol(true)
                 const resSync = await syncInstrumentOKXV1()
                 
-                const res = await syncSymbolSpot(resSync.data?.data?.listSpot || [])
-                const { status, message, data: resData } = res.data
+                const res = await syncSymbolSpot(resSync.data?.data?.filter(item=>item.market === "Spot") || [])
+                const { status, message } = res.data
 
                 dispatch(addMessageToast({
                     status: status,

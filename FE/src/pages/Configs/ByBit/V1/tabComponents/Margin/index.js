@@ -18,10 +18,10 @@ import AddBreadcrumbs from '../../../../../../components/BreadcrumbsCutom';
 import { handleCheckAllCheckBox } from '../../../../../../functions';
 import useDebounce from '../../../../../../hooks/useDebounce';
 import { getAllBotActiveByUserID } from '../../../../../../services/botService';
-import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitService';
+import { getTotalFutureByBot } from '../../../../../../services/Configs/ByBIt/V3/configService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
-import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/marginService';
+import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/Configs/ByBIt/V1/marginService';
 
 
 function Margin() {

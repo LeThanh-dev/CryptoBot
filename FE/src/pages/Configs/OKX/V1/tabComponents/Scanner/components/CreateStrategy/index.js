@@ -7,10 +7,9 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { getAllCoin, syncCoin } from "../../../../../../../../services/coinService"
-import { createConfigScanner } from '../../../../../../../../services/scannerService';
-import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../../../services/spotService';
-import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../../../services/marginService';
+import { createConfigScanner } from '../../../../../../../../services/Configs/OKX/V1/scannerService';
+import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../../../services/Configs/OKX/V1/spotService';
+import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../../../services/Configs/OKX/V1/marginService';
 
 function CreateStrategy({
     botListInput,

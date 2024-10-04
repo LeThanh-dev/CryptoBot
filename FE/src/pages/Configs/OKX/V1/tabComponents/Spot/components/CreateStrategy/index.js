@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux"
 import DialogCustom from "../../../../../../../../components/DialogCustom"
 import { addMessageToast } from "../../../../../../../../store/slices/Toast"
 import styles from "./CreateStrategy.module.scss"
-import { createStrategiesSpot, getAllSymbolSpot, getSpotBorrowCheck } from "../../../../../../../../services/spotOKXService";
+import { createStrategiesSpot, getAllSymbolSpot, getSpotBorrowCheck } from "../../../../../../../../services/Configs/OKX/V1/spotService";
 import { formatNumberString } from "../../../../../../../../functions"
 
 function CreateStrategy({

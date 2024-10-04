@@ -5,8 +5,8 @@ import { useDispatch } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
 import AddBreadcrumbs from '../../../../components/BreadcrumbsCutom';
 import DataGridCustom from '../../../../components/DataGridCustom';
-import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../../../services/instrumentsInfoService';
 import { addMessageToast } from '../../../../store/slices/Toast';
+import { getAllInstrumentsInfo, syncInstrumentsInfo } from '../../../../services/Instruments/ByBIt/V1/instrumentService';
 
 function InstrumentsInfo() {
     const tableColumns = [
