@@ -48,13 +48,7 @@ const InstrumentOKXV1Controller = {
                     }
                 })
             })
-
-            // return Object.values(list)
-            return {
-                listTemp,
-                listTempTikcer
-            }
-
+            return Object.values(list)
         } catch (err) {
             return []
         }
@@ -73,26 +67,26 @@ const InstrumentOKXV1Controller = {
         try {
             const resData = await InstrumentOKXV1Controller.getSymbolFromCloud()
 
-            // const bulkOperations = resData.map(data => ({
-            //     updateOne: {
-            //         filter: {
-            //             "symbol": data.symbol,
-            //             // "market": data.market,
-            //         },
-            //         update: {
-            //             $set: {
-            //                 minSz: data.minSz,
-            //                 lotSz: data.lotSz,
-            //                 tickSz: data.tickSz,
-            //                 lever: data.lever,
-            //                 vol: data.vol,
-            //             }
-            //         },
-            //         upsert: true
-            //     }
-            // }));
+            const bulkOperations = resData.map(data => ({
+                updateOne: {
+                    filter: {
+                        "symbol": data.symbol,
+                        // "market": data.market,
+                    },
+                    update: {
+                        $set: {
+                            minSz: data.minSz,
+                            lotSz: data.lotSz,
+                            tickSz: data.tickSz,
+                            lever: data.lever,
+                            vol: data.vol,
+                        }
+                    },
+                    upsert: true
+                }
+            }));
 
-            // await InstrumentOKXV1Model.bulkWrite(bulkOperations);
+            await InstrumentOKXV1Model.bulkWrite(bulkOperations);
 
             res.customResponse(200, "Sync All Successful", resData);
 

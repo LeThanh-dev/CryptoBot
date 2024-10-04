@@ -41,6 +41,6 @@ export const deleteMultipleBot = async (botIDList, botType) => {
 export const setMargin = async (botData) => {
     return await api.post(`/bot/setMargin`, botData)
 }
-export const setLever = async (botData) => {
-    return await api.post(`/bot/setLever`, botData)
+export const setLever = async (data) => {
+    return await api.post(`/bot/setLever`, data)
 }

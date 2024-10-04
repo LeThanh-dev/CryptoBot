@@ -749,15 +749,48 @@ const BotController = {
     setLever: async (req, res) => {
         try {
 
-            const resSet = await OKX_API.orderBookTrading.copyTrading.setLever(
-                {
-                    "instId": "BTC-USDT",
-                    "mgnMode": "isolated",
-                    "lever": "5"
-                }
-            )
-            console.log(resSet);
-            
+            const data = req.body
+
+            const botData = {
+                ApiKey: data.botData.ApiKey,
+                SecretKey: data.botData.SecretKey,
+                Password: data.password,
+            }
+
+            const list = {}
+            const getSpot = OKX_API.publicData.restAPI.getInstruments({ instType: "SPOT" })
+            const getMargin = OKX_API.publicData.restAPI.getInstruments({ instType: "MARGIN" })
+
+            const resultGetAll = await Promise.allSettled([getSpot, getMargin])
+
+            resultGetAll.forEach((symbolListData) => {
+                symbolListData.value?.forEach(e => {
+                    if (e.quoteCcy == "USDT") {
+                        const symbol = e.instId
+                        if (e.instType == "MARGIN" && !list[symbol]) {
+                            list[symbol] = {
+                                symbol,
+                                lever: e.lever,
+                            }
+                        }
+
+                    }
+                })
+            })
+
+           const resData =  await OKX_API.orderBookTrading.copyTrading.setLever({
+                listSymbol: Object.values(list),
+                botData
+            })
+            if(resData.code == 0)
+            {
+                res.customResponse(200, resData.msg,resData.data);
+            }
+            else 
+            {
+                res.customResponse(400, resData.msg);
+            }
+
         } catch (error) {
             // Xử lý lỗi nếu có
             res.status(500).json({ message: `Set Lever Error: ${error.message}` });

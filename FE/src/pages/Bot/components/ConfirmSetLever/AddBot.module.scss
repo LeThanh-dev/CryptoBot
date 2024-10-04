@@ -1,0 +1,15 @@
+.dialog {
+    &Form {
+        display: flex;
+        flex-direction: column;
+
+        .formControl {
+            margin-bottom: 16px;
+        }
+        .label
+        {
+            margin-bottom: 6px;
+        }
+        
+    }
+}

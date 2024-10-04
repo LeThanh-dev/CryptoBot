@@ -6,7 +6,7 @@ import { useState, memo, useEffect, useRef } from "react";
 import AddBreadcrumbs from "../../components/BreadcrumbsCutom";
 import DataGridCustom from "../../components/DataGridCustom";
 import AddBot from "./components/AddBot";
-import { deleteBot, getAllBot, getAllBotByGroupCreatedByUserID, getAllBotBySameGroup, getAllBotByUserID, setMargin, updateBot } from "../../services/botService";
+import { deleteBot, getAllBot, getAllBotByGroupCreatedByUserID, getAllBotBySameGroup, getAllBotByUserID, setLever, setMargin, updateBot } from "../../services/botService";
 import styles from "./Bot.module.scss"
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessageToast } from '../../store/slices/Toast';
@@ -15,6 +15,7 @@ import { getTotalFutureSpot, getTotalFutureSpotByBot } from '../../services/data
 import { formatNumber } from '../../functions';
 import { getAllBotType } from '../../services/botTypeService';
 import { LoadingButton } from '@mui/lab';
+import ConfirmSetLever from './components/ConfirmSetLever';
 
 function Bot() {
 
@@ -24,6 +25,7 @@ function Bot() {
     }) => {
         let text = ""
         let func
+        let btnColor
         switch (botType) {
             case "ByBitV1": {
                 text = "Set Margin"
@@ -32,13 +34,15 @@ function Bot() {
             }
             case "OKX_V1": {
                 text = "Set Lever"
-                func = () => { handleSetLever(rowData) }
+                func = () => { setOpenConfirmSetLever(rowData) }
+                btnColor = "success"
                 break
             }
         }
         return {
             text,
-            func
+            func,
+            btnColor
         }
     }
     const statusList = [
@@ -264,6 +268,7 @@ function Bot() {
                 return (
                     <LoadingButton
                         variant="contained"
+                        color={data.btnColor}
                         size="small"
                         loading={loadingSetMargin == rowData["_id"]}
                         sx={{
@@ -295,8 +300,9 @@ function Bot() {
     const [confirmActiveBot, setConfirmActiveBot] = useState(false);
     const [loadingSetMargin, setLoadingSetMargin] = useState("");
     const [totalFutureSpot, setTotalFutureSpot] = useState(0);
-    const totalFutureSpotOfMeDefault = useRef(0)
+    const [openConfirmSetLever, setOpenConfirmSetLever] = useState("");
 
+    const totalFutureSpotOfMeDefault = useRef(0)
     const checkMyBotRef = useRef(true)
     const checkBotTypeRef = useRef("All")
     const checkBotStatusRef = useRef("All")
@@ -335,26 +341,7 @@ function Bot() {
         setLoadingSetMargin("")
     }
 
-    const handleSetLever = async (botData) => {
-        setLoadingSetMargin(botData._id)
-        try {
-            const res = await setMargin(botData)
-            const { status, message } = res.data
 
-            dispatch(addMessageToast({
-                status: status,
-                message: message,
-            }))
-
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Set Lever Error",
-            }))
-        }
-        setLoadingSetMargin("")
-    }
 
     const handleUpdateBot = async ({ botID, data }) => {
         try {
@@ -714,6 +701,14 @@ function Bot() {
                         <p style={{ textAlign: "center" }}>Bot have api - Do you want to deactive?</p>
                     </DialogCustom >
                 )
+            }
+            {
+                openConfirmSetLever && <ConfirmSetLever
+                    onClose={() => { setOpenConfirmSetLever("") }}
+                    setLoadingSetMargin={setLoadingSetMargin}
+                    botData={openConfirmSetLever}
+                    loading = {loadingSetMargin}
+                />
             }
         </div >
 

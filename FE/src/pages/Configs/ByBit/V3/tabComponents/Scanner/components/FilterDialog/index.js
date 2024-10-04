@@ -121,6 +121,15 @@ function FilterDialog({
                 compare: "=",
                 value: ""
             },
+            name: "TP",
+            value: "TP",
+            compareFilterList: compareFilterListDefault,
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
             name: "Adjust",
             value: "Adjust",
             compareFilterList: compareFilterListDefault,

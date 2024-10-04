@@ -1983,6 +1983,7 @@ const handleScannerDataList = async ({
 
             scannerData.OCLength = Math.abs(scannerData.OCLength)
             scannerData.OrderChange = Math.abs(scannerData.OrderChange)
+            scannerData.TP = Math.abs(scannerData.TP)
             scannerData.Adjust = Math.abs(scannerData.Adjust)
             scannerData.Amount = Math.abs(scannerData.Amount)
             scannerData.Expire = Math.abs(scannerData.Expire)
@@ -2130,7 +2131,7 @@ const handleScannerDataList = async ({
                                         Amount: scannerData.Amount,
                                         OrderChange: newOC,
                                         Candlestick,
-                                        TakeProfit: 40,
+                                        TakeProfit: scannerData.TP,
                                         ReduceTakeProfit: 45,
                                         ExtendedOCPercent: 80,
                                         Ignore: 85,

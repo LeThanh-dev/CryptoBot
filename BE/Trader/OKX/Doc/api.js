@@ -5,14 +5,22 @@ const api = axios.create({
     baseURL: "https://aws.okx.com",
 });
 
-const getApiPrivate = (TIMESTAMP) => axios.create({
+const getApiPrivate = ({
+    timestamp,
+    ApiKey,
+    Password
+}) => axios.create({
     baseURL: "https://aws.okx.com",
     headers: {
-        "OK-ACCESS-KEY": "20c806d9-db45-4fc8-bd41-5c311f0d7c64",
-        "OK-ACCESS-TIMESTAMP": TIMESTAMP,
-        "OK-ACCESS-PASSPHRASE": "Nguyen123@"
+        "OK-ACCESS-KEY": ApiKey,
+        "OK-ACCESS-TIMESTAMP": timestamp,
+        "OK-ACCESS-PASSPHRASE": Password
     },
 });
+
+async function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function createSignature({
     timestamp, method, requestPath, body, secretKey
@@ -48,46 +56,82 @@ const OKX_API = {
         },
         copyTrading: {
             setLever: async ({
-                instId = "",
-                mgnMode,
-                lever
+                listSymbol = [],
+                botData = {}
             }) => {
                 try {
-                    const body = {
-                        instId,
-                        mgnMode,
-                        lever
-                    }
-                    const requestPath = "/api/v5/copytrading/batch-set-leverage"
-                    const timestamp = new Date().toISOString()
 
-                    const OK_ACCESS_SIGN = createSignature({
-                        timestamp,
-                        method: "POST",
-                        requestPath,
-                        body,
-                        secretKey: "5E821F8B11B827A4843BEEA6250C781A"
-                    })
+                    const ApiKey = botData.ApiKey
+                    const SecretKey = botData.SecretKey
+                    const Password = botData.Password
 
-                    const apiPrivate = getApiPrivate(timestamp)
+                    const requestPath = "/api/v5/account/set-leverage"
 
-                    const res = await apiPrivate.post(requestPath, body, {
-                        headers: {
-                            "OK-ACCESS-SIGN": OK_ACCESS_SIGN
+                    let index = 0;
+                    const batchSize = 10
+
+                    let errorText = ""
+                    while (index < listSymbol.length) {
+                        console.log(index);
+
+                        const batch = listSymbol.slice(index, index + batchSize);
+                        await Promise.allSettled(batch.map(async item => (
+                            await Promise.allSettled(["isolated", "cross"].map(async mgnMode => {
+                                const symbol = item.symbol
+                                const lever = item.lever
+                                const body = {
+                                    instId: symbol,
+                                    mgnMode,
+                                    lever,
+                                }
+                                const timestamp = new Date().toISOString()
+                                const OK_ACCESS_SIGN = createSignature({
+                                    timestamp,
+                                    method: "POST",
+                                    requestPath,
+                                    body,
+                                    secretKey: SecretKey
+                                })
+
+                                const apiPrivate = getApiPrivate({
+                                    timestamp,
+                                    ApiKey,
+                                    Password
+                                })
+
+                                try {
+                                    await apiPrivate.post(requestPath, body, {
+                                        headers: {
+                                            "OK-ACCESS-SIGN": OK_ACCESS_SIGN
+                                        }
+                                    })
+                                    console.log(`[V] Set lever ( ${symbol} - ${lever} ) successful`);
+
+                                } catch (error) {
+                                    console.log(`[!] Set lever ( ${symbol} - ${lever} )  error: ${error}`);
+                                    errorText = error.response.data.msg
+                                }
+
+                            })
+                            ))));
+                        if (errorText) {
+                            break
                         }
-                    })
-                    const resData = res.data
+                        await delay(2000)
+                        index += batchSize;
+                    }
 
                     return {
-                        code: resData.code,
-                        data: resData.data,
+                        code: !errorText ? 0 : -1,
+                        msg: !errorText ? "Set Lever Successful" : errorText,
+                        data: listSymbol
                     }
-
 
                 } catch (error) {
                     return {
                         code: -1,
-                        data: [],
+                        msg: error.message,
+                        data: []
                     }
                 }
             }

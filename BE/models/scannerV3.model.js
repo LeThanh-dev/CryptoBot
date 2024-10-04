@@ -22,6 +22,7 @@ const strategiesSchema = new mongoose.Schema({
   Ratio: String,
 
   Amount: Number,
+  TP: Number,
   PositionSide: String,
   Expire: Number,
   Limit: Number,

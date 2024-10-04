@@ -564,25 +564,46 @@ function UpdateStrategy({
 
                     </div>
 
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
-                    <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
-                        <TextField
-                            type='number'
-                            label="Amount"
-                            variant="outlined"
-                            defaultValue={dataInput.Amount}
-                            size="medium"
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">
-                                    %
-                                </InputAdornment>
-                            }}
-                            {...register("Amount", { required: true, min: formControlMinValue })}
-                        />
-                        {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">The Amount Required.</p>}
-                        {errors.Amount?.type === "min" && <p className="formControlErrorLabel">The Amount must bigger 0.01.</p>}
+                        <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
+                            <TextField
+                                type='number'
+                                label="Amount"
+                                variant="outlined"
+                                defaultValue={dataInput.Amount}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("Amount", { required: true, min: formControlMinValue })}
+                            />
+                            {errors.Amount?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Amount?.type === "min" && <p className="formControlErrorLabel">Bigger 0.01.</p>}
 
-                    </FormControl>
+                        </FormControl>
+
+                        <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
+                            <TextField
+                                type='number'
+                                label="TP"
+                                variant="outlined"
+                                defaultValue={dataInput.TP}
+                                size="medium"
+                                InputProps={{
+                                    endAdornment: <InputAdornment position="end">
+                                        %
+                                    </InputAdornment>
+                                }}
+                                {...register("TP", { required: true, min: formControlMinValue })}
+                            />
+                            {errors.TP?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.TP?.type === "min" && <p className="formControlErrorLabel">Bigger 0.01.</p>}
+
+                        </FormControl>
+                    </div>
 
                     <FormControl className={clsx(styles.formControl, styles.formMainDataItem)}>
                         <TextField

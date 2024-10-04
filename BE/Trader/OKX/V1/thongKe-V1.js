@@ -82,12 +82,12 @@ async function getListSymbol() {
 
                     listSymbol.push(
                         {
-                            channel: "tickers",
+                            channel: "candle1D",
                             instId: symbolData.instId
                         },
                     )
 
-                    symbolObject[symbol] = symbolData.instType == "Margin" ? "🍁" : "🍀"
+                    symbolObject[symbol] = symbolData.instType == "MARGIN" ? "🍁" : "🍀"
 
                     trichMauData[symbol] = {
                         open: 0,
@@ -110,11 +110,11 @@ async function getListSymbol() {
         console.log(`[!] Error get symbol: ${error.message}`);
     }
 
-    return listSymbol
-    // return [{
-    //     channel: "tickers",
-    //     instId: "DEGEN-USDT"
-    // }]
+    // return listSymbol
+    return [{
+        channel: "candle1D",
+        instId: "DEGEN-USDT"
+    }]
 }
 
 
@@ -223,15 +223,15 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
         const timeOC = new Date(timestamp).toLocaleString()
-        if (vol >= 5000) {
-            if (OCRound >= 1) {
+        if (vol >= 0) {
+            if (OCRound >= 0) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1) {
+            if (OCLongRound <= 0) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(htLong)
                 console.log(htLong);
@@ -244,7 +244,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
@@ -264,17 +264,18 @@ let Main = async () => {
 
     wsSymbol.on('update', (dataCoin) => {
 
+        
         const dataMainAll = dataCoin.data
         if (dataMainAll.length > 1) {
             console.log("CO 2 gias");
         }
         dataMainAll.forEach(dataMain => {
 
-            const coinCurrent = +dataMain.last
+            const coinCurrent = +dataMain[4]
 
-            const turnover = +dataMain.bidSz
-            const timestamp = +dataMain.ts
-            const symbol = dataMain.instId
+            const turnover = +dataMain[6]
+            const timestamp = +dataMain[0]
+            const symbol = dataCoin.arg.instId
 
             listKlineObject[symbol] = symbol
 
@@ -356,7 +357,7 @@ let Main = async () => {
             trichMauDataArray[symbol] = []
         })
         listKlineObject = {}
-    }, 5000)
+    }, 3000)
 
 
 

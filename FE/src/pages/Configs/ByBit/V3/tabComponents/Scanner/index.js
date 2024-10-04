@@ -307,6 +307,12 @@ function ScannerV3() {
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
+            field: 'TP',
+            headerName: 'TP (%)',
+            minWidth: window.innerWidth <= 740 ? 130 : 100,
+            flex: window.innerWidth <= 740 ? undefined : 1,
+        },
+        {
             field: 'Condition',
             headerName: 'Condition (%)',
             minWidth: window.innerWidth <= 740 ? 200 : 130,
