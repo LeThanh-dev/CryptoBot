@@ -2131,7 +2131,7 @@ const handleScannerDataList = async ({
                                         Amount: scannerData.Amount,
                                         OrderChange: newOC,
                                         Candlestick,
-                                        TakeProfit: scannerData.TP,
+                                        TakeProfit: scannerData.TP || 40,
                                         ReduceTakeProfit: 45,
                                         ExtendedOCPercent: 80,
                                         Ignore: 85,
