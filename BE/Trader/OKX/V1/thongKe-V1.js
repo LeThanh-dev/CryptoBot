@@ -277,15 +277,15 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
         const timeOC = new Date(timestamp).toLocaleString()
-        if (vol >= 0) {
-            if (OCRound >= .1) {
+        if (vol >= 5000) {
+            if (OCRound >= 1) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -.1) {
+            if (OCLongRound <= -1) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(htLong)
                 console.log(htLong);
