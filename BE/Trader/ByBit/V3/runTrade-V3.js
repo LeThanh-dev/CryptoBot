@@ -638,14 +638,14 @@ const handleCancelOrderTP = async ({
             else {
                 console.log(changeColorConsole.yellowBright(`[!] Cancel TP ( ${botName} - ${side} - ${symbol} - ${candle} ) failed `, response.retMsg))
             }
-            cancelAll({ strategyID, botID })
-            // allStrategiesByBotIDOrderOC[botID][symbol].totalOC -= 1
 
         })
         .catch((error) => {
             console.log(`[!] Cancel TP ( ${botName} - ${side} - ${symbol} - ${candle} ) error `, error)
-            cancelAll({ strategyID, botID })
         });
+        cancelAll({ strategyID, botID })
+        delete listOCByCandleBot[candle]?.[botID]?.listOC?.[strategyID]
+
 
 }
 
@@ -711,6 +711,7 @@ const cancelAll = (
 ) => {
     if (botID && strategyID) {
         const data = allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID]
+        
         if (data) {
             const OCOrderID = data?.OC?.orderLinkId
             const TPOrderID = data?.TP?.orderLinkId
@@ -1180,7 +1181,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                 console.log(`[-] Cancelled OC ( ${botName} - ${strategy.PositionSide === "Long" ? "Sell" : "Buy"} - ${symbol} - ${strategy.Candlestick}) `);
 
-                                                delete listOCByCandleBot[strategy.Candlestick]?.[botID]?.listOC[strategyID]
+                                                delete listOCByCandleBot[strategy.Candlestick]?.[botID]?.listOC?.[strategyID]
                                                 cancelAll({ botID, strategyID })
                                             }
 

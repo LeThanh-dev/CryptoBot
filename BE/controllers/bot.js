@@ -751,7 +751,7 @@ const BotController = {
 
             const resSet = await OKX_API.orderBookTrading.copyTrading.setLever(
                 {
-                    "instId": "BTC-USDT-USDT",
+                    "instId": "BTC-USDT",
                     "mgnMode": "isolated",
                     "lever": "5"
                 }

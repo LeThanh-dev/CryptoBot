@@ -4,11 +4,12 @@ const crypto = require('crypto');
 const api = axios.create({
     baseURL: "https://aws.okx.com",
 });
-const apiPrivate = axios.create({
+
+const getApiPrivate = (TIMESTAMP) => axios.create({
     baseURL: "https://aws.okx.com",
     headers: {
         "OK-ACCESS-KEY": "20c806d9-db45-4fc8-bd41-5c311f0d7c64",
-        "OK-ACCESS-TIMESTAMP": new Date().toISOString(),
+        "OK-ACCESS-TIMESTAMP": TIMESTAMP,
         "OK-ACCESS-PASSPHRASE": "Nguyen123@"
     },
 });
@@ -58,28 +59,36 @@ const OKX_API = {
                         lever
                     }
                     const requestPath = "/api/v5/copytrading/batch-set-leverage"
-                    
+                    const timestamp = new Date().toISOString()
+
                     const OK_ACCESS_SIGN = createSignature({
-                        timestamp: new Date().toISOString(),
+                        timestamp,
                         method: "POST",
                         requestPath,
                         body,
                         secretKey: "5E821F8B11B827A4843BEEA6250C781A"
                     })
-                    
-                    
+
+                    const apiPrivate = getApiPrivate(timestamp)
+
                     const res = await apiPrivate.post(requestPath, body, {
                         headers: {
                             "OK-ACCESS-SIGN": OK_ACCESS_SIGN
                         }
                     })
+                    const resData = res.data
 
-                    console.log("res",res);
+                    return {
+                        code: resData.code,
+                        data: resData.data,
+                    }
 
-                    return res.data?.data || []
 
                 } catch (error) {
-                    return []
+                    return {
+                        code: -1,
+                        data: [],
+                    }
                 }
             }
         }
