@@ -110,11 +110,11 @@ async function getListSymbol() {
         console.log(`[!] Error get symbol: ${error.message}`);
     }
 
-    // return listSymbol
-    return [{
-        channel: "candle1D",
-        instId: "DEGEN-USDT"
-    }]
+    return listSymbol
+    // return [{
+    //     channel: "candle1D",
+    //     instId: "DEGEN-USDT"
+    // }]
 }
 
 
@@ -141,7 +141,12 @@ const sendMessageTinhOC = async (messageList) => {
 
 }
 
-
+const sortListReverse = (arr) => {
+    return {
+        OC: [...arr].sort((a, b) => Math.abs(b.OC) - Math.abs(a.OC)),
+        OCLong: [...arr].sort((a, b) => Math.abs(b.OCLong) - Math.abs(a.OCLong))
+    }
+}
 
 
 const tinhOC = (symbol, dataAll = []) => {
@@ -155,10 +160,43 @@ const tinhOC = (symbol, dataAll = []) => {
         let OCLong = 0
         let TPLong = 0
 
-        let dataOC = ""
+        let dataOCList = []
+        let dataOC = {}
+        let dataOCLong = {}
         let timestamp = 0
 
         const vol = Math.abs(dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol])
+
+        dataAll.forEach((data, index) => {
+
+            const Open = +data.open
+            const Highest = +data.high
+            const Lowest = +data.low
+
+            OC = (Highest - Open) / Open
+            OCLong = (Lowest - Open) / Open
+
+            if ([Infinity, -Infinity].includes(OC)) {
+                OC = 0
+            }
+
+            if ([Infinity, -Infinity].includes(OCLong)) {
+                OCLong = 0
+            }
+            dataOCList.push({
+                OC: OC,
+                OCLong: OCLong,
+                index
+            })
+        })
+
+        const OCMain = sortListReverse(dataOCList)
+        const OCLongData = OCMain.OCLong[0]
+        const OCData = OCMain.OC[0]
+
+        OC = OCData.OC
+        OCLong = OCLongData.OCLong
+
 
         dataAll.forEach((data, index) => {
 
@@ -167,38 +205,54 @@ const tinhOC = (symbol, dataAll = []) => {
             const Highest = +data.high
             const Lowest = +data.low
 
+            if (index >= OCData.index) {
+                if (index === OCData.index) {
+                    // Tinh OC Short
+                    TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+                    dataOC = {
+                        close: Close,
+                        open: Open,
+                        high: Highest,
+                        low: Lowest,
+                    }
+                    timestamp = data.timestamp
+                }
+                else {
+                    let TPTemp = 0
+                    if (Lowest < dataOC.close) {
+                        TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
+                    }
+                    if (TPTemp > TP) {
+                        TP = TPTemp
+                    }
 
-            if (!dataOC) {
-                OC = (Highest - Open) / Open
-                OCLong = (Lowest - Open) / Open
-                TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
-                TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
-                dataOC = {
-                    close: Close,
-                    open: Open,
-                    high: Highest,
-                    low: Lowest,
-                }
-                timestamp = data.timestamp
-            }
-            else {
-
-                let TPTemp = 0
-                let TPLongTemp = 0
-                if (Lowest < dataOC.close) {
-                    TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
-                }
-                if (Highest > dataOC.close) {
-                    TPLongTemp = Math.abs((Highest - dataOC.low) / (dataOC.low - dataOC.open)) || 0
-                }
-
-                if (TPTemp > TP) {
-                    TP = TPTemp
-                }
-                if (TPLongTemp > TPLong) {
-                    TPLong = TPLongTemp
                 }
             }
+            if (index >= OCLongData.index) {
+                if (index === OCLongData.index) {
+                    // Tinh OC Long
+                    TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                    dataOCLong = {
+                        close: Close,
+                        open: Open,
+                        high: Highest,
+                        low: Lowest,
+                    }
+                    timestamp = data.timestamp
+                }
+                else {
+                    let TPLongTemp = 0
+
+                    if (Highest > dataOCLong.close) {
+                        TPLongTemp = Math.abs((Highest - dataOCLong.low) / (dataOCLong.low - dataOCLong.open)) || 0
+                    }
+
+                    if (TPLongTemp > TPLong) {
+                        TPLong = TPLongTemp
+                    }
+                }
+            }
+
         })
 
 
@@ -224,14 +278,14 @@ const tinhOC = (symbol, dataAll = []) => {
 
         const timeOC = new Date(timestamp).toLocaleString()
         if (vol >= 0) {
-            if (OCRound >= 0) {
+            if (OCRound >= .1) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= 0) {
+            if (OCLongRound <= -.1) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
                 messageList.push(htLong)
                 console.log(htLong);
@@ -244,7 +298,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                // sendMessageTinhOC(messageList)
+                sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
@@ -264,7 +318,7 @@ let Main = async () => {
 
     wsSymbol.on('update', (dataCoin) => {
 
-        
+
         const dataMainAll = dataCoin.data
         if (dataMainAll.length > 1) {
             console.log("CO 2 gias");
@@ -357,7 +411,7 @@ let Main = async () => {
             trichMauDataArray[symbol] = []
         })
         listKlineObject = {}
-    }, 3000)
+    }, 5000)
 
 
 
