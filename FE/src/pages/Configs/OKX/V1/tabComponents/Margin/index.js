@@ -21,7 +21,8 @@ import { getAllBotActiveByUserID } from '../../../../../../services/botService';
 import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitService';
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
-import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/marginService';
+import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/marginOKXService';
+import { syncInstrumentOKXV1 } from '../../../../../../services/InstrumentOKXV1Service';
 
 
 function MarginOKX() {
@@ -127,7 +128,7 @@ function MarginOKX() {
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotActiveByUserID(userData._id, "ByBitV1")
+        getAllBotActiveByUserID(userData._id, "OKX_V1")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (
@@ -234,7 +235,9 @@ function MarginOKX() {
         if (!loadingUploadSymbol) {
             try {
                 setLoadingUploadSymbol(true)
-                const res = await syncSymbolSpot()
+                const resSync = await syncInstrumentOKXV1()
+                
+                const res = await syncSymbolSpot(resSync.data?.data?.listMargin || [])
                 const { status, message, data: resData } = res.data
 
                 dispatch(addMessageToast({

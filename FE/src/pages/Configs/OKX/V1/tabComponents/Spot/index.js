@@ -20,6 +20,7 @@ import { getTotalFutureByBot } from '../../../../../../services/dataCoinByBitSer
 import { addMessageToast } from '../../../../../../store/slices/Toast';
 import { setTotalFuture } from '../../../../../../store/slices/TotalFuture';
 import { getAllStrategiesSpot, syncSymbolSpot } from '../../../../../../services/spotOKXService';
+import { syncInstrumentOKXV1 } from '../../../../../../services/InstrumentOKXV1Service';
 
 
 function SpotOKX() {
@@ -125,7 +126,7 @@ function SpotOKX() {
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotActiveByUserID(userData._id, "ByBitV1")
+        getAllBotActiveByUserID(userData._id, "OKX_V1")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (
@@ -232,7 +233,9 @@ function SpotOKX() {
         if (!loadingUploadSymbol) {
             try {
                 setLoadingUploadSymbol(true)
-                const res = await syncSymbolSpot()
+                const resSync = await syncInstrumentOKXV1()
+                
+                const res = await syncSymbolSpot(resSync.data?.data?.listSpot || [])
                 const { status, message, data: resData } = res.data
 
                 dispatch(addMessageToast({

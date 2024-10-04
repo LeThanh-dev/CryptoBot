@@ -52,8 +52,8 @@ export const deleteStrategiesMultipleSpot = async (data) => {
 }
 
 // OTHER
-export const syncSymbolSpot = async () => {
-    return await api.get("/spotOKX/syncSymbolSpot")
+export const syncSymbolSpot = async (listSymbolObject) => {
+    return await api.post("/spotOKX/syncSymbolSpot",listSymbolObject)
 }
 export const copyMultipleStrategiesToSymbolSpot = async (newData) => {
     return await api.post(`/spotOKX/copyMultipleStrategiesToSymbolSpot`, newData)

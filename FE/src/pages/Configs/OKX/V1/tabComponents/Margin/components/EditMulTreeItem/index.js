@@ -8,7 +8,7 @@ import { verifyTokenVIP } from '../../../../../../../../services/authService';
 import { getAllBotActive } from '../../../../../../../../services/botService';
 import { getUserByID } from '../../../../../../../../services/userService';
 import { addMessageToast } from '../../../../../../../../store/slices/Toast';
-import { updateStrategiesMultipleSpot, getAllSymbolSpot, deleteStrategiesMultipleSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../../../services/marginService';
+import { updateStrategiesMultipleSpot, getAllSymbolSpot, deleteStrategiesMultipleSpot, copyMultipleStrategiesToSymbolSpot, copyMultipleStrategiesToBotSpot } from '../../../../../../../../services/marginOKXService';
 
 function EditMulTreeItem({
     onClose,
@@ -165,7 +165,7 @@ function EditMulTreeItem({
     }
     const handleGetAllBot = async () => {
         try {
-            const res = await getAllBotActive("ByBitV1")
+            const res = await getAllBotActive("OKX_V1")
             const { data: resUserData } = res.data
             setBotListInputVIP(resUserData.map(item => ({
                 name: item.botName,

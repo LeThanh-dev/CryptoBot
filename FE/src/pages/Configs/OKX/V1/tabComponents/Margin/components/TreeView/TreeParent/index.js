@@ -14,7 +14,7 @@ import { memo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { handleCheckAllCheckBox } from '../../../../../../../../../functions';
 import { addMessageToast } from '../../../../../../../../../store/slices/Toast';
-import { updateStrategiesMultipleSpot, addToBookmarkSpot, removeToBookmarkSpot } from '../../../../../../../../../services/marginService';
+import { updateStrategiesMultipleSpot, addToBookmarkSpot, removeToBookmarkSpot } from '../../../../../../../../../services/marginOKXService';
 
 function TreeParent({
     treeData,
@@ -304,7 +304,7 @@ function TreeParent({
                     checkedIcon={<StarIcon />}
                 />
                 <p className={styles.label}>
-                    {treeData.label.split("USDT")[0]}
+                    {treeData.label.split("-USDT")[0]}
                     <span style={{
                         fontWeight: "600",
                         marginLeft: "3px"

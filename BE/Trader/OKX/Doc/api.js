@@ -72,8 +72,6 @@ const OKX_API = {
 
                     let errorText = ""
                     while (index < listSymbol.length) {
-                        console.log(index);
-
                         const batch = listSymbol.slice(index, index + batchSize);
                         await Promise.allSettled(batch.map(async item => (
                             await Promise.allSettled(["isolated", "cross"].map(async mgnMode => {
@@ -105,7 +103,6 @@ const OKX_API = {
                                             "OK-ACCESS-SIGN": OK_ACCESS_SIGN
                                         }
                                     })
-                                    console.log(`[V] Set lever ( ${symbol} - ${lever} ) successful`);
 
                                 } catch (error) {
                                     console.log(`[!] Set lever ( ${symbol} - ${lever} )  error: ${error}`);

@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux";
 import DialogCustom from "../../../../../../../../components/DialogCustom";
 import { addMessageToast } from "../../../../../../../../store/slices/Toast";
 import styles from "../CreateStrategy/CreateStrategy.module.scss"
-import { updateStrategiesSpotByID } from "../../../../../../../../services/marginService";
+import { updateStrategiesSpotByID } from "../../../../../../../../services/marginOKXService";
 
 function UpdateStrategy({
     onClose,

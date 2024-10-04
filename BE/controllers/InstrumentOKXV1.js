@@ -14,13 +14,13 @@ const InstrumentOKXV1Controller = {
             const getTickers = await OKX_API.orderBookTrading.marketData.getTickers({ instType: "SPOT" })
 
             const vol24hBySymbolObject = {}
-            const listTemp = []
-            const listTempTikcer = []
+
+            const listSpot = []
+            const listMargin = []
 
             getTickers.forEach((ticker) => {
                 const symbol = ticker.instId
                 if (symbol.includes("USDT")) {
-                    listTempTikcer.push(symbol)
                     vol24hBySymbolObject[symbol] = ticker.volCcy24h
                 }
             })
@@ -30,6 +30,13 @@ const InstrumentOKXV1Controller = {
                     if (e.quoteCcy == "USDT") {
                         const symbol = e.instId
                         const market = e.instType == "MARGIN" ? "Margin" : "Spot"
+                        const volume24h = vol24hBySymbolObject[symbol]
+                        if (market === "Margin") {
+                            listMargin.push({symbol,volume24h})
+                        }
+                        else {
+                            listSpot.push({symbol,volume24h})
+                        }
                         if (!list[symbol]) {
                             list[symbol] = {
                                 symbol,
@@ -38,9 +45,8 @@ const InstrumentOKXV1Controller = {
                                 lotSz: e.lotSz,
                                 tickSz: e.tickSz,
                                 lever: e.lever,
-                                vol: vol24hBySymbolObject[symbol]
+                                volume24h
                             }
-                            listTemp.push(symbol)
                         }
                         else {
                             market === "Margin" && (list[symbol].market = market);
@@ -48,7 +54,11 @@ const InstrumentOKXV1Controller = {
                     }
                 })
             })
-            return Object.values(list)
+            return {
+                listSpot,
+                listMargin,
+                list:Object.values(list)
+            }
         } catch (err) {
             return []
         }
@@ -65,7 +75,9 @@ const InstrumentOKXV1Controller = {
     },
     sync: async (req, res) => {
         try {
-            const resData = await InstrumentOKXV1Controller.getSymbolFromCloud()
+            const resAll = await InstrumentOKXV1Controller.getSymbolFromCloud()
+
+            const resData = resAll.list
 
             const bulkOperations = resData.map(data => ({
                 updateOne: {
@@ -79,7 +91,7 @@ const InstrumentOKXV1Controller = {
                             lotSz: data.lotSz,
                             tickSz: data.tickSz,
                             lever: data.lever,
-                            vol: data.vol,
+                            vol: data.volume24h,
                         }
                     },
                     upsert: true
@@ -88,7 +100,7 @@ const InstrumentOKXV1Controller = {
 
             await InstrumentOKXV1Model.bulkWrite(bulkOperations);
 
-            res.customResponse(200, "Sync All Successful", resData);
+            res.customResponse(200, "Sync All Successful", resAll);
 
         } catch (err) {
             res.status(500).json({ message: err.message });

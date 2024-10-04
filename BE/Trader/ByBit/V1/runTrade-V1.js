@@ -226,6 +226,7 @@ const handleSubmitOrder = async ({
 }) => {
 
 
+    let orderOCFalse = false
     !allStrategiesByBotIDAndStrategiesID[botID]?.[strategyID] && cancelAll({ botID, strategyID });
 
     !allStrategiesByBotIDOrderOC[botID] && (
@@ -256,6 +257,7 @@ const handleSubmitOrder = async ({
             side,
             botName,
             botID,
+            botData,
             ApiKey,
             SecretKey,
             orderLinkId,
@@ -305,6 +307,7 @@ const handleSubmitOrder = async ({
                     console.log(textTele)
                     delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                     delete listOCByCandleBot[botID].listOC[strategyID]
+                    orderOCFalse = true
 
                 }
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
@@ -312,6 +315,7 @@ const handleSubmitOrder = async ({
             .catch((error) => {
                 textTele = `\n🟥 Ordered OC ( ${strategy.OrderChange} )  ( ${botName} - ${side} - ${symbol} ) error: ${error} `
                 console.log(textTele)
+                orderOCFalse = true
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
                 delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                 delete listOCByCandleBot[botID].listOC[strategyID]
@@ -324,8 +328,31 @@ const handleSubmitOrder = async ({
             allStrategiesByBotIDOrderOC[botID].totalOC = 0
         }, 1000)
 
+        if (orderOCFalse) {
+            allStrategiesByCandleAndSymbol[symbol][strategyID].IsActive = false
+            const configID = strategy._id
+
+            let offSuccess = false
+            if (symbolTradeTypeObject[symbol] == "Spot") {
+                offSuccess = await offConfigSpotBE({
+                    configID,
+                    symbol,
+                })
+            }
+            else {
+                offSuccess = await offConfigMarginBE({
+                    configID,
+                    symbol,
+                    PositionSide: strategy.PositionSide
+                });
+            }
+            offSuccess && await handleSocketUpdate([strategy])
+        }
+
+        const textTeleHandle = !orderOCFalse ? textTele : `${textTele}\n -> Off Config Successful`
+
         sendMessageWithRetry({
-            messageText: textTele,
+            messageText: textTeleHandle,
             telegramID,
             telegramToken
         })
@@ -592,8 +619,10 @@ const handleRepaySymbol = async ({
     botID,
     side,
     ApiKey,
-    SecretKey
+    SecretKey,
+    botData
 }) => {
+    let textTele = ""
     console.log(changeColorConsole.magentaBright(`[...] Repay ( ${symbol}  ${side} )`));
 
     repayCoinObject[symbol] = true
@@ -603,16 +632,24 @@ const handleRepaySymbol = async ({
 
     await clientRepay.repayLiability({ coin: symbol.replace("USDT", "") }).then((response) => {
         if (response.retCode == 0) {
-            console.log(changeColorConsole.greenBright(`[V] Repay ( ${symbol}  ${side} ) successful`));
+            textTele = `[V] Repay ( ${symbol}  ${side} ) successful`
+            console.log(changeColorConsole.greenBright(textTele));
             closeMarketRepayBySymbol[botID][symbol] = true
         }
         else {
-            console.log(changeColorConsole.yellowBright(`[!] Repay ( ${symbol}  ${side} ) failed: ${response.retMsg}`));
+            textTele = `[!] Repay ( ${symbol}  ${side} ) failed: ${response.retMsg}`
+            console.log(changeColorConsole.yellowBright(textTele));
         }
     })
         .catch((error) => {
-            console.log(`[!] Repay ( ${symbol}  ${side} ) error: ${error}`)
+            textTele = `[!] Repay ( ${symbol}  ${side} ) error: ${error}`
+            console.log(textTele)
         });
+    sendMessageWithRetry({
+        messageText: textTele,
+        telegramID: botData.telegramID,
+        telegramToken: botData.telegramToken,
+    })
     repayCoinObject[symbol] = false
 }
 
@@ -623,6 +660,7 @@ const handleCloseMarket = async ({
     OrderChange,
     ApiKey,
     SecretKey,
+    botData,
     qty,
 }) => {
 
@@ -650,6 +688,7 @@ const handleCloseMarket = async ({
         await handleCancelAllOrderOC(listOCByCandleBot[botID])
 
         if (side === "Buy") {
+            let textTele = ""
             client
                 .submitOrder({
                     category: 'spot',
@@ -663,16 +702,24 @@ const handleCloseMarket = async ({
                 .then((response) => {
 
                     if (response.retCode == 0) {
-                        console.log(changeColorConsole.greenBright(`[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) successful: ${qtyMain}`));
+                        textTele = `[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) successful: ${qtyMain}`
+                        console.log(changeColorConsole.greenBright(textTele));
                         closeMarketRepayBySymbol[botID][symbol] = true
                     }
                     else {
-                        console.log(changeColorConsole.yellowBright(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) failed: ${qtyMain} - ${response.retMsg}`));
+                        textTele = `[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) failed: ${qtyMain} - ${response.retMsg}`
+                        console.log(changeColorConsole.yellowBright(textTele));
                     }
                 })
                 .catch((error) => {
-                    console.log(`[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) error: ${error}`)
+                    textTele = `[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) error: ${error}`
+                    console.log(textTele)
                 });
+            sendMessageWithRetry({
+                messageText: textTele,
+                telegramID: botData.telegramID,
+                telegramToken: botData.telegramToken,
+            })
         }
         else {
             await handleRepaySymbol({
@@ -680,7 +727,8 @@ const handleCloseMarket = async ({
                 botID,
                 side,
                 ApiKey,
-                SecretKey
+                SecretKey,
+                botData
             })
         }
         closeMarketRepayBySymbol[botID][symbol] = false
@@ -692,13 +740,15 @@ const handleCancelOrderOC = async ({
     strategy,
     symbol,
     side,
-    ApiKey,
-    SecretKey,
-    botName,
-    botID,
+    botData,
     OrderChange,
     orderId = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID
 }) => {
+
+    const ApiKey = botData.ApiKey
+    const SecretKey = botData.SecretKey
+    const botName = botData.botName
+    const botID = botData.id
 
     !maxCancelOrderOCData[botID] && (
         maxCancelOrderOCData[botID] = {
@@ -707,8 +757,6 @@ const handleCancelOrderOC = async ({
             timeout: ""
         }
     );
-
-
 
     if (maxCancelOrderOCData[botID].totalOC < MAX_CANCEL_LIMIT) {
 
@@ -739,6 +787,7 @@ const handleCancelOrderOC = async ({
                         symbol,
                         ApiKey,
                         SecretKey,
+                        botData,
                         OrderChange: strategy.OrderChange
                     })
                 }
@@ -753,6 +802,7 @@ const handleCancelOrderOC = async ({
                     symbol,
                     ApiKey,
                     SecretKey,
+                    botData,
                     OrderChange: strategy.OrderChange
                 })
             });
@@ -769,8 +819,8 @@ const handleCancelOrderOC = async ({
 
         sendMessageWithRetry({
             messageText: textTele,
-            telegramID,
-            telegramToken
+            telegramID: botData.telegramID,
+            telegramToken: botData.telegramToken,
         })
     }
     else {
@@ -817,19 +867,20 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         else {
                             const OrderChange = cur.strategy.OrderChange
                             console.log(`[V] Cancel order OC ( ${OrderChange} ) ( ${cur.botName} - ${cur.side} -  ${cur.symbol} ) has been filled `);
-                            handleCloseMarket({
-                                OrderChange,
-                                botID: botIDTemp,
-                                side: cur.side,
-                                symbol: cur.symbol,
-                                ApiKey: cur.ApiKey,
-                                SecretKey: cur.SecretKey,
-                            })
-                            cancelAll({
-                                botID: botIDTemp,
-                                strategyID: strategyIDTemp,
-                            })
-                            delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
+                            // handleCloseMarket({
+                            //     OrderChange,
+                            //     botID: botIDTemp,
+                            //     side: cur.side,
+                            //     symbol: cur.symbol,
+                            //     ApiKey: cur.ApiKey,
+                            //     botData: cur.botData,
+                            //     SecretKey: cur.SecretKey,
+                            // })
+                            // cancelAll({
+                            //     botID: botIDTemp,
+                            //     strategyID: strategyIDTemp,
+                            // })
+                            // delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
                         }
                         return pre
                     }, [])
@@ -848,20 +899,29 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         const strategyIDTemp = data.strategyID
                         const OrderChange = data.strategy.OrderChange
 
+                        let teleText = ""
                         if (codeData.code == 0) {
-                            console.log(`[V] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) successful `);
+                            teleText = `[V] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) successful `
+                            console.log(teleText);
                         }
                         else {
-                            console.log(changeColorConsole.yellowBright(`[!] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed `, codeData.msg));
+                            teleText = `[!] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed: ${codeData.msg} `
+                            console.log(changeColorConsole.yellowBright(teleText));
                             handleCloseMarket({
                                 OrderChange: OrderChange,
                                 botID: botIDTemp,
                                 side: data.side,
                                 symbol: data.symbol,
                                 ApiKey: data.ApiKey,
+                                botData: data.botData,
                                 SecretKey: data.SecretKey,
                             })
                         }
+                        sendMessageWithRetry({
+                            messageText: textTele,
+                            telegramID: botData.telegramID,
+                            telegramToken: botData.telegramToken,
+                        })
                         cancelAll({
                             botID: botIDTemp,
                             strategyID: strategyIDTemp,
@@ -1365,12 +1425,13 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                         const botID = botApiData.id
 
-                        const ApiKey = botApiList[botID].ApiKey
-                        const SecretKey = botApiList[botID].SecretKey
-                        const botName = botApiList[botID].botName
+                        const botDataMain = botApiList[botID]
+                        const ApiKey = botDataMain.ApiKey
+                        const SecretKey = botDataMain.SecretKey
+                        const botName = botDataMain.botName
 
-                        const telegramID = botApiList[botID].telegramID
-                        const telegramToken = botApiList[botID].telegramToken
+                        const telegramID = botDataMain.telegramID
+                        const telegramToken = botDataMain.telegramToken
 
                         const topicMain = dataCoin.topic
                         const dataMainAll = dataCoin.data
@@ -1647,10 +1708,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                         strategy,
                                                         symbol,
                                                         side: strategy.PositionSide === "Long" ? "Buy" : "Sell",
-                                                        ApiKey,
-                                                        SecretKey,
-                                                        botName,
-                                                        botID,
+                                                        botData: botDataMain,
                                                         OrderChange: strategy.OrderChange,
                                                         orderId: dataMain.orderId
                                                     })
@@ -1798,8 +1856,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                             side,
                                                             ApiKey,
                                                             SecretKey,
-                                                            botName,
-                                                            botID,
+                                                            botData: botDataMain,
                                                             missState: true,
                                                         }
 
@@ -1930,8 +1987,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                     wsOrder.on('reconnected', () => {
                         if (connectByBotError[botID]) {
-                            const telegramID = botApiList[botID]?.telegramID
-                            const telegramToken = botApiList[botID]?.telegramToken
+                            const telegramID = botDataMain?.telegramID
+                            const telegramToken = botDataMain?.telegramToken
 
                             const text = `🔰 ${botName} khôi phục kết nối thành công`
                             console.log(text);
@@ -1947,8 +2004,8 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                     wsOrder.on('error', (err) => {
                         if (!connectByBotError[botID]) {
-                            const telegramID = botApiList[botID]?.telegramID
-                            const telegramToken = botApiList[botID]?.telegramToken
+                            const telegramID = botDataMain?.telegramID
+                            const telegramToken = botDataMain?.telegramToken
 
                             const text = `🚫 [ Cảnh báo ] ${botName} đang bị gián đoạn kết nối`
                             console.log(text);
@@ -2418,7 +2475,6 @@ try {
                             configID,
                             symbol,
                         })
-                        offSuccess && await handleSocketUpdate([strategy])
                     }
                     else {
                         offSuccess = await offConfigMarginBE({
@@ -2768,10 +2824,11 @@ const handleSocketUpdate = async (newData = []) => {
 
         if (checkConditionBot(strategiesData)) {
 
-            const ApiKey = strategiesData.botID.ApiKey
-            const SecretKey = strategiesData.botID.SecretKey
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
+            const botData = strategiesData.botID
+            const ApiKey = botData.ApiKey
+            const SecretKey = botData.SecretKey
+            const botID = botData._id
+            const botName = botData.botName
 
             const symbol = strategiesData.symbol
             const strategyID = strategiesData.value
@@ -2794,8 +2851,8 @@ const handleSocketUpdate = async (newData = []) => {
                         botName,
                         ApiKey,
                         SecretKey,
-                        telegramID: strategiesData.botID.telegramID,
-                        telegramToken: strategiesData.botID.telegramToken,
+                        telegramID: botData.telegramID,
+                        telegramToken: botData.telegramToken,
                     }
 
                     newBotApiList[botID] = {
@@ -2803,8 +2860,8 @@ const handleSocketUpdate = async (newData = []) => {
                         botName,
                         ApiKey,
                         SecretKey,
-                        telegramID: strategiesData.botID.telegramID,
-                        telegramToken: strategiesData.botID.telegramToken,
+                        telegramID: botData.telegramID,
+                        telegramToken: botData.telegramToken,
                     }
 
                     // !allStrategiesByBotIDOrderOC[botID] && (allStrategiesByBotIDOrderOC[botID] = {})
@@ -2852,6 +2909,7 @@ const handleSocketUpdate = async (newData = []) => {
                     side,
                     botName,
                     botID,
+                    botData,
                     ApiKey,
                     SecretKey,
                     orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
@@ -2882,13 +2940,15 @@ const handleSocketDelete = async (newData = []) => {
     await Promise.allSettled(newData.map((strategiesData, index) => {
         if (checkConditionBot(strategiesData)) {
 
-            const ApiKey = strategiesData.botID.ApiKey
-            const SecretKey = strategiesData.botID.SecretKey
+            const botData = strategiesData.botID
+
+            const ApiKey = botData.ApiKey
+            const SecretKey = botData.SecretKey
 
             const symbol = strategiesData.symbol
             const strategyID = strategiesData.value
-            const botID = strategiesData.botID._id
-            const botName = strategiesData.botID.botName
+            const botID = botData._id
+            const botName = botData.botName
             const scannerID = strategiesData.scannerID
 
             const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
@@ -2926,6 +2986,7 @@ const handleSocketDelete = async (newData = []) => {
                 side,
                 botName,
                 botID,
+                botData,
                 ApiKey,
                 SecretKey,
                 orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
@@ -2958,13 +3019,14 @@ const handleSocketScannerUpdate = async (newData = []) => {
     newData.forEach(scannerData => {
         const scannerID = scannerData._id
         const IsActive = scannerData.IsActive
+        const botData = strategiesData.botID
 
-        const botID = scannerData.botID?._id
-        const botName = scannerData.botID.botName
-        const ApiKey = scannerData.botID.ApiKey
-        const SecretKey = scannerData.botID.SecretKey
-        const telegramID = scannerData.botID.telegramID
-        const telegramToken = scannerData.botID.telegramToken
+        const botID = botData?._id
+        const botName = botData.botName
+        const ApiKey = botData.ApiKey
+        const SecretKey = botData.SecretKey
+        const telegramID = botData.telegramID
+        const telegramToken = botData.telegramToken
 
         if (!botApiList[botID]) {
             botApiList[botID] = {
@@ -3126,10 +3188,12 @@ socketRealtime.on('bot-update', async (data = {}) => {
 
     await Promise.allSettled(configData.map((strategiesData, index) => {
 
-        const ApiKey = strategiesData.botID.ApiKey
-        const SecretKey = strategiesData.botID.SecretKey
-        const botID = strategiesData.botID._id
-        const botName = strategiesData.botID.botName
+        const botData = strategiesData.botID
+
+        const ApiKey = botData.ApiKey
+        const SecretKey = botData.SecretKey
+        const botID = botData._id
+        const botName = botData.botName
 
         const symbol = strategiesData.symbol
         const strategyID = strategiesData.value
@@ -3149,8 +3213,8 @@ socketRealtime.on('bot-update', async (data = {}) => {
                     ApiKey,
                     SecretKey,
                     botName,
-                    telegramID: strategiesData.botID.telegramID,
-                    telegramToken: strategiesData.botID.telegramToken,
+                    telegramID: botData.telegramID,
+                    telegramToken: botData.telegramToken,
                     IsActive: true
                 }
             }
@@ -3161,8 +3225,8 @@ socketRealtime.on('bot-update', async (data = {}) => {
                 ApiKey,
                 SecretKey,
                 botName,
-                telegramID: strategiesData.botID.telegramID,
-                telegramToken: strategiesData.botID.telegramToken,
+                telegramID: botData.telegramID,
+                telegramToken: botData.telegramToken,
                 IsActive: botActive
             }
         }
@@ -3194,6 +3258,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
             botName,
             botID,
             ApiKey,
+            botData,
             SecretKey,
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
         });
@@ -3271,13 +3336,14 @@ socketRealtime.on('bot-api', async (data) => {
     const listOrderTP = []
 
     await Promise.allSettled(newData.map((strategiesData, index) => {
+        const botData = strategiesData.botID
 
         const strategyID = strategiesData.value
         const symbol = strategiesData.symbol
-        const ApiKey = strategiesData.botID.ApiKey
-        const SecretKey = strategiesData.botID.SecretKey
-        const botID = strategiesData.botID._id
-        const botName = strategiesData.botID.botName
+        const ApiKey = botData.ApiKey
+        const SecretKey = botData.SecretKey
+        const botID = botData._id
+        const botName = botData.botName
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
         !allStrategiesByCandleAndSymbol[symbol] && (allStrategiesByCandleAndSymbol[symbol] = {});
@@ -3314,6 +3380,7 @@ socketRealtime.on('bot-api', async (data) => {
             side,
             botName,
             botID,
+            botData,
             ApiKey,
             SecretKey,
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId
@@ -3381,13 +3448,15 @@ socketRealtime.on('bot-delete', async (data) => {
 
     await Promise.allSettled(configData.map(async (strategiesData, index) => {
 
-        const ApiKey = strategiesData.botID.ApiKey
-        const SecretKey = strategiesData.botID.SecretKey
+        const botData = strategiesData.botID
+
+        const ApiKey = botData.ApiKey
+        const SecretKey = botData.SecretKey
 
         const symbol = strategiesData.symbol
         const strategyID = strategiesData.value
-        const botID = strategiesData.botID._id
-        const botName = strategiesData.botID.botName
+        const botID = botData._id
+        const botName = botData.botName
 
         const side = strategiesData.PositionSide === "Long" ? "Buy" : "Sell"
 
@@ -3417,6 +3486,7 @@ socketRealtime.on('bot-delete', async (data) => {
             side,
             botName,
             botID,
+            botData,
             ApiKey,
             SecretKey,
             orderLinkId: allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderLinkId

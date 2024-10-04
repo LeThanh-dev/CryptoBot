@@ -21,7 +21,7 @@ router.post('/deleteStrategiesItemSpot', MiddlewareController.verifyToken, spotC
 router.delete('/deleteStrategiesSpot/:id', MiddlewareController.verifyToken, spotController.deleteStrategiesSpot)
 router.post('/deleteStrategiesMultipleSpot', MiddlewareController.verifyToken, spotController.deleteStrategiesMultipleSpot)
 
-router.get('/syncSymbolSpot', MiddlewareController.verifyToken, spotController.syncSymbolSpot)
+router.post('/syncSymbolSpot', MiddlewareController.verifyToken, spotController.syncSymbolSpot)
 router.post('/copyMultipleStrategiesToSymbolSpot', MiddlewareController.verifyToken, spotController.copyMultipleStrategiesToSymbolSpot)
 router.post('/copyMultipleStrategiesToBotSpot', MiddlewareController.verifyToken, spotController.copyMultipleStrategiesToBotSpot)
 router.post('/balanceWallet', MiddlewareController.verifyToken, spotController.balanceWallet)
