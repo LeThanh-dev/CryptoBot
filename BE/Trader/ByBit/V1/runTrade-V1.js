@@ -836,6 +836,7 @@ const handleCancelOrderOC = async ({
 const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
 
     if (items.length > 0) {
+        let messageText = []
         await Promise.allSettled(items.map(async item => {
 
             const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
@@ -917,11 +918,9 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                                 SecretKey: data.SecretKey,
                             })
                         }
-                        sendMessageWithRetry({
-                            messageText: textTele,
-                            telegramID: botData.telegramID,
-                            telegramToken: botData.telegramToken,
-                        })
+                        
+                        messageText.push(teleText)
+
                         cancelAll({
                             botID: botIDTemp,
                             strategyID: strategyIDTemp,
@@ -934,6 +933,12 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                 }
             }
         }))
+
+        messageText.length > 0 && sendMessageWithRetry({
+            messageText: messageText.join("\n"),
+            telegramID: botData.telegramID,
+            telegramToken: botData.telegramToken,
+        })
         console.log("[V] Cancel All OC Successful");
 
     }
@@ -3019,7 +3024,7 @@ const handleSocketScannerUpdate = async (newData = []) => {
     newData.forEach(scannerData => {
         const scannerID = scannerData._id
         const IsActive = scannerData.IsActive
-        const botData = strategiesData.botID
+        const botData = scannerData.botID
 
         const botID = botData?._id
         const botName = botData.botName
