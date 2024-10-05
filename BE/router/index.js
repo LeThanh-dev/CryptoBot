@@ -38,8 +38,8 @@ router.use('/scannerByBitV1', scannerByBitV1Router);
 router.use('/scannerOKXV1', scannerOKXV1Router);
 router.use('/scannerByBitV3', scannerByBitV3Router);
 router.use('/coin', coinRouter);
-router.use('/instrumentByBitV1', instrumentByBitV1Router);
-router.use('/instrumentOKXV1', instrumentOKXV1Router);
+// router.use('/instrumentByBitV1', instrumentByBitV1Router);
+// router.use('/instrumentOKXV1', instrumentOKXV1Router);
 
 // Sử dụng các route khác tương tự
 
