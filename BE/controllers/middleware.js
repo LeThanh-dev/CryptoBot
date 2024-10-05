@@ -9,6 +9,7 @@ const MiddlewareController = {
     verifyToken: async (req, res, next) => {
 
         const token = req.headers.authorization;
+console.log("tokentoken",token);
 
         if (!token) {
             return res.customResponse(401, "Unauthorized", "");
