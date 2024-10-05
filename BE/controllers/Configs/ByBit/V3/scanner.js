@@ -7,12 +7,12 @@ const { default: mongoose } = require('mongoose');
 
 const dataCoinByBitController = {
     // SOCKET
-
+    
     sendDataRealtime: ({
         type,
         data
     }) => {
-        const { socketServer } = require('../serverConfig');
+        const { socketServer } = require('../../../../serverConfig');
         socketServer.to("ByBitV3").emit(type, data)
     },
 

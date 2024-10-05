@@ -57,6 +57,7 @@ function CreateStrategy({
     const [blackListSelected, setBlackListSelected] = useState([])
     const [botList, setBotList] = useState([])
     const [loadingSyncCoin, setLoadingSyncCoin] = useState(false);
+    const [PositionSideSelected, setPositionSideSelected] = useState("");
 
     const dataChangeRef = useRef(false)
     const spotDataListRef = useRef([])
@@ -160,11 +161,14 @@ function CreateStrategy({
 
     const handleSubmitCreate = async data => {
 
-        if (onlyPairsSelected.length > 0 && botList.length > 0)  {
+        if (onlyPairsSelected.length > 0 && botList.length > 0) {
 
             try {
                 const res = await createConfigScanner({
-                    data: data,
+                    data: {
+                        ...data,
+                        PositionSide: PositionSideSelected
+                    },
                     botListId: botList.map(item => item.value),
                     Blacklist: blackListSelected.map(item => item.value),
                     OnlyPairs: onlyPairsSelected.map(item => item.value)
@@ -193,29 +197,35 @@ function CreateStrategy({
 
     const handleSubmitCreateWithAddMore = async data => {
 
-        try {
-            const res = await createConfigScanner({
-                data: data,
-                botListId: botList.map(item => item.value),
-                Blacklist: blackListSelected.map(item => item.value),
-                OnlyPairs: onlyPairsSelected.map(item => item.value)
-            })
-            const { status, message, data: symbolListDataRes } = res.data
+        if (onlyPairsSelected.length > 0 && botList.length > 0) {
 
-            dispatch(addMessageToast({
-                status: status,
-                message: message
-            }))
+            try {
+                const res = await createConfigScanner({
+                    data: {
+                        ...data,
+                        PositionSide: PositionSideSelected
+                    },
+                    botListId: botList.map(item => item.value),
+                    Blacklist: blackListSelected.map(item => item.value),
+                    OnlyPairs: onlyPairsSelected.map(item => item.value)
+                })
+                const { status, message, data: symbolListDataRes } = res.data
 
-            if (status === 200) {
-                dataChangeRef.current = true
+                dispatch(addMessageToast({
+                    status: status,
+                    message: message
+                }))
+
+                if (status === 200) {
+                    dataChangeRef.current = true
+                }
             }
-        }
-        catch (err) {
-            dispatch(addMessageToast({
-                status: 500,
-                message: "Add New Error",
-            }))
+            catch (err) {
+                dispatch(addMessageToast({
+                    status: 500,
+                    message: "Add New Error",
+                }))
+            }
         }
     }
 
@@ -339,9 +349,11 @@ function CreateStrategy({
                                             value: "Long",
                                         }
                                     ]
+                                    setPositionSideSelected("Long")
                                 }
                                 else {
                                     handleGetMarginDataList(!marginDataListRef.current.length)
+                                    setPositionSideSelected("")
                                     positionSideListRef.current = positionSideListDefault
                                 }
                             }}
@@ -361,9 +373,13 @@ function CreateStrategy({
                             select
                             label="Position side"
                             variant="outlined"
-                            // defaultValue={positionSideListRef.current[0].value}
                             size="medium"
-                            {...register("PositionSide", { required: true, })}
+                            value={PositionSideSelected}
+                            onChange={e => {
+                                console.log("value", e.target.value);
+
+                                setPositionSideSelected(e.target.value)
+                            }}
                         >
                             {
                                 positionSideListRef.current.map(item => (
@@ -371,7 +387,7 @@ function CreateStrategy({
                                 ))
                             }
                         </TextField>
-                        {errors.PositionSide?.type === 'required' && <p className="formControlErrorLabel">The Position Required.</p>}
+                        {isSubmitted && !PositionSideSelected && <p className="formControlErrorLabel">The Position Required.</p>}
                     </FormControl>
                 </div>
                 <FormControl className={styles.formControl}>
@@ -672,7 +688,7 @@ function CreateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover", )}
+                            {...register("Turnover",)}
                         />
 
                     </FormControl>

@@ -1,11 +1,8 @@
 const Big = require('big.js');
 const { RestClientV5 } = require('bybit-api');
 const PositionV1Model = require('../../../../models/Positions/ByBit/V1/position.model')
-const InstrumentsInfoModel = require('../../../../models/instruments/ByBit/V1/instrument.model')
+const InstrumentsInfoModel = require('../../../../models/instruments/ByBit/V1/instrument.model');
 
-const clientDigit = new RestClientV5({
-    testnet: false,
-});
 
 const PositionController = {
 
@@ -15,7 +12,7 @@ const PositionController = {
         type,
         data
     }) => {
-        const { socketServer } = require('../serverConfig');
+        const { socketServer } = require('../../../../serverConfig');
         socketServer.to("ByBitV1").emit(type, data)
     },
     // 

@@ -163,7 +163,6 @@ const tinhOC = (symbol, dataAll = []) => {
         let dataOCList = []
         let dataOC = {}
         let dataOCLong = {}
-        let timestamp = 0
 
         const vol = Math.abs(dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol])
 
@@ -172,6 +171,7 @@ const tinhOC = (symbol, dataAll = []) => {
             const Open = +data.open
             const Highest = +data.high
             const Lowest = +data.low
+            const timestamp = data.timestamp
 
             OC = (Highest - Open) / Open
             OCLong = (Lowest - Open) / Open
@@ -186,7 +186,8 @@ const tinhOC = (symbol, dataAll = []) => {
             dataOCList.push({
                 OC: OC,
                 OCLong: OCLong,
-                index
+                index,
+                timestamp
             })
         })
 
@@ -195,7 +196,9 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCData = OCMain.OC[0]
 
         OC = OCData.OC
+        const timestampOC = OCData.timestamp
         OCLong = OCLongData.OCLong
+        const timestampOCLong = OCLongData.timestamp
 
 
         dataAll.forEach((data, index) => {
@@ -215,7 +218,6 @@ const tinhOC = (symbol, dataAll = []) => {
                         high: Highest,
                         low: Lowest,
                     }
-                    timestamp = data.timestamp
                 }
                 else {
                     let TPTemp = 0
@@ -238,7 +240,6 @@ const tinhOC = (symbol, dataAll = []) => {
                         high: Highest,
                         low: Lowest,
                     }
-                    timestamp = data.timestamp
                 }
                 else {
                     let TPLongTemp = 0
@@ -276,17 +277,16 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
 
-        const timeOC = new Date(timestamp).toLocaleString()
-        if (vol >= 5000) {
-            if (OCRound >= 1) {
-                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
+        if (vol >= 0) {
+            if (OCRound >= 1.5) {
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${new Date(timestampOC).toLocaleString()}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1) {
-                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
+            if (OCLongRound <= -1.5) {
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${new Date(timestampOCLong).toLocaleString()}`)
                 messageList.push(htLong)
                 console.log(htLong);
                 console.log(dataAll);
@@ -298,7 +298,7 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }

@@ -1188,10 +1188,11 @@ const dataCoinByBitController = {
                 { _id: scannerID },
                 { $addToSet: { Blacklist: symbol } }
             );
-            console.log(`[Mongo] Add ${symbol} to blacklist successful`);
+            console.log(`\n[Mongo] Add ${symbol} to blacklist successful`);
             return true
         } catch (error) {
             console.log(`[Mongo] Add ${symbol} to blacklist error: ${error}`);
+            return false
         }
     },
 

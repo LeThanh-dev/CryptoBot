@@ -1,5 +1,5 @@
 const { RestClientV5 } = require('bybit-api');
-const PositionModel = require('../../../../models/Positions/ByBit/V3/position.model')
+const PositionModel = require('../../../../models/Positions/ByBit/V3/position.model');
 
 const PositionController = {
 
@@ -9,7 +9,7 @@ const PositionController = {
         type,
         data
     }) => {
-        const { socketServer } = require('../serverConfig');
+        const { socketServer } = require('../../../../serverConfig');
         socketServer.to("ByBitV3").emit(type, data)
     },
     // 

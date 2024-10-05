@@ -68,6 +68,7 @@ const clientDigit = new RestClientV5({
 // ----------------------------------------------------------------------------------
 let missTPDataBySymbol = {}
 
+var messageTeleByBot = {}
 var closeMarketRepayBySymbol = {}
 var listKline = {}
 var listKlineObject = {}
@@ -111,6 +112,11 @@ var trichMau = {}
 var timeExpire = 0
 
 // ----------------------------------------------------------------------------------
+
+const handleIconMarketType = (symbol) => {
+    return symbolTradeTypeObject[symbol] == "Spot" ? "🍀" : "🍁"
+}
+
 const getWebsocketClientConfig = ({
     ApiKey,
     SecretKey,
@@ -324,11 +330,11 @@ const handleSubmitOrder = async ({
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderLinkId = newOrderLinkID
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrderTPTemp = priceOrderTPTemp
 
-                    textTele = `\n🟩 Order OC ( ${strategy.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) successful: ${price} - ${qty}`
+                    textTele = `+ OC ${side} ( ${strategy.OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botName} \nPrice: ${price} | Qty: ${qty} \n<i>-> Success</i>`
                     console.log(textTele)
                 }
                 else {
-                    textTele = `\n🟨 Ordered OC ( ${strategy.OrderChange} )  ( ${botName} - ${side} - ${symbol} ) failed: ${price} - ${qty} - ${response.retMsg}`
+                    textTele = `+ OC ${side} ( ${strategy.OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botName} \nPrice: ${price} | Qty: ${qty} \n<code>🟡 Failed: ${response.retMsg}</code>`
                     console.log(textTele)
                     delete allStrategiesByBotIDAndOrderID[botID][orderLinkId]
                     delete listOCByCandleBot[botID].listOC[strategyID]
@@ -338,7 +344,7 @@ const handleSubmitOrder = async ({
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
             })
             .catch((error) => {
-                textTele = `\n🟥 Ordered OC ( ${strategy.OrderChange} )  ( ${botName} - ${side} - ${symbol} ) error: ${error} `
+                textTele = `+ OC ${side} ( ${strategy.OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botName} \nPrice: ${price} | Qty: ${qty} \n<code>🔴 Error: ${error}</code>`
                 console.log(textTele)
                 orderOCFalse = true
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.ordering = false
@@ -374,7 +380,7 @@ const handleSubmitOrder = async ({
             offSuccess && await handleSocketUpdate([strategy])
         }
 
-        const textTeleHandle = !orderOCFalse ? textTele : `${textTele}\n -> Off Config Successful`
+        const textTeleHandle = !orderOCFalse ? textTele : `${textTele}\n <i>-> Off Config Success</i>`
 
         sendMessageWithRetry({
             messageText: textTeleHandle,
@@ -428,7 +434,7 @@ const handleMoveOrderOC = async ({
             })
             .then((response) => {
                 if (response.retCode == 0) {
-                    console.log(`[->] Move Order OC ( ${strategy.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
+                    console.log(`[->] Move Order OC ( ${strategy.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) success: ${price}`)
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.priceOrderTPTemp = priceOrderTPTemp
                 }
                 else {
@@ -530,7 +536,7 @@ const handleSubmitOrderTP = async ({
                 // }
 
 
-                console.log(`[+TP] Order TP ( ${strategy?.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) successful: ${price} - ${qty}`)
+                console.log(`[+TP] Order TP ( ${strategy?.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) success: ${price} - ${qty}`)
                 console.log(changeColorConsole.greenBright(`[_TP orderID_] ( ${botName} - ${side} - ${symbol} ): ${newOrderLinkID}`));
 
             }
@@ -576,7 +582,7 @@ const moveOrderTP = async ({
         .then((response) => {
             if (response.retCode == 0) {
                 allStrategiesByBotIDAndStrategiesID[botID][strategyID].TP.orderID = response.result.orderId
-                console.log(`[->] Move Order TP ( ${strategy.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) successful: ${price}`)
+                console.log(`[->] Move Order TP ( ${strategy.OrderChange} ) ( ${botName} - ${side} - ${symbol} ) success: ${price}`)
             }
             else {
 
@@ -650,39 +656,41 @@ const handleRepaySymbol = async ({
     let textTele = ""
     console.log(changeColorConsole.magentaBright(`[...] Repay ( ${symbol}  ${side} )`));
 
-    repayCoinObject[symbol] = true
+    repayCoinObject[botID] = repayCoinObject[botID] || {}
+
+    repayCoinObject[botID][symbol] = true
 
     const clientConfigRepay = getRestClientV5Config({ ApiKey, SecretKey })
     const clientRepay = new RestClientV5(clientConfigRepay);
 
     await clientRepay.repayLiability({ coin: symbol.replace("USDT", "") }).then((response) => {
         if (response.retCode == 0) {
-            textTele = `[V] Repay ( ${symbol}  ${side} ) successful`
+            textTele = `💳 Repay ${side} \n <b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botData.botName} \n<i>-> Success</i>`
             console.log(changeColorConsole.greenBright(textTele));
-            closeMarketRepayBySymbol[botID][symbol] = true
         }
         else {
-            textTele = `[!] Repay ( ${symbol}  ${side} ) failed: ${response.retMsg}`
+            textTele = `💳 Repay ${side} \n <b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botData.botName} \n<code>🟡Failed: ${response.retMsg}</code>`
             console.log(changeColorConsole.yellowBright(textTele));
+            closeMarketRepayBySymbol[botID][symbol] = false
         }
     })
         .catch((error) => {
-            textTele = `[!] Repay ( ${symbol}  ${side} ) error: ${error}`
+            textTele = `💳 Repay ${side} \n <b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botData.botName} \n<code>🔴 Error: ${error}</code>`
             console.log(textTele)
+            closeMarketRepayBySymbol[botID][symbol] = false
         });
     sendMessageWithRetry({
         messageText: textTele,
         telegramID: botData.telegramID,
         telegramToken: botData.telegramToken,
     })
-    repayCoinObject[symbol] = false
+    repayCoinObject[botID][symbol] = false
 }
 
 const handleCloseMarket = async ({
     symbol,
     side,
     botID,
-    OrderChange,
     ApiKey,
     SecretKey,
     botData,
@@ -692,6 +700,8 @@ const handleCloseMarket = async ({
     if (!closeMarketRepayBySymbol[botID]?.[symbol]) {
 
         closeMarketRepayBySymbol[botID] = closeMarketRepayBySymbol[botID] || {}
+
+        closeMarketRepayBySymbol[botID][symbol] = true
 
         const botSymbolMissID = `${botID}-${symbol}`
 
@@ -710,7 +720,7 @@ const handleCloseMarket = async ({
 
         console.log("\n[...] Cancel All OC For Close Market-Repay");
 
-        await handleCancelAllOrderOC(listOCByCandleBot[botID])
+        // await handleCancelAllOrderOC(listOCByCandleBot[botID])
 
         if (side === "Buy") {
             let textTele = ""
@@ -727,18 +737,19 @@ const handleCloseMarket = async ({
                 .then((response) => {
 
                     if (response.retCode == 0) {
-                        textTele = `[V] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) successful: ${qtyMain}`
+                        textTele = `💳 Close Market ${side} | <b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} \nBot: ${botData.botName} \n<i>-> Success</i>`
                         console.log(changeColorConsole.greenBright(textTele));
-                        closeMarketRepayBySymbol[botID][symbol] = true
                     }
                     else {
-                        textTele = `[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) failed: ${qtyMain} - ${response.retMsg}`
+                        textTele = `💳 Close Market ${side} | <b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} \nBot: ${botData.botName} \n<code>🟡 Failed: ${response.retMsg}</code>`
                         console.log(changeColorConsole.yellowBright(textTele));
+                        closeMarketRepayBySymbol[botID][symbol] = false
                     }
                 })
                 .catch((error) => {
-                    textTele = `[!] Close market ( ${MarketName} ) ( ${symbol}  ${side} - ${OrderChange} ) error: ${error}`
+                    textTele = `💳 Close Market ${side} | <b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} \nBot: ${botData.botName} \n<code>🔴 Error: ${error}</code>`
                     console.log(textTele)
+                    closeMarketRepayBySymbol[botID][symbol] = false
                 });
             sendMessageWithRetry({
                 messageText: textTele,
@@ -756,7 +767,6 @@ const handleCloseMarket = async ({
                 botData
             })
         }
-        closeMarketRepayBySymbol[botID][symbol] = false
     }
 }
 
@@ -799,11 +809,11 @@ const handleCancelOrderOC = async ({
             })
             .then((response) => {
                 if (response.retCode == 0) {
-                    textTele = `[V] Cancel order OC ( ${OrderChange} ) ( ${botName} - ${side} -  ${symbol} ) successful `
+                    textTele = `x OC ${side} ( ${OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botName} \n<i>-> Success</i>`
                     console.log(textTele);
                 }
                 else {
-                    textTele = `[!] Cancel order OC ( ${OrderChange} ) ( ${botName} - ${side} -  ${symbol} ) failed: ${response.retMsg} `
+                    textTele = `x OC ${side} ( ${OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botName} \n<code>🟡 Failed: ${response.retMsg}</code>`
                     console.log(textTele)
                     handleCloseMarket({
                         OrderChange,
@@ -813,12 +823,11 @@ const handleCancelOrderOC = async ({
                         ApiKey,
                         SecretKey,
                         botData,
-                        OrderChange: strategy.OrderChange
                     })
                 }
             })
             .catch((error) => {
-                textTele = `[!] Cancel order OC ( ${OrderChange} ) ( ${botName} - ${side} -  ${symbol} ) error: ${error}`
+                textTele = `x OC ${side} ( ${OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${botName} \n<code>🔴 Error: ${error}</code>`
                 console.log(textTele)
                 handleCloseMarket({
                     OrderChange,
@@ -828,7 +837,6 @@ const handleCancelOrderOC = async ({
                     ApiKey,
                     SecretKey,
                     botData,
-                    OrderChange: strategy.OrderChange
                 })
             });
 
@@ -843,7 +851,7 @@ const handleCancelOrderOC = async ({
         }, 1000)
 
         sendMessageWithRetry({
-            messageText: textTele,
+            messageText: `<code>Cancel remain quantity</code> \n${textTele}`,
             telegramID: botData.telegramID,
             telegramToken: botData.telegramToken,
         })
@@ -861,7 +869,7 @@ const handleCancelOrderOC = async ({
 const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
 
     if (items.length > 0) {
-        let messageText = []
+        let messageListByBot = {}
         await Promise.allSettled(items.map(async item => {
 
             const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
@@ -914,6 +922,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                     console.log(`[...] Canceling ${newList.length} OC`);
 
                     const res = await client.batchCancelOrders("spot", newList)
+
                     const listSuccess = res.result.list || []
                     const listSuccessCode = res.retExtInfo.list || []
 
@@ -924,33 +933,40 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         const botIDTemp = data.botID
                         const strategyIDTemp = data.strategyID
                         const OrderChange = data.strategy.OrderChange
+                        const symbol = data.symbol
+                        const side = data.side
 
-                        let teleText = ""
+                        let textTele = ""
+                        
                         if (codeData.code == 0) {
-                            teleText = `[V] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) successful `
-                            console.log(teleText);
+                            textTele = `x OC ${side} ( ${OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${data.botName} \n<i>-> Success</i>`
+                            console.log(textTele);
                         }
                         else {
-                            teleText = `[!] Cancel order OC ( ${OrderChange} )  ( ${data.botName} - ${data.side} -  ${data.symbol} ) failed: ${codeData.msg} `
-                            console.log(changeColorConsole.yellowBright(teleText));
+                            textTele = `x OC ${side} ( ${OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${data.botName} \n<code>🟡 Failed: ${codeData.msg}</code>`
+                            console.log(changeColorConsole.yellowBright(textTele));
                             handleCloseMarket({
                                 OrderChange: OrderChange,
                                 botID: botIDTemp,
-                                side: data.side,
-                                symbol: data.symbol,
+                                side,
+                                symbol,
                                 ApiKey: data.ApiKey,
                                 botData: data.botData,
                                 SecretKey: data.SecretKey,
                             })
                         }
+                        messageListByBot[botIDTemp] = {
+                            botData: data.botData,
+                        }
 
-                        messageText.push(teleText)
+                        messageListByBot[botIDTemp].textTele = messageListByBot[botIDTemp].textTele || []
+                        messageListByBot[botIDTemp].textTele.push(textTele)
 
                         cancelAll({
                             botID: botIDTemp,
                             strategyID: strategyIDTemp,
                         })
-                        delete listOCByCandleBot[botIDTemp].listOC[strategyIDTemp]
+                        delete listOCByCandleBot[botIDTemp]?.listOC?.[strategyIDTemp]
                     })
 
                     await delay(1200)
@@ -959,12 +975,17 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
             }
         }))
 
-        messageText.length > 0 && sendMessageWithRetry({
-            messageText: messageText.join("\n"),
-            telegramID: botData.telegramID,
-            telegramToken: botData.telegramToken,
-        })
-        console.log("[V] Cancel All OC Successful");
+        const listTele = Object.values(messageListByBot)
+
+        listTele?.length > 0 && await Promise.allSettled(listTele.map(messageData => {
+            sendMessageWithRetry({
+                messageText: messageData.textTele?.join("\n---------------\n"),
+                telegramID: messageData.botData.telegramID,
+                telegramToken: messageData.botData.telegramToken,
+            })
+        }))
+
+        console.log("[V] Cancel All OC Success");
 
     }
 
@@ -1023,7 +1044,7 @@ const handleOrderMultipleOC = async ({
             const OCSuccess = orderLinkIdList[item.orderLinkId]
 
             if (codeData.code == 0) {
-                console.log(`[V] Order OC ( ${OCSuccess} ) successful `);
+                console.log(`[V] Order OC ( ${OCSuccess} ) success `);
 
             }
             else {
@@ -1040,7 +1061,7 @@ const handleOrderMultipleOC = async ({
         //     const candleTemp = data.candle
 
         //     if (codeData.code == 0) {
-        //         console.log(`[V] Order OC  successful `);
+        //         console.log(`[V] Order OC  success `);
         //         cancelAll({
         //             botID: botIDTemp,
         //             strategyID: strategyIDTemp,
@@ -1055,7 +1076,7 @@ const handleOrderMultipleOC = async ({
 
         await delay(1200)
         index += batchSize
-        console.log("[V] Order All OC Successful");
+        console.log("[V] Order All OC Success");
 
     }
 
@@ -1159,6 +1180,7 @@ const handleCreateMultipleConfigMargin = async ({
     const newData = res.data
 
     if (newData.length > 0) {
+
         console.log(changeColorConsole.greenBright(`\n${res.message}`));
 
         listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
@@ -1195,7 +1217,7 @@ const handleCancelOrderTP = async ({
         })
         .then((response) => {
             if (response.retCode == 0) {
-                console.log(`[V] Cancel TP ( ${botName} - ${side} - ${symbol} - ${candle} ) successful `);
+                console.log(`[V] Cancel TP ( ${botName} - ${side} - ${symbol} - ${candle} ) success `);
 
                 if (gongLai && !missTPDataBySymbol[botSymbolMissID].gongLai) {
                     missTPDataBySymbol[botSymbolMissID].gongLai = true
@@ -1281,7 +1303,7 @@ const resetMissData = ({
         botName: "",
         botID: "",
     }
-
+    delete closeMarketRepayBySymbol[botID]?.[symbol]
 }
 
 const cancelAll = (
@@ -1356,30 +1378,47 @@ const sendMessageWithRetry = async ({
             })
             BOT_TOKEN_RUN_TRADE = newBotInit
             botListTelegram[telegramToken] = newBotInit
+            messageTeleByBot[telegramToken] = {
+                timeOut: "",
+                text: []
+            }
             // BOT_TOKEN_RUN_TRADE.launch();
         }
-        for (let i = 0; i < retries; i++) {
-            try {
-                if (messageText) {
-                    // await BOT_TOKEN_RUN_TRADE.telegram.sendMessage(telegramID, messageText);
-                    await BOT_TOKEN_RUN_TRADE.sendMessage(telegramID, messageText, {
-                        parse_mode: "HTML"
-                    });
-                    console.log('[->] Message sent to telegram successfully');
-                    return;
+        if (messageText) {
+
+            messageTeleByBot[telegramToken].timeOut && clearTimeout(messageTeleByBot[telegramToken].timeOut)
+            messageTeleByBot[telegramToken].text.push(messageText)
+
+            messageTeleByBot[telegramToken].timeOut = setTimeout(async () => {
+                const messageTextList = messageTeleByBot[telegramToken].text.join("\n---------------\n")
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        if (messageTextList) {
+                            // await BOT_TOKEN_RUN_TRADE.telegram.sendMessage(telegramID, messageText);
+                            await BOT_TOKEN_RUN_TRADE.sendMessage(telegramID, messageTextList, {
+                                parse_mode: "HTML"
+                            });
+                            console.log('[->] Message sent to telegram successfully');
+                            messageTeleByBot[telegramToken] = {
+                                timeOut: "",
+                                text: []
+                            }
+                            return;
+                        }
+                    } catch (error) {
+                        if (error.code === 429) {
+                            const retryAfter = error.parameters.retry_after;
+                            console.log(changeColorConsole.yellowBright(`[!] Rate limited. Retrying after ${retryAfter} seconds...`));
+                            await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+                        } else {
+                            throw new Error(error);
+                        }
+                    }
                 }
-            } catch (error) {
-                if (error.code === 429) {
-                    const retryAfter = error.parameters.retry_after;
-                    console.log(changeColorConsole.yellowBright(`[!] Rate limited. Retrying after ${retryAfter} seconds...`));
-                    await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-                } else {
-                    throw new Error(error);
-                }
-            }
+                throw new Error('[!] Failed to send message after multiple retries');
+            }, 2000)
         }
 
-        throw new Error('[!] Failed to send message after multiple retries');
     } catch (error) {
         console.log("[!] Bot Telegram Error", error)
     }
@@ -1449,7 +1488,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 wsOrder.subscribeV5(LIST_ORDER, 'spot').then(() => {
 
 
-                    console.log(`[V] Subscribe order ( ${botName} ) successful\n`);
+                    console.log(`[V] Subscribe order ( ${botName} ) success\n`);
 
                     wsOrder.on('update', async (dataCoin) => {
 
@@ -1490,9 +1529,10 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                             const symbolItem = strategyData.symbol
                                             if (symbol == symbolItem && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.TP?.orderID) {
                                                 {
-                                                    console.log(`[V] RESET | ${symbol.replace("USDT", "")} - ${strategyData.side} - Bot: ${strategyData.botName}`);
+                                                    console.log(`[V] RESET-Filled | ${symbol.replace("USDT", "")} - ${strategyData.side} - Bot: ${strategyData.botName}`);
                                                     cancelAll({ botID, strategyID })
                                                     delete listOCByCandleBot[botID].listOC[strategyID]
+                                                    resetMissData({ botID, symbol })
                                                 }
                                             }
                                         })
@@ -1545,8 +1585,9 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                                                     const priceOldOrder = (strategy.Amount / 100).toFixed(2)
 
-                                                    console.log(`\n\n[V] ${orderStatus} OC: \n${symbol.replace("USDT", "")} | Open ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}\n`);
-                                                    const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
+                                                    const teleText = `<b>${symbol.replace("USDT", "")} ${handleIconMarketType(symbol)}</b> | Open ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
+                                                    console.log(`\n\n ${teleText}`);
+
                                                     // const teleText = `<b>${symbol.replace("USDT", "")}</b> | Open ${sideText} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${openTrade} | Amount: ${priceOldOrder}`
 
                                                     if (!missTPDataBySymbol[botSymbolMissID]?.orderIDToDB) {
@@ -1685,7 +1726,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                         }
                                                     }
 
-                                                    const teleText = `<b>${textWinLoseShort}  ${symbol.replace("USDT", "")}</b> | Close ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
+                                                    const teleText = `<b>${textWinLoseShort}  ${symbol.replace("USDT", "")}  ${handleIconMarketType(symbol)}</b> | Close ${strategy.PositionSide} \nBot: ${botName} | OC: ${strategy.OrderChange}% | TP: ${TPMain}% \nPrice: ${closePrice} | Amount: ${priceOldOrder}`
 
                                                     missTPDataBySymbol[botSymbolMissID].size -= Math.abs(qty)
 
@@ -1732,7 +1773,6 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                 }
 
                                                 if (timeOut !== 0) {
-                                                    console.log("[...] Canceling remain quantity");
                                                     handleCancelOrderOC({
                                                         strategyID,
                                                         strategy,
@@ -2022,7 +2062,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
                             const text = `🔰 ${botName} khôi phục kết nối thành công`
                             console.log(text);
-                            console.log(`[V] Reconnected Bot ( ${botName} ) successful`)
+                            console.log(`[V] Reconnected Bot ( ${botName} ) success`)
                             connectByBotError[botID] = false
                             sendMessageWithRetry({
                                 messageText: text,
@@ -2069,7 +2109,7 @@ const handleSocketListKline = async (listKlineInput) => {
     await wsSymbol.subscribeV5(listKlineInput, 'spot').then(() => {
         const length = listKlineInput.length
 
-        console.log(`[V] Subscribe ${length} kline successful\n`);
+        console.log(`[V] Subscribe ${length} kline success\n`);
 
     }).catch(err => {
         console.log(`[!] Subscribe ${length} kline error: ${err}`,)
@@ -2341,7 +2381,6 @@ const Main = async () => {
             preTime: 0
         }
         symbolTradeTypeObject[symbol] = symbolData.type
-        repayCoinObject[symbol] = false
 
         trichMauData[symbol] = {
             open: 0,
@@ -2446,8 +2485,10 @@ try {
 
         const listDataObject = allStrategiesByCandleAndSymbol?.[symbol]
 
-        listDataObject && Object.values(listDataObject)?.length > 0 && !repayCoinObject[symbol] && Promise.allSettled(Object.values(listDataObject).map(async strategy => {
-            if (checkConditionBot(strategy) && strategy.IsActive && !updatingAllMain) {
+        listDataObject && Object.values(listDataObject)?.length > 0 && Promise.allSettled(Object.values(listDataObject).map(async strategy => {
+            const botID = strategy.botID._id
+
+            if (checkConditionBot(strategy) && strategy.IsActive && !updatingAllMain && !repayCoinObject[botID]?.[symbol]) {
 
                 // console.log("strategy.Amount", strategy.Amount,symbol);
                 // console.log("strategy.OrderChange", strategy.OrderChange,symbol);
@@ -2465,7 +2506,6 @@ try {
                 digitAllCoinObject[symbol]?.priceScale
 
                 const botData = strategy.botID
-                const botID = strategy.botID._id
                 const botName = strategy.botID.botName
 
                 const Expire = Math.abs(strategy.Expire)
@@ -2720,7 +2760,7 @@ try {
             const text = "🔰 Hệ thống khôi phục kết nối thành công"
             console.log(text);
             sendAllBotTelegram(text)
-            console.log('[V] Reconnected kline successful')
+            console.log('[V] Reconnected kline success')
             connectKlineError = false
         }
 
@@ -2798,6 +2838,9 @@ const handleSocketAddNew = async (newData = []) => {
 
             const ApiKey = newStrategiesData.botID.ApiKey
             const SecretKey = newStrategiesData.botID.SecretKey
+
+            console.log("OrderChange", newStrategiesData.OrderChange);
+
 
 
             if (!botApiList[botID]) {
@@ -3043,6 +3086,7 @@ const handleSocketDelete = async (newData = []) => {
 }
 
 const handleSocketScannerUpdate = async (newData = []) => {
+    
     console.log("[...] Update Scanner From Realtime", newData.length);
     const newBotApiList = {}
 
@@ -3642,7 +3686,7 @@ socketRealtime.on('close-upcode', async () => {
 
     await Promise.allSettled([cancelOC, deleteAll])
 
-    console.log("PM2 Kill Successful");
+    console.log("PM2 Kill Success");
     exec("pm2 stop runTrade-V1")
 
 });

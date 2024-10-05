@@ -639,6 +639,7 @@ function EditMulTreeItem({
             }))
 
         }
+        setLoadingSubmit(false)
     }
 
     const handleDelete = async () => {

@@ -343,8 +343,9 @@ function EditMulTreeItem({
                 status: 500,
                 message: "Update All Error",
             }))
-
         }
+        setLoadingSubmit(false)
+
     }
 
     const handleDelete = async () => {
@@ -379,6 +380,7 @@ function EditMulTreeItem({
             }))
         }
         closeDialog(dataChange)
+
     }
 
     const handleExport = () => {
@@ -427,6 +429,7 @@ function EditMulTreeItem({
                 setLoadingSubmit(false)
             }
             closeDialog(dataChange)
+            
         }
     }
 
