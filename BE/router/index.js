@@ -18,8 +18,8 @@ const scannerByBitV1Router = require('./Configs/ByBit/V1/scanner.route');
 const scannerOKXV1Router = require('./Configs/OKX/V1/scanner.route');
 const scannerByBitV3Router = require('./Configs/ByBit/V3/scanner.route');
 const coinRouter = require('./coin.route');
-const instrumentByBitV1Router = require('./instruments/ByBit/V1/instrument.route');
-const instrumentOKXV1Router = require('./instruments/OKX/V1/instrument.route');
+// const instrumentByBitV1Router = require('./instruments/ByBit/V1/instrument.route');
+// const instrumentOKXV1Router = require('./instruments/OKX/V1/instrument.route');
 
 router.use('/auth', authRouter);
 router.use('/user', userRouter);
