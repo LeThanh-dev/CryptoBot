@@ -5,7 +5,6 @@ require('dotenv').config({
     path: "../../../.env"
 });
 
-const cron = require('node-cron');
 const changeColorConsole = require('cli-color');
 const TelegramBot = require('node-telegram-bot-api');
 const {

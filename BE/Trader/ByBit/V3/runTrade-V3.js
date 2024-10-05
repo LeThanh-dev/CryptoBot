@@ -26,7 +26,7 @@ const {
     getPositionBySymbol
 } = require('../../../controllers/Positions/ByBit/V3/position');
 
-const { getAllStrategiesActiveScannerV3BE } = require('../../../controllers/scannerV3');
+const { getAllStrategiesActiveScannerV3BE } = require('../../../controllers/Configs/ByBit/V3/scanner');
 
 const wsConfig = {
     market: 'v5',
