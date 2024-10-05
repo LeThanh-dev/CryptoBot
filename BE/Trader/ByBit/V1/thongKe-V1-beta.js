@@ -1,14 +1,14 @@
 require('dotenv').config({
     path: "../../../.env"
 });
+const { exec } = require('child_process');
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const { WebsocketClient } = require('okx-api');
+const { RestClientV5, WebsocketClient } = require('bybit-api');
 var cron = require('node-cron');
-const OKX_API = require('../Doc/api');
 
-const bot = new TelegramBot(process.env.OKX_BOT_TOKEN_THONG_KE, {
+const bot = new TelegramBot("6992407921:AAFS2wimsauyuoj1eXJFN_XxRFhs5wWtp7c", {
     polling: false,
     request: {
         agentOptions: {
@@ -16,16 +16,21 @@ const bot = new TelegramBot(process.env.OKX_BOT_TOKEN_THONG_KE, {
         }
     }
 });
+const CHANNEL_ID = "-1002178225625"
+const MAX_ORDER_LIMIT = 20
 
-const CHANNEL_ID = process.env.OKX_CHANNEL_ID_THONG_KE
 
 var sendTeleCount = {
     logError: false,
     total: 0
 }
+let digit = []
+let OpenTimem1 = []
+let CoinFT = []
 let messageList = []
 var listKlineObject = {}
 
+var delayTimeOut = ""
 var coinAllClose = false
 var preTurnover = {}
 var trichMauData = {}
@@ -37,10 +42,17 @@ var trichMauTimeMainSendTele = {
     pre: 0,
 }
 
+let botListTelegram = {}
 
-let wsSymbol = new WebsocketClient({
-    market: "aws"
-});
+let wsConfig = {
+    market: 'v5',
+    recvWindow: 100000
+}
+let wsSymbol = new WebsocketClient(wsConfig);
+let wsInfo = {
+    testnet: false,
+}
+let CoinInfo = new RestClientV5(wsInfo);
 
 //Funcition
 
@@ -65,54 +77,45 @@ async function sendMessageWithRetry(messageText, retries = 5) {
     throw new Error('Failed to send message after multiple retries');
 
 }
-async function getListSymbol() {
 
-    let listSymbol = {}
 
-    const getSpot = OKX_API.publicData.restAPI.getInstruments({ instType: "SPOT" })
-    const getMargin = OKX_API.publicData.restAPI.getInstruments({ instType: "MARGIN" })
 
-    try {
-        const resultGetAll = await Promise.allSettled([getSpot, getMargin])
+async function ListCoinFT() {
 
-        resultGetAll.forEach((symbolListData) => {
-            symbolListData.value?.forEach(symbolData => {
-                if (symbolData.quoteCcy == "USDT") {
-                    const symbol = symbolData.instId
+    let ListCoin1m = []
 
-                    listSymbol[symbol] = {
-                        channel: "candle1D",
-                        instId: symbolData.instId
-                    }
+    await CoinInfo.getInstrumentsInfo({ category: 'spot' })
+        .then((rescoin) => {
+            rescoin.result.list.forEach((e) => {
+                const symbol = e.symbol
+                if (symbol.split("USDT")[1] === "") {
+                    // if (e.marginTrading != "none" && e.symbol.split("USDT")[1] === "") {
+                    ListCoin1m.push(`kline.D.${symbol}`)
+                }
 
-                    symbolObject[symbol] = symbolData.instType == "MARGIN" ? "🍁" : "🍀"
-
-                    trichMauData[symbol] = {
-                        open: 0,
-                        close: 0,
-                        high: 0,
-                        low: 0,
-                        turnover: 0
-                    }
-
-                    preTurnover[symbol] = 0
-                    trichMauDataArray[symbol] = []
-                    trichMau[symbol] = {
-                        cur: 0,
-                        pre: 0,
-                    }
+                symbolObject[symbol] = e.marginTrading != "none" ? "🍁" : "🍀"
+                trichMauData[symbol] = {
+                    open: 0,
+                    close: 0,
+                    high: 0,
+                    low: 0,
+                    turnover: 0
+                }
+                preTurnover[symbol] = 0
+                trichMauDataArray[symbol] = []
+                trichMau[symbol] = {
+                    cur: 0,
+                    pre: 0,
                 }
             })
         })
-    } catch (error) {
-        console.log(`[!] Error get symbol: ${error.message}`);
-    }
+        .catch((error) => {
+            console.error(error);
+        });
 
-    return listSymbol
-    // return [{
-    //     channel: "candle1D",
-    //     instId: "DEGEN-USDT"
-    // }]
+
+    return ListCoin1m
+    // return [`kline.D.EGP1USDT`]
 }
 
 
@@ -145,6 +148,7 @@ const sortListReverse = (arr) => {
         OCLong: [...arr].sort((a, b) => Math.abs(b.OCLong) - Math.abs(a.OCLong))
     }
 }
+
 
 
 const tinhOC = (symbol, dataAll = []) => {
@@ -275,15 +279,15 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
 
-        if (vol >= 5000) {
-            if (OCRound >= 1) {
+        if (vol >= 0) {
+            if (OCRound >= .6) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCData.index} | ${new Date(timestampOC).toLocaleString()}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1) {
+            if (OCLongRound <= -.6) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCLongData.index} | ${new Date(timestampOCLong).toLocaleString()}`)
                 messageList.push(htLong)
                 console.log(htLong);
@@ -296,13 +300,11 @@ const tinhOC = (symbol, dataAll = []) => {
         if (messageList.length > 0) {
             if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = new Date()
             }
         }
-
-
     }
 }
 
@@ -310,86 +312,84 @@ const tinhOC = (symbol, dataAll = []) => {
 let Main = async () => {
 
 
-    const listSymbolObject = await getListSymbol()
-    const listSymbol = Object.values(listSymbolObject)
-
-    await wsSymbol.subscribe(listSymbol)
-
-    wsSymbol.on('update', (dataCoin) => {
+    listKline = await ListCoinFT()
 
 
-        const dataMainAll = dataCoin.data
-        if (dataMainAll.length > 1) {
-            console.log("CO 2 GIÁ");
-        }
-        dataMainAll.forEach(dataMain => {
+    await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
+        console.log("[V] Subscribe Kline Successful");
 
-            const coinCurrent = +dataMain[4]
-            const turnover = +dataMain[6]
-            const timestamp = new Date()
-            const symbol = dataCoin.arg.instId
+        wsSymbol.on('update', (dataCoin) => {
+            const dataMainAll = dataCoin.data
 
-            listKlineObject[symbol] = symbol
+            dataMainAll.forEach((dataMain) => {
 
-            // if (symbol === "GUMMYUSDT") {
-            //     console.log("\n", dataCoin, new Date().toLocaleTimeString(), "\n");
-            // }
+                const coinCurrent = +dataMain.close
+                const turnover = +dataMain.turnover
+                const timestamp = dataMain.timestamp
+                const [_, candle, symbol] = dataCoin.topic.split(".");
+
+                listKlineObject[symbol] = symbol
+
+                // if (symbol === "GUMMYUSDT") {
+                //     console.log("\n", dataCoin, new Date().toLocaleTimeString(), "\n");
+                // }
+
+                if (!trichMauData[symbol].open) {
+                    trichMauData[symbol] = {
+                        open: coinCurrent,
+                        close: coinCurrent,
+                        high: coinCurrent,
+                        low: coinCurrent,
+                        turnover,
+                        turnoverD: turnover
+                    }
+                    preTurnover[symbol] = turnover
+                    trichMauDataArray[symbol].push(trichMauData[symbol])
+                }
+
+                if (coinCurrent > trichMauData[symbol].high) {
+                    trichMauData[symbol].high = coinCurrent
+
+                }
+                if (coinCurrent < trichMauData[symbol].low) {
+                    trichMauData[symbol].low = coinCurrent
+                }
 
 
-            if (!trichMauData[symbol].open) {
+                trichMauData[symbol].turnoverD = turnover
+                trichMauData[symbol].close = coinCurrent
+                trichMauData[symbol].timestamp = timestamp
+
+                if (new Date() - trichMau[symbol].pre >= 1000) {
+                    // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
+                    trichMauDataArray[symbol].push(trichMauData[symbol])
+                    trichMau[symbol].pre = new Date()
+                }
+
                 trichMauData[symbol] = {
                     open: coinCurrent,
                     close: coinCurrent,
                     high: coinCurrent,
                     low: coinCurrent,
-                    turnover,
-                    turnoverD: turnover
+                    turnover
                 }
-                preTurnover[symbol] = turnover
-                trichMauDataArray[symbol].push(trichMauData[symbol])
-            }
 
-            if (coinCurrent > trichMauData[symbol].high) {
-                trichMauData[symbol].high = coinCurrent
+                // }
+                // else if (dataMain.confirm === true) {
+                //     coinAllClose = true
+                //     trichMau[symbol].pre = new Date()
+                //     trichMauData[symbol] = {
+                //         open: coinCurrent,
+                //         high: coinCurrent,
+                //         low: coinCurrent,
+                //         turnover: turnover,
+                //     }
+                // }
 
-            }
-            if (coinCurrent < trichMauData[symbol].low) {
-                trichMauData[symbol].low = coinCurrent
-            }
 
-
-            trichMauData[symbol].turnoverD = turnover
-            trichMauData[symbol].close = coinCurrent
-            trichMauData[symbol].timestamp = timestamp
-
-            if (new Date() - trichMau[symbol].pre >= 1000) {
-                // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
-                trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date()
-            }
-
-            trichMauData[symbol] = {
-                open: coinCurrent,
-                close: coinCurrent,
-                high: coinCurrent,
-                low: coinCurrent,
-                turnover
-            }
-
-            // }
-            // else if (dataMain.confirm === true) {
-            //     coinAllClose = true
-            //     trichMau[symbol].pre = new Date()
-            //     trichMauData[symbol] = {
-            //         open: coinCurrent,
-            //         high: coinCurrent,
-            //         low: coinCurrent,
-            //         turnover: turnover,
-            //     }
-            // }
+            })
         })
-
-    });
+    }).catch((err) => { console.log(err) });
 
     setInterval(() => {
 
@@ -422,6 +422,8 @@ let Main = async () => {
 
 try {
     Main()
+
+
 
     setTimeout(() => {
         cron.schedule('0 */3 * * *', async () => {

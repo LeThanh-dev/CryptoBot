@@ -88,8 +88,8 @@ async function ListCoinFT() {
         .then((rescoin) => {
             rescoin.result.list.forEach((e) => {
                 const symbol = e.symbol
-                // if (symbol.split("USDT")[1] === "") {
-                if (e.marginTrading != "none" && e.symbol.split("USDT")[1] === "") {
+                if (symbol.split("USDT")[1] === "") {
+                // if (e.marginTrading != "none" && e.symbol.split("USDT")[1] === "") {
                     ListCoin1m.push(`kline.D.${symbol}`)
                 }
 
@@ -367,7 +367,7 @@ let Main = async () => {
             trichMauDataArray[symbol] = []
         })
         listKlineObject = {}
-    }, 5000)
+    }, 3000)
 
 
 
