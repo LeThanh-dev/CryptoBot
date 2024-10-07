@@ -188,14 +188,14 @@ const tinhOC = (symbol, data = {}) => {
 
 
     if (vol >= 5000) {
-        if (OCRound >= 1 && TPRound > 0) {
+        if (OCRound >= .5 && TPRound > 0) {
             const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} | ${formatTime(timestamp)}`)
             messageList.push(ht)
             console.log(ht);
             console.log(data);
         }
 
-        if (OCLongRound <= -1 && TPLongRound > 0) {
+        if (OCLongRound <= -.5 && TPLongRound > 0) {
             const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} | ${formatTime(timestamp)}`)
             messageList.push(htLong)
             console.log(htLong);
