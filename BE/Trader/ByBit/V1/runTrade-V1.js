@@ -2732,20 +2732,19 @@ try {
         trichMauData[symbol].timestamp = dataMain.timestamp
 
 
-        if (new Date() - trichMau[symbol].pre >= 1000) {
+        const time = Date.now()
+        if (time - trichMau[symbol].pre >= 1000) {
             trichMauDataArray[symbol].push(trichMauData[symbol])
-            trichMau[symbol].pre = new Date()
+            trichMau[symbol].pre = time
+            trichMauData[symbol] = {
+                open: coinCurrent,
+                close: coinCurrent,
+                high: coinCurrent,
+                low: coinCurrent,
+                turnover,
+                turnoverD: turnover
+            }
         }
-
-        trichMauData[symbol] = {
-            open: coinCurrent,
-            close: coinCurrent,
-            high: coinCurrent,
-            low: coinCurrent,
-            turnover
-        }
-
-
 
     })
 
@@ -2795,7 +2794,7 @@ try {
             trichMauDataArray[symbol] = []
         })
         listKlineObject = {}
-    }, 5000)
+    }, 3000)
 
 
     // handleCreateMultipleConfigSpot({

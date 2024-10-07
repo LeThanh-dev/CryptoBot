@@ -145,7 +145,8 @@ const sortListReverse = (arr) => {
         OCLong: [...arr].sort((a, b) => Math.abs(b.OCLong) - Math.abs(a.OCLong))
     }
 }
-
+const checkInfinityValue = value => [Infinity, -Infinity].includes(value)
+const formatTime = time => new Date(time).toLocaleString()
 
 const tinhOC = (symbol, dataAll = []) => {
 
@@ -153,51 +154,36 @@ const tinhOC = (symbol, dataAll = []) => {
 
     if (dataAll.length > 0) {
 
-        let OC = 0
-        let TP = 0
-        let OCLong = 0
-        let TPLong = 0
-
-        let dataOCList = []
-        let dataOC = {}
-        let dataOCLong = {}
-
-        const vol = Math.abs(dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol])
-
-        dataAll.forEach((data, index) => {
-
-            const Open = +data.open
-            const Highest = +data.high
-            const Lowest = +data.low
-            const timestamp = data.timestamp
-
-            OC = (Highest - Open) / Open
-            OCLong = (Lowest - Open) / Open
-
-            if ([Infinity, -Infinity].includes(OC)) {
-                OC = 0
+        let dataOC = {
+            close: 0,
+            open: 0,
+            high: 0,
+            low: 0,
+            OCData: {
+                OC: 0,
+                timestamp: 0,
+            },
+            TPData: {
+                TP: 0,
+                timestamp: 0,
             }
-
-            if ([Infinity, -Infinity].includes(OCLong)) {
-                OCLong = 0
+        }
+        let dataOCLong = {
+            close: 0,
+            open: 0,
+            high: 0,
+            low: 0,
+            OCData: {
+                OC: 0,
+                timestamp: 0,
+            },
+            TPData: {
+                TP: 0,
+                timestamp: 0,
             }
-            dataOCList.push({
-                OC: OC,
-                OCLong: OCLong,
-                index,
-                timestamp
-            })
-        })
+        }
 
-        const OCMain = sortListReverse(dataOCList)
-        const OCLongData = OCMain.OCLong[0]
-        const OCData = OCMain.OC[0]
-
-        OC = OCData.OC
-        const timestampOC = OCData.timestamp
-        OCLong = OCLongData.OCLong
-        const timestampOCLong = OCLongData.timestamp
-
+        const vol = dataAll[dataAll.length - 1].turnover - preTurnover[symbol]
 
         dataAll.forEach((data, index) => {
 
@@ -205,86 +191,92 @@ const tinhOC = (symbol, dataAll = []) => {
             const Open = +data.open
             const Highest = +data.high
             const Lowest = +data.low
+            // const turnover = data.turnover
+            const timestamp = data.timestamp
 
-            if (index >= OCData.index) {
-                if (index === OCData.index) {
-                    // Tinh OC Short
-                    TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+            if (!dataOC.close) {
+                const OC = (Highest - Open) / Open
+                const TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
+
+                if (!checkInfinityValue(OC)) {
                     dataOC = {
                         close: Close,
                         open: Open,
                         high: Highest,
                         low: Lowest,
+                        OCData: {
+                            OC,
+                            timestamp,
+                        },
+                        TPData: {
+                            TP: checkInfinityValue(TP) ? 0 : TP,
+                            timestamp,
+                        }
                     }
-                }
-                else {
-                    let TPTemp = 0
-                    if (Lowest < dataOC.close) {
-                        TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
-                    }
-                    if (TPTemp > TP) {
-                        TP = TPTemp
-                    }
-
                 }
             }
-            if (index >= OCLongData.index) {
-                if (index === OCLongData.index) {
-                    // Tinh OC Long
-                    TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+            else {
+                if (Lowest < dataOC.close) {
+                    const TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
+                    if (!checkInfinityValue(TPTemp) && TPTemp > dataOC.TPData.TP) {
+                        dataOC.TPData = {
+                            TP: TPTemp,
+                            timestamp,
+                        }
+                    }
+                }
+            }
+            if (!dataOCLong.close) {
+                const OCLong = (Lowest - Open) / Open
+                const TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                if (!checkInfinityValue(OCLong)) {
                     dataOCLong = {
                         close: Close,
                         open: Open,
                         high: Highest,
                         low: Lowest,
-                    }
-                }
-                else {
-                    let TPLongTemp = 0
-
-                    if (Highest > dataOCLong.close) {
-                        TPLongTemp = Math.abs((Highest - dataOCLong.low) / (dataOCLong.low - dataOCLong.open)) || 0
-                    }
-
-                    if (TPLongTemp > TPLong) {
-                        TPLong = TPLongTemp
+                        OCData: {
+                            OC: OCLong,
+                            timestamp,
+                        },
+                        TPData: {
+                            TP: checkInfinityValue(TPLong) ? 0 : TPLong,
+                            timestamp,
+                        }
                     }
                 }
             }
+            else {
 
+                if (Highest > dataOCLong.close) {
+                    const TPLongTemp = Math.abs((Highest - dataOCLong.low) / (dataOCLong.low - dataOCLong.open)) || 0
+                    if (!checkInfinityValue(TPLongTemp) && TPLongTemp > dataOCLong.TPData.TP) {
+                        dataOCLong.TPData = {
+                            TP: TPLongTemp,
+                            timestamp,
+                        }
+
+                    }
+                }
+            }
         })
 
+        const OCRound = roundNumber(dataOC.OCData.OC)
+        const TPRound = roundNumber(dataOC.TPData.TP)
+        const OCLongRound = roundNumber(dataOCLong.OCData.OC)
+        const TPLongRound = roundNumber(dataOCLong.TPData.TP)
 
-        if ([Infinity, -Infinity].includes(OC)) {
-            OC = 0
-        }
-
-        if ([Infinity, -Infinity].includes(OCLong)) {
-            OCLong = 0
-        }
-        if ([Infinity, -Infinity].includes(TP)) {
-            TP = 0
-        }
-
-        if ([Infinity, -Infinity].includes(TPLong)) {
-            TPLong = 0
-        }
-
-        const OCRound = roundNumber(OC)
-        const TPRound = roundNumber(TP)
-        const OCLongRound = roundNumber(OCLong)
-        const TPLongRound = roundNumber(TPLong)
-
-        if (vol >= 5000) {
-            if (OCRound >= 1 && TPRound > 0) {
-                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCData.index} | ${new Date(timestampOC).toLocaleString()}`)
+      
+        if (vol >= 0) {
+            if (OCRound >= .2 && TPRound > 0) {
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> \nOC: ${OCRound}% | ${formatTime(dataOC.OCData.timestamp)} \nTP: ${TPRound}% | ${formatTime(dataOC.TPData.timestamp)} \nVOL: ${formatNumberString(vol)}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1 && TPLongRound > 0) {
-                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCLongData.index} | ${new Date(timestampOCLong).toLocaleString()}`)
+            if (OCLongRound <= -.2 && TPLongRound > 0) {
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> \nOC: ${OCLongRound}% | ${formatTime(dataOCLong.OCData.timestamp)} \nTP: ${TPLongRound}% | ${formatTime(dataOCLong.TPData.timestamp)} \nVOL: ${formatNumberString(vol)}`)
                 messageList.push(htLong)
                 console.log(htLong);
                 console.log(dataAll);
@@ -292,18 +284,28 @@ const tinhOC = (symbol, dataAll = []) => {
         }
 
 
-
         if (messageList.length > 0) {
             const time = Date.now()
             if (time - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                sendMessageTinhOC(messageList)
+                // sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = time
             }
         }
 
-
+        // if (sendTeleCount.total < MAX_ORDER_LIMIT) {
+        // }
+        // else {
+        //     if (!sendTeleCount?.logError) {
+        //         console.log(`[!] LIMIT SEND TELEGRAM`);
+        //         sendTeleCount.logError = true
+        //         setTimeout(() => {
+        //             sendTeleCount.logError = false
+        //             sendTeleCount.total = 0
+        //         }, 3000)
+        //     }
+        // }
     }
 }
 
@@ -319,78 +321,68 @@ let Main = async () => {
 
     wsSymbol.on('update', (dataCoin) => {
 
-        const dataMainAll = dataCoin.data
+        const dataMain = dataCoin.data[0]
+        const coinCurrent = +dataMain[4]
+        const turnover = +dataMain[6]
+        const timestamp = new Date()
+        const symbol = dataCoin.arg.instId
 
-        if (dataMainAll.length > 1) {
-            console.log("CO 2 GIÁ");
+        listKlineObject[symbol] = symbol
+
+        // if (symbol === "GUMMYUSDT") {
+        //     console.log("\n", dataCoin, new Date().toLocaleTimeString(), "\n");
+        // }
+
+        if (!trichMauData[symbol].open) {
+            trichMauData[symbol] = {
+                open: coinCurrent,
+                close: coinCurrent,
+                high: coinCurrent,
+                low: coinCurrent,
+                turnover,
+            }
+            preTurnover[symbol] = turnover
+            trichMauDataArray[symbol].push(trichMauData[symbol])
         }
-        dataMainAll.forEach(dataMain => {
 
-            const coinCurrent = +dataMain[4]
-            const turnover = +dataMain[6]
-            const timestamp = new Date()
-            const symbol = dataCoin.arg.instId
+        if (coinCurrent > trichMauData[symbol].high) {
+            trichMauData[symbol].high = coinCurrent
 
-            listKlineObject[symbol] = symbol
-
-            // if (symbol === "GUMMYUSDT") {
-            //     console.log("\n", dataCoin, new Date().toLocaleTimeString(), "\n");
-            // }
-
-            if (!trichMauData[symbol].open) {
-                trichMauData[symbol] = {
-                    open: coinCurrent,
-                    close: coinCurrent,
-                    high: coinCurrent,
-                    low: coinCurrent,
-                    turnover,
-                    turnoverD: turnover
-                }
-                preTurnover[symbol] = turnover
-                trichMauDataArray[symbol].push(trichMauData[symbol])
-            }
-
-            if (coinCurrent > trichMauData[symbol].high) {
-                trichMauData[symbol].high = coinCurrent
-
-            }
-            if (coinCurrent < trichMauData[symbol].low) {
-                trichMauData[symbol].low = coinCurrent
-            }
+        }
+        if (coinCurrent < trichMauData[symbol].low) {
+            trichMauData[symbol].low = coinCurrent
+        }
 
 
-            trichMauData[symbol].turnoverD = turnover
-            trichMauData[symbol].close = coinCurrent
-            trichMauData[symbol].timestamp = timestamp
+        trichMauData[symbol].turnover = turnover
+        trichMauData[symbol].close = coinCurrent
+        trichMauData[symbol].timestamp = timestamp
 
-            const time = Date.now()
-            if (time - trichMau[symbol].pre >= 1000) {
-                // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
-                trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = time
-                trichMauData[symbol] = {
-                    open: coinCurrent,
-                    close: coinCurrent,
-                    high: coinCurrent,
-                    low: coinCurrent,
-                    turnover,
-                    turnoverD: turnover
-                }
-            }
+        const time = Date.now()
+        if (time - trichMau[symbol].pre >= 1000) {
+            trichMauDataArray[symbol].push(trichMauData[symbol])
+            trichMau[symbol].pre = time
+        }
+        trichMauData[symbol] = {
+            open: coinCurrent,
+            close: coinCurrent,
+            high: coinCurrent,
+            low: coinCurrent,
+            turnover,
+        }
 
 
-            // }
-            // else if (dataMain.confirm === true) {
-            //     coinAllClose = true
-            //     trichMau[symbol].pre = new Date()
-            //     trichMauData[symbol] = {
-            //         open: coinCurrent,
-            //         high: coinCurrent,
-            //         low: coinCurrent,
-            //         turnover: turnover,
-            //     }
-            // }
-        })
+        // }
+        // else if (dataMain.confirm === true) {
+        //     coinAllClose = true
+        //     trichMau[symbol].pre = new Date()
+        //     trichMauData[symbol] = {
+        //         open: coinCurrent,
+        //         high: coinCurrent,
+        //         low: coinCurrent,
+        //         turnover: turnover,
+        //     }
+        // }
 
     });
 
@@ -406,7 +398,6 @@ let Main = async () => {
                 high: coinCurrent,
                 low: coinCurrent,
                 turnover,
-                turnoverD: turnover,
             }
             preTurnover[symbol] = trichMauData[symbol].turnover
             trichMauDataArray[symbol] = []
@@ -426,7 +417,7 @@ let Main = async () => {
 
 try {
     Main()
-   
+
     setTimeout(() => {
         cron.schedule('0 */3 * * *', async () => {
             process.exit(0);

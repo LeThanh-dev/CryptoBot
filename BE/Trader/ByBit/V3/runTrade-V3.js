@@ -3020,7 +3020,7 @@ try {
 
     // SYNC VOL  --------------------------------
 
-    cron.schedule('0 */3 * * *', async () => {
+    cron.schedule('0 */1 * * *', async () => {
 
         await syncVol24()
 
