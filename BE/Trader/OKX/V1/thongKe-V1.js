@@ -111,7 +111,7 @@ async function getListSymbol() {
     return listSymbol
     // return [{
     //     channel: "candle1D",
-    //     instId: "DEGEN-USDT"
+    //     instId: "MKR-USDT"
     // }]
 }
 
@@ -276,14 +276,14 @@ const tinhOC = (symbol, dataAll = []) => {
         const TPLongRound = roundNumber(TPLong)
 
         if (vol >= 5000) {
-            if (OCRound >= 1) {
+            if (OCRound >= 1 && TPRound > 0) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCData.index} | ${new Date(timestampOC).toLocaleString()}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -1) {
+            if (OCLongRound <= -1 && TPLongRound > 0) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCLongData.index} | ${new Date(timestampOCLong).toLocaleString()}`)
                 messageList.push(htLong)
                 console.log(htLong);
@@ -294,11 +294,12 @@ const tinhOC = (symbol, dataAll = []) => {
 
 
         if (messageList.length > 0) {
-            if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
+            const time = Date.now()
+            if (time - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
                 sendMessageTinhOC(messageList)
                 messageList = []
-                trichMauTimeMainSendTele.pre = new Date()
+                trichMauTimeMainSendTele.pre = time
             }
         }
 
@@ -311,14 +312,15 @@ let Main = async () => {
 
 
     const listSymbolObject = await getListSymbol()
+
     const listSymbol = Object.values(listSymbolObject)
 
     await wsSymbol.subscribe(listSymbol)
 
     wsSymbol.on('update', (dataCoin) => {
 
-
         const dataMainAll = dataCoin.data
+
         if (dataMainAll.length > 1) {
             console.log("CO 2 GIÁ");
         }
@@ -334,7 +336,6 @@ let Main = async () => {
             // if (symbol === "GUMMYUSDT") {
             //     console.log("\n", dataCoin, new Date().toLocaleTimeString(), "\n");
             // }
-
 
             if (!trichMauData[symbol].open) {
                 trichMauData[symbol] = {
@@ -362,19 +363,21 @@ let Main = async () => {
             trichMauData[symbol].close = coinCurrent
             trichMauData[symbol].timestamp = timestamp
 
-            if (new Date() - trichMau[symbol].pre >= 1000) {
+            const time = Date.now()
+            if (time - trichMau[symbol].pre >= 1000) {
                 // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date()
+                trichMau[symbol].pre = time
+                trichMauData[symbol] = {
+                    open: coinCurrent,
+                    close: coinCurrent,
+                    high: coinCurrent,
+                    low: coinCurrent,
+                    turnover,
+                    turnoverD: turnover
+                }
             }
 
-            trichMauData[symbol] = {
-                open: coinCurrent,
-                close: coinCurrent,
-                high: coinCurrent,
-                low: coinCurrent,
-                turnover
-            }
 
             // }
             // else if (dataMain.confirm === true) {
@@ -413,6 +416,7 @@ let Main = async () => {
 
 
 
+
     //Báo lỗi socket$ pm2 start app.js
     wsSymbol.on('error', (err) => {
         process.exit(1);
@@ -422,7 +426,7 @@ let Main = async () => {
 
 try {
     Main()
-
+   
     setTimeout(() => {
         cron.schedule('0 */3 * * *', async () => {
             process.exit(0);

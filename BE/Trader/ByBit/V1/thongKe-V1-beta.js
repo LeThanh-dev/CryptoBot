@@ -279,15 +279,15 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCLongRound = roundNumber(OCLong)
         const TPLongRound = roundNumber(TPLong)
 
-        if (vol >= 0) {
-            if (OCRound >= .6 && TPRound > 0) {
+        if (vol >= 2000) {
+            if (OCRound >= 1 && TPRound > 0) {
                 const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCData.index} | ${new Date(timestampOC).toLocaleString()}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -.6 && TPLongRound > 0) {
+            if (OCLongRound <= -1 && TPLongRound > 0) {
                 const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - Index: ${OCLongData.index} | ${new Date(timestampOCLong).toLocaleString()}`)
                 messageList.push(htLong)
                 console.log(htLong);
@@ -296,13 +296,14 @@ const tinhOC = (symbol, dataAll = []) => {
         }
 
 
+        const time = Date.now()
 
         if (messageList.length > 0) {
-            if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
+            if (time - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                // sendMessageTinhOC(messageList)
+                sendMessageTinhOC(messageList)
                 messageList = []
-                trichMauTimeMainSendTele.pre = new Date()
+                trichMauTimeMainSendTele.pre = time
             }
         }
     }
@@ -314,12 +315,14 @@ let Main = async () => {
 
     listKline = await ListCoinFT()
 
-
     await wsSymbol.subscribeV5(listKline, 'spot').then(() => {
         console.log("[V] Subscribe Kline Successful");
 
         wsSymbol.on('update', (dataCoin) => {
             const dataMainAll = dataCoin.data
+            if (dataMainAll.length > 1) {
+                console.log("CO 2 GIÁ",dataMainAll);
+            }
 
             dataMainAll.forEach((dataMain) => {
 
@@ -360,20 +363,22 @@ let Main = async () => {
                 trichMauData[symbol].close = coinCurrent
                 trichMauData[symbol].timestamp = timestamp
 
-                if (new Date() - trichMau[symbol].pre >= 1000) {
+                const time = Date.now()
+
+                if (time - trichMau[symbol].pre >= 1000) {
                     // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                     trichMauDataArray[symbol].push(trichMauData[symbol])
-                    trichMau[symbol].pre = new Date()
+                    trichMau[symbol].pre = time
+                    trichMauData[symbol] = {
+                        open: coinCurrent,
+                        close: coinCurrent,
+                        high: coinCurrent,
+                        low: coinCurrent,
+                        turnover,
+                        turnoverD: turnover
+                    }
                 }
-
-                trichMauData[symbol] = {
-                    open: coinCurrent,
-                    close: coinCurrent,
-                    high: coinCurrent,
-                    low: coinCurrent,
-                    turnover
-                }
-
+                
                 // }
                 // else if (dataMain.confirm === true) {
                 //     coinAllClose = true
@@ -405,7 +410,7 @@ let Main = async () => {
                 turnover,
                 turnoverD: turnover,
             }
-            preTurnover[symbol] = trichMauData[symbol].turnover
+            preTurnover[symbol] = turnover
             trichMauDataArray[symbol] = []
         })
         listKlineObject = {}

@@ -244,11 +244,12 @@ const tinhOC = (symbol, dataAll = []) => {
 
 
         if (messageList.length > 0) {
-            if (new Date() - trichMauTimeMainSendTele.pre >= 3000) {
+            const time = Date.now()
+            if (time - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
                 // sendMessageTinhOC(messageList)
                 messageList = []
-                trichMauTimeMainSendTele.pre = new Date()
+                trichMauTimeMainSendTele.pre = time
             }
         }
 
@@ -318,11 +319,13 @@ let Main = async () => {
             trichMauData[symbol].turnoverD = turnover
             trichMauData[symbol].close = coinCurrent
             trichMauData[symbol].timestamp = timestamp
+            
+            const time = Date.now()
 
-            if (new Date() - trichMau[symbol].pre >= 1000) {
+            if (time - trichMau[symbol].pre >= 1000) {
                 // trichMauData[symbol].turnover = turnover - trichMauData[symbol].turnover
                 trichMauDataArray[symbol].push(trichMauData[symbol])
-                trichMau[symbol].pre = new Date()
+                trichMau[symbol].pre = time
             }
 
             trichMauData[symbol] = {
