@@ -33,6 +33,21 @@ function createSignature({
     return Buffer.from(hmac.digest()).toString('base64');
 }
 
+const sendPrivateRequestPOST = async ({ method, requestPath, body, secretKey, ApiKey, Password }) => {
+    const timestamp = new Date().toISOString();
+    const OK_ACCESS_SIGN = createSignature({ timestamp, method, requestPath, body, secretKey });
+
+    const apiPrivate = getApiPrivate({ timestamp, ApiKey, Password });
+
+    const response = await apiPrivate.post(requestPath, body, {
+        headers: {
+            "OK-ACCESS-SIGN": OK_ACCESS_SIGN
+        }
+    });
+    return response.data;
+
+}
+
 const OKX_API = {
     orderBookTrading: {
         marketData: {
@@ -82,26 +97,15 @@ const OKX_API = {
                                     mgnMode,
                                     lever,
                                 }
-                                const timestamp = new Date().toISOString()
-                                const OK_ACCESS_SIGN = createSignature({
-                                    timestamp,
-                                    method: "POST",
-                                    requestPath,
-                                    body,
-                                    secretKey: SecretKey
-                                })
-
-                                const apiPrivate = getApiPrivate({
-                                    timestamp,
-                                    ApiKey,
-                                    Password
-                                })
 
                                 try {
-                                    await apiPrivate.post(requestPath, body, {
-                                        headers: {
-                                            "OK-ACCESS-SIGN": OK_ACCESS_SIGN
-                                        }
+                                    await sendPrivateRequestPOST({
+                                        ApiKey,
+                                        secretKey: SecretKey,
+                                        Password,
+                                        method: "POST",
+                                        requestPath,
+                                        body
                                     })
 
                                 } catch (error) {

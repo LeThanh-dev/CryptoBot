@@ -102,6 +102,18 @@ function EditApi({
 
                 </FormControl>
 
+                
+                {botType == "OKX_V1" && <FormControl className={styles.formControl}>
+                    <FormLabel className={styles.label}>Password</FormLabel>
+                    <TextField
+                        defaultValue={botData.Password}
+                        {...register("Password", { required: true })}
+                        size="small"
+                    />
+                    {errors.Password?.type === 'required' && <p className="formControlErrorLabel">The Password Required.</p>}
+
+                </FormControl>}
+
                 <FormControl className={styles.formControl}>
                     <FormLabel className={styles.label}>UTA</FormLabel>
                     <Switch

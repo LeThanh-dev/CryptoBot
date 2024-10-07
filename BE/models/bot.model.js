@@ -15,6 +15,7 @@ const botSchema = new mongoose.Schema({
   // Bot Api
   ApiKey: String,
   SecretKey: String,
+  Password: String,
   UTA: Boolean,
   // 
   userID: {
