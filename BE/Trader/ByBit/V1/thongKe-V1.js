@@ -430,22 +430,22 @@ const tinhOC = (symbol, dataAll = []) => {
         const OCLongRound = roundNumber(dataOCLong.OCData.OC)
         const TPLongRound = roundNumber(dataOCLong.TPData.TP)
 
-        if (vol >= 0) {
-            if (OCRound >= .5 && TPRound > 0) {
-                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> \nOC: ${OCRound}% | ${formatTime(dataOC.OCData.timestamp)} \nTP: ${TPRound}% | ${formatTime(dataOC.TPData.timestamp)} \nVOL: ${formatNumberString(vol)}`)
+        if (vol >= 2000) {
+            if (OCRound >= 1 && TPRound > 0) {
+                const ht = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} | ${formatTime(dataOC.OCData.timestamp)}`)
                 messageList.push(ht)
                 console.log(ht);
                 console.log(dataAll);
             }
 
-            if (OCLongRound <= -.5 && TPLongRound > 0) {
-                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("USDT", "")}</b> \nOC: ${OCLongRound}% | ${formatTime(dataOCLong.OCData.timestamp)} \nTP: ${TPLongRound}% | ${formatTime(dataOCLong.TPData.timestamp)} \nVOL: ${formatNumberString(vol)}`)
+            if (OCLongRound <= -1 && TPLongRound > 0) {
+                const htLong = (`${symbolObject[symbol]} | <b>${symbol.replace("-USDT", "")}</b> - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} | ${formatTime(dataOCLong.OCData.timestamp)}`)
                 messageList.push(htLong)
                 console.log(htLong);
                 console.log(dataAll);
             }
         }
-       
+
 
         if (messageList.length > 0) {
             const time = Date.now()
