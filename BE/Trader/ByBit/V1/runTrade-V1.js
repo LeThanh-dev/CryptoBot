@@ -2740,14 +2740,14 @@ try {
         if (time - trichMau[symbol].pre >= 1000) {
             trichMauDataArray[symbol].push(trichMauData[symbol])
             trichMau[symbol].pre = time
-            trichMauData[symbol] = {
-                open: coinCurrent,
-                close: coinCurrent,
-                high: coinCurrent,
-                low: coinCurrent,
-                turnover,
-                turnoverD: turnover
-            }
+        }
+        trichMauData[symbol] = {
+            open: coinCurrent,
+            close: coinCurrent,
+            high: coinCurrent,
+            low: coinCurrent,
+            turnover,
+            turnoverD: turnover
         }
 
     })
@@ -2794,7 +2794,7 @@ try {
                 turnover,
                 turnoverD: turnover
             }
-            preTurnover[symbol] = trichMauData[symbol].turnover
+            preTurnover[symbol] = turnover
             trichMauDataArray[symbol] = []
         })
         listKlineObject = {}

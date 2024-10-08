@@ -28,7 +28,7 @@
 
         &:active,
         &:hover {
-            color: var(--blueLightColor);
+            color: var(--blueLightColor) ;
             background: #f6f9ff;
         }
 
@@ -44,6 +44,6 @@
     }
 }
 .active {
-    color: var(--blueLightColor);
+    color: var(--blueLightColor) !important;
     background: #f6f9ff;
 }

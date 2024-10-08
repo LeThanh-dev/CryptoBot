@@ -42,7 +42,7 @@ const { WebsocketClient, RestClient } = require('okx-api');
 
 
 const wsSymbol = new WebsocketClient({
-    market: "aws",
+    market: "businessAws",
 });
 
 const LIST_ORDER = ["order", "execution"]
@@ -118,7 +118,7 @@ const getWebsocketClientConfig = ({
     apiSecret
 }) => {
     return {
-        market: "aws",
+        market: "businessAws",
         accounts: [{
             apiKey,
             apiPass,
@@ -1480,7 +1480,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 const wsOrder = new WebsocketClient(wsConfigOrder);
 
 
-                wsOrder.subscribeV5(LIST_ORDER, 'spot').then(() => {
+                wsOrder.subscribe(LIST_ORDER, 'spot').then(() => {
 
 
                     console.log(`[V] Subscribe order ( ${botName} ) success\n`);
@@ -2101,15 +2101,14 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
 
 const handleSocketListKline = async (listKlineInput) => {
 
-    await wsSymbol.subscribeV5(listKlineInput, 'spot').then(() => {
-        const length = listKlineInput.length
-
+    const length = listKlineInput.length
+    try {
+        await wsSymbol.subscribe(listKlineInput)
         console.log(`[V] Subscribe ${length} kline success\n`);
-
-    }).catch(err => {
+    } catch (err) {
+        
         console.log(`[!] Subscribe ${length} kline error: ${err}`,)
-    })
-
+    }
 }
 
 
@@ -2453,7 +2452,7 @@ const Main = async () => {
     await syncDigit()
 
 
-    await handleSocketBotApiList(botApiList)
+    // await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(Object.values(listKline))
 
@@ -2464,12 +2463,11 @@ try {
 
     wsSymbol.on('update', (dataCoin) => {
 
-        const [_, candle, symbol] = dataCoin.topic.split(".");
-
         const dataMain = dataCoin.data[0]
+        const symbol = dataCoin.arg.instId
 
-        const coinCurrent = +dataMain.close
-        const coinOpen = +dataMain.open
+        const coinCurrent = +dataMain[4]
+        const coinOpen = +dataMain[1]
 
         const listDataObject = allStrategiesByCandleAndSymbol?.[symbol]
 
@@ -2689,7 +2687,7 @@ try {
 
         //----------------------------------------------------------------
         // SCANNER
-        const turnover = +dataMain.turnover
+        const turnover = +dataMain[6]
 
         listKlineObject[symbol] = symbol
 
@@ -2739,7 +2737,7 @@ try {
 
     wsSymbol.on('close', () => {
         console.log('[V] Connection listKline closed');
-        wsSymbol.unsubscribeV5(listKline, "spot")
+        wsSymbol.unsubscribe(listKline, "spot")
     });
 
     wsSymbol.on('reconnected', () => {
@@ -3470,7 +3468,7 @@ socketRealtime.on('bot-api', async (data) => {
 
         const wsOrder = new WebsocketClient(wsConfigOrder);
 
-        await wsOrder.unsubscribeV5(LIST_ORDER, 'spot')
+        await wsOrder.unsubscribe(LIST_ORDER, 'spot')
 
         botApiList[botIDMain] = {
             ...botApiList[botIDMain],
@@ -3484,10 +3482,10 @@ socketRealtime.on('bot-api', async (data) => {
 
         const wsOrderNew = new WebsocketClient(wsConfigOrderNew);
 
-        await wsOrderNew.subscribeV5(LIST_ORDER, 'spot')
+        await wsOrderNew.subscribe(LIST_ORDER, 'spot')
 
     } catch (error) {
-        console.log("[!] Error subscribeV5", error)
+        console.log("[!] Error subscribe", error)
     }
 
 
@@ -3587,7 +3585,7 @@ socketRealtime.on('bot-delete', async (data) => {
 
     const wsOrder = new WebsocketClient(wsConfigOrder);
 
-    await wsOrder.unsubscribeV5(LIST_ORDER, 'spot')
+    await wsOrder.unsubscribe(LIST_ORDER, 'spot')
 
     delete botApiList[botIDMain]
 
