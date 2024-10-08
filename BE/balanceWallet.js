@@ -128,12 +128,14 @@ const handleWalletBalance = async () => {
                     telegramToken: botData.telegramToken,
                 }
             }
-            sendMessageWithRetryByBot({
-                messageText: `<b>Bot:</b> ${botData.botName}\n💵 <b>Balance:</b> ${balancePrice.toFixed(3)}$`,
-                telegramID: botData.telegramID,
-                telegramToken: botData.telegramToken,
-                botName: botData.botName
-            })
+            console.log("botData",botData);
+            
+            // sendMessageWithRetryByBot({
+            //     messageText: `<b>Bot:</b> ${botData.botName}\n💵 <b>Balance:</b> ${balancePrice.toFixed(3)}$`,
+            //     telegramID: botData.telegramID,
+            //     telegramToken: botData.telegramToken,
+            //     botName: botData.botName
+            // })
         }))
     }
     // return {
@@ -149,16 +151,18 @@ try {
         await handleWalletBalance();
         setTimeout(() => {
             const list = Object.entries(botBalance)
+            console.log("list",list);
+            
             if (list.length > 0) {
                 Promise.allSettled(list.map(async item => {
                     const key = item[0]
                     const value = item[1]
-                    sendMessageWithRetryByBot({
-                        messageText: `<b>BotType:</b> ${value.botType}\n💰 <b>Total Balance:</b> ${(value.totalBalanceAllBot).toFixed(3)}$`,
-                        telegramID: value.telegramInfo.telegramID,
-                        telegramToken: value.telegramInfo.telegramToken,
-                        botName: "Total Bot"
-                    })
+                    // sendMessageWithRetryByBot({
+                    //     messageText: `<b>BotType:</b> ${value.botType}\n💰 <b>Total Balance:</b> ${(value.totalBalanceAllBot).toFixed(3)}$`,
+                    //     telegramID: value.telegramInfo.telegramID,
+                    //     telegramToken: value.telegramInfo.telegramToken,
+                    //     botName: "Total Bot"
+                    // })
 
                     botBalance[key] = {
                         totalBalanceAllBot: 0,
