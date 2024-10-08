@@ -1197,7 +1197,6 @@ const dataCoinByBitController = {
                     key: API_KEY,
                     secret: SECRET_KEY,
                     syncTimeBeforePrivateRequests: true,
-
                 });
 
                 let myUUID = uuidv4();

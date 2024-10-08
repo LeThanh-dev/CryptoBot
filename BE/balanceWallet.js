@@ -19,7 +19,7 @@ const getFutureSpot = async ({
             key: API_KEY,
             secret: SECRET_KEY,
             syncTimeBeforePrivateRequests: true,
-
+            recv_window:10000
         });
 
         // get field totalWalletBalance
