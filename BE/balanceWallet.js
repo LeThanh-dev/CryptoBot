@@ -64,9 +64,13 @@ const handleWalletBalance = async () => {
     const botListDataActiveRes = await getAllBotActiveBE()
     if (botListDataActiveRes.length > 0) {
         const botListDataActiveObject = await Promise.allSettled(botListDataActiveRes.map(async item => {
+            
             const botID = item._id
 
             const result = await getFutureSpotBE(botID)
+
+            console.log("result",result);
+            
 
             // Trả về đối tượng mới cho mỗi item trong mảng
             return {
@@ -76,8 +80,8 @@ const handleWalletBalance = async () => {
                 spotSavings: +item?.spotSavings || 0,
                 future: +result.future || 0,
                 spotTotal: +result.spotTotal || 0,
-                API_KEY: result.API_KEY,
-                SECRET_KEY: result.SECRET_KEY,
+                API_KEY: result.ApiKey,
+                SECRET_KEY: result.SecretKey,
                 telegramID: item?.telegramID,
                 telegramToken: item?.telegramToken,
                 telegramToken: item?.telegramToken,
