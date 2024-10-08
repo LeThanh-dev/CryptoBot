@@ -85,7 +85,7 @@ const handleWalletBalance = async () => {
             };
 
         }))
-        botListDataActive = botListDataActiveObject.map(item => item.value)
+        const botListDataActive = botListDataActiveObject.map(item => item.value)
 
         await Promise.allSettled(botListDataActive.map(async botData => {
 

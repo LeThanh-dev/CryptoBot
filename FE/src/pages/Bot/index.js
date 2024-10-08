@@ -1,5 +1,5 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { Button, MenuItem, Select, Switch } from "@mui/material";
+import { Button, CircularProgress, MenuItem, Select, Switch } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { Link } from 'react-router-dom';
 import { useState, memo, useEffect, useRef } from "react";
@@ -604,7 +604,12 @@ function Bot() {
             </div>
             <div className={styles.botTableContainer}>
                 <div className={styles.botTableContainerTitle}>
-                    <b style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Total: {!loadingGetMoney ? `${formatNumber(totalFutureSpot)} $` : "..."} </b>
+                    <b style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Total: {!loadingGetMoney ? `${formatNumber(totalFutureSpot)} $` :  <CircularProgress style={{
+                                width: "16px",
+                                height: "16px",
+                                color: "#2e75db",
+                                marginLeft:"6px"
+                            }} color='inherit' />} </b>
                     <div>
                         {/* {dataTableChange.length > 0 && (
                             <Button

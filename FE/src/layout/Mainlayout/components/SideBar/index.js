@@ -18,7 +18,8 @@ import styles from "./SideBar.module.scss"
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { Collapse, Menu, MenuItem, Popover } from '@mui/material';
 import { useState } from 'react';
-
+import bybitIcon from "../../../../assets/bybit-logo.png"
+import OKXIcon from "../../../../assets/okx_logo.svg"
 
 function SideBar({
     openSidebar,
@@ -95,7 +96,8 @@ function SideBar({
                 {
                     link: "Configs/ByBit",
                     name: "ByBit",
-                    icon: <RadarIcon className={styles.icon} />,
+                    // icon: <RadarIcon className={styles.icon} />,
+                    icon: <img src={bybitIcon} width={"24px"} />,
                     open: openAll.Config.children.ByBit,
                     openFunc: (target) => {
                         setOpenAll(data => {
@@ -118,7 +120,7 @@ function SideBar({
                 {
                     link: "Configs/OKX",
                     name: "OKX",
-                    icon: <ViewInArIcon className={styles.icon} />,
+                    icon: <img src={OKXIcon} width={"24px"} />,
                     open: openAll.Config.children.OKX,
                     openFunc: (target) => {
                         setOpenAll(data => {
@@ -158,7 +160,7 @@ function SideBar({
                 {
                     link: "Positions/ByBit",
                     name: "ByBit",
-                    icon: <RadarIcon className={styles.icon} />,
+                    icon: <img src={bybitIcon} width={"24px"} />,
                     open: openAll.Position.children.ByBit,
                     openFunc: (target) => {
                         setOpenAll(data => {
@@ -181,7 +183,7 @@ function SideBar({
                 {
                     link: "Positions/OKX",
                     name: "OKX",
-                    icon: <ViewInArIcon className={styles.icon} />,
+                    icon: <img src={OKXIcon} width={"24px"} />,
                     open: openAll.Position.children.OKX,
                     openFunc: (target) => {
                         setOpenAll(data => {

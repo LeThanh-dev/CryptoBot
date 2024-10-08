@@ -29,6 +29,7 @@ import MarginOKX from "../pages/Configs/OKX/V1/tabComponents/Margin"
 import InstrumentOKXV1 from "../pages/Instruments/OKX/V1"
 import InstrumentsInfo from "../pages/Instruments/ByBit/V1"
 import CoinOKX from "../pages/Coins/OKX"
+import LayoutBox from "../components/LayoutBox"
 
 
 const routeList = [
@@ -81,11 +82,32 @@ const routeList = [
                         </>,
                         children: [
                             {
+                                path: "",
+                                element: <LayoutBox list = {[
+                                    {
+                                        label:"V1",
+                                        link:"/Configs/ByBit/V1/Spot"
+                                    },
+                                    {
+                                        label:"V3",
+                                        link:"/Configs/ByBit/V3/Config"
+                                    }
+                                ]}/>
+                            },
+                            {
                                 path: "V3",
                                 element: <>
                                     <Outlet />
                                 </>,
                                 children: [
+                                    {
+                                        path: "",
+                                        element:
+                                            <>
+                                                <StrategiesV3Tab />
+                                                <Strategies />
+                                            </>,
+                                    },
                                     {
                                         path: "Config",
                                         element:
@@ -114,6 +136,14 @@ const routeList = [
                                     <Outlet />
                                 </>,
                                 children: [
+                                    {
+                                        path: "",
+                                        element:
+                                            <>
+                                                <StrategiesMargin />
+                                                <Spot />
+                                            </>
+                                    },
                                     {
                                         path: "Spot",
                                         element:
@@ -149,11 +179,32 @@ const routeList = [
                         </>,
                         children: [
                             {
+                                path: "",
+                                element: <LayoutBox list = {[
+                                    {
+                                        label:"V1",
+                                        link:"/Configs/OKX/V1/Spot"
+                                    },
+                                    {
+                                        label:"V3",
+                                        link:"/Configs/OKX/V3/Config"
+                                    }
+                                ]}/>
+                            },
+                            {
                                 path: "V3",
                                 element: <>
                                     <Outlet />
                                 </>,
                                 children: [
+                                    {
+                                        path: "",
+                                        element:
+                                            <>
+                                                <ConfigV3Tab />
+                                                <Strategies />
+                                            </>,
+                                    },
                                     {
                                         path: "Config",
                                         element:
@@ -182,6 +233,14 @@ const routeList = [
                                     <Outlet />
                                 </>,
                                 children: [
+                                    {
+                                        path: "",
+                                        element:
+                                            <>
+                                                <ConfigV1Tab />
+                                                <SpotOKX />
+                                            </>
+                                    },
                                     {
                                         path: "Spot",
                                         element:
@@ -264,7 +323,7 @@ const routeList = [
                 children: [
                     {
                         path: "ByBit",
-                        element: <InstrumentsInfo/>
+                        element: <InstrumentsInfo />
 
                     },
                     {
@@ -282,7 +341,7 @@ const routeList = [
                 children: [
                     {
                         path: "ByBit",
-                        element: <Coin/>
+                        element: <Coin />
 
                     },
                     // {
