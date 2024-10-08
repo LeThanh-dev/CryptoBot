@@ -82,7 +82,6 @@ var allScannerDataObject = {}
 var allStrategiesByCandleAndSymbol = {}
 var symbolTradeTypeObject = {}
 var trichMauOCListObject = {}
-var trichMauTPListObject = {}
 
 var allStrategiesByBotIDAndOrderID = {}
 var allStrategiesByBotIDAndStrategiesID = {}

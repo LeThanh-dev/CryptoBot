@@ -31,8 +31,10 @@ import InstrumentsInfo from "../pages/Instruments/ByBit/V1"
 import CoinOKX from "../pages/Coins/OKX"
 import LayoutBox from "../components/LayoutBox"
 import bybitIcon from "../assets/bybit-logo.png"
-import OKXIcon from "../assets/okx_logo.svg"
-import { Padding } from "@mui/icons-material"
+import OKXIcon from "../assets/okx_logo.png"
+
+const renderByBitIcon = () => <img src={bybitIcon} width={"70px"} style={{ borderRadius: "6px" }} />
+const renderOKXIcon = () => <img src={OKXIcon} width={"70px"} style={{ borderRadius: "6px" }} />
 
 const routeList = [
     {
@@ -82,18 +84,20 @@ const routeList = [
                         element: <LayoutBox
                             list={[
                                 {
-                                    label: <img src={bybitIcon} width={"60px"} />,
+                                    label: renderByBitIcon(),
                                     link: "/Configs/ByBit",
-                                    style:{
-                                        padding: "12px",
+                                    style: {
+                                        padding: "0",
+                                        lineHeight:"100%",
                                         flexBasis: 0
                                     }
                                 },
                                 {
-                                    label: <img src={OKXIcon} width={"70px"} />,
+                                    label: renderOKXIcon(),
                                     link: "/Configs/OKX",
-                                    style:{
-                                        padding: "6px",
+                                    style: {
+                                        padding: "0",
+                                        lineHeight:"100%",
                                         flexBasis: 0
                                     }
                                 }
@@ -309,18 +313,20 @@ const routeList = [
                         element: <LayoutBox
                             list={[
                                 {
-                                    label: <img src={bybitIcon} width={"60px"} />,
+                                    label: renderByBitIcon(),
                                     link: "/Positions/ByBit",
-                                    style:{
-                                        padding: "12px",
+                                    style: {
+                                        padding: "0",
+                                        lineHeight:"100%",
                                         flexBasis: 0
                                     }
                                 },
                                 {
-                                    label: <img src={OKXIcon} width={"70px"} />,
+                                    label: renderOKXIcon(),
                                     link: "/Positions/OKX",
-                                    style:{
-                                        padding: "6px",
+                                    style: {
+                                        padding: "0",
+                                        lineHeight:"100%",
                                         flexBasis: 0
                                     }
                                 }

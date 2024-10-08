@@ -19,7 +19,10 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { Collapse, Menu, MenuItem, Popover } from '@mui/material';
 import { useState } from 'react';
 import bybitIcon from "../../../../assets/bybit-logo.png"
-import OKXIcon from "../../../../assets/okx_logo.svg"
+import OKXIcon from "../../../../assets/okx_logo.png"
+
+const renderByBitIcon = () => <img src={bybitIcon} width={"22px"} style={{ borderRadius: "6px" }} />
+const renderOKXIcon = () => <img src={OKXIcon} width={"22px"} style={{ borderRadius: "6px" }} />
 
 function SideBar({
     openSidebar,
@@ -97,7 +100,7 @@ function SideBar({
                     link: "Configs/ByBit",
                     name: "ByBit",
                     // icon: <RadarIcon className={styles.icon} />,
-                    icon: <img src={bybitIcon} width={"24px"} />,
+                    icon: renderByBitIcon(),
                     open: openAll.Config.children.ByBit,
                     openFunc: (target) => {
                         setOpenAll(data => {
@@ -120,7 +123,7 @@ function SideBar({
                 {
                     link: "Configs/OKX",
                     name: "OKX",
-                    icon: <img src={OKXIcon} width={"24px"} />,
+                    icon: renderOKXIcon(),
                     open: openAll.Config.children.OKX,
                     openFunc: (target) => {
                         setOpenAll(data => {
@@ -160,7 +163,7 @@ function SideBar({
                 {
                     link: "Positions/ByBit",
                     name: "ByBit",
-                    icon: <img src={bybitIcon} width={"24px"} />,
+                    icon: renderByBitIcon(),
                     open: openAll.Position.children.ByBit,
                     openFunc: (target) => {
                         setOpenAll(data => {
@@ -183,7 +186,7 @@ function SideBar({
                 {
                     link: "Positions/OKX",
                     name: "OKX",
-                    icon: <img src={OKXIcon} width={"24px"} />,
+                    icon: renderOKXIcon(),
                     open: openAll.Position.children.OKX,
                     openFunc: (target) => {
                         setOpenAll(data => {

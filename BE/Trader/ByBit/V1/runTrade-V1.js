@@ -41,10 +41,12 @@ const {
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 
 const wsConfig = {
-    market: 'v5',
 }
 
-const wsSymbol = new WebsocketClient(wsConfig);
+const wsSymbol = new WebsocketClient({
+    market: 'v5',
+    recvWindow: 100000,
+});
 
 const LIST_ORDER = ["order", "execution"]
 const MAX_ORDER_LIMIT = 20
@@ -62,6 +64,7 @@ const SPOT_MODEL_DEFAULT = {
 
 const clientDigit = new RestClientV5({
     testnet: false,
+    recv_window: 100000,
 });
 
 // ----------------------------------------------------------------------------------
@@ -138,6 +141,7 @@ const getRestClientV5Config = ({
         key: ApiKey,
         secret: SecretKey,
         syncTimeBeforePrivateRequests: true,
+        recv_window: 100000,
     }
 }
 

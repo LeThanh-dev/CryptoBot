@@ -42,7 +42,7 @@ const MAX_ORDER_LIMIT = 10
 
 const clientDigit = new RestClientV5({
     testnet: false,
-    // recv_window: 100000,
+    recv_window: 100000,
 });
 
 // ----------------------------------------------------------------------------------
@@ -119,6 +119,7 @@ const getRestClientV5Config = ({
         key: ApiKey,
         secret: SecretKey,
         syncTimeBeforePrivateRequests: true,
+        recvWindow: 100000,
     }
 }
 
