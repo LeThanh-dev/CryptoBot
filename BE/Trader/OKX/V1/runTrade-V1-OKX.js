@@ -117,14 +117,14 @@ const getWebsocketClientConfig = ({
     apiPass,
     apiSecret
 }) => {
-    return {
+    return new WebsocketClient( {
         market: "businessAws",
         accounts: [{
             apiKey,
             apiPass,
             apiSecret
         }]
-    }
+    })
 }
 
 const getRestClientConfig = ({
@@ -132,11 +132,11 @@ const getRestClientConfig = ({
     apiPass,
     apiSecret
 }) => {
-    return {
+    return new RestClient({
         apiKey,
         apiPass,
         apiSecret
-    }
+    })
 }
 
 const handleCalcOrderChange = ({ OrderChange, Numbs }) => {
@@ -298,9 +298,7 @@ const handleSubmitOrder = async ({
             OC: true
         }
 
-        const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
-
-        const client = new RestClient(clientConfig);
+        const client = getRestClientConfig({ ApiKey, SecretKey });
 
         let textTele = ""
         await client
@@ -416,9 +414,8 @@ const handleMoveOrderOC = async ({
     );
     if (maxAmendOrderOCData[botID].totalOC < MAX_AMEND_LIMIT) {
 
-        const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
+        const client = getRestClientConfig({ ApiKey, SecretKey });
 
-        const client = new RestClient(clientConfig);
         maxAmendOrderOCData[botID].totalOC += 1
         await client
             .amendOrder({
@@ -480,9 +477,8 @@ const handleSubmitOrderTP = async ({
         }
     }
 
-    const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
+    const client = getRestClientConfig({ ApiKey, SecretKey });
 
-    const client = new RestClient(clientConfig);
     await client
         .submitOrder({
             category: 'spot',
@@ -564,9 +560,8 @@ const moveOrderTP = async ({
 }) => {
     // console.log(changeColorConsole.greenBright(`Price Move TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
-    const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
+    const client = getRestClientConfig({ ApiKey, SecretKey });
 
-    const client = new RestClient(clientConfig);
     await client
         .amendOrder({
             category: 'spot',
@@ -655,8 +650,7 @@ const handleRepaySymbol = async ({
 
     repayCoinObject[botID][symbol] = true
 
-    const clientConfigRepay = getRestClientConfig({ ApiKey, SecretKey })
-    const clientRepay = new RestClient(clientConfigRepay);
+    const clientRepay = getRestClientConfig({ ApiKey, SecretKey });
 
     await clientRepay.repayLiability({ coin: symbol.replace("USDT", "") }).then((response) => {
         if (response.retCode == 0) {
@@ -706,9 +700,7 @@ const handleCloseMarket = async ({
             missTPDataBySymbol[botSymbolMissID].size = Math.abs(qtyMain)
         }
 
-        const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
-
-        const client = new RestClient(clientConfig);
+        const client = getRestClientConfig({ ApiKey, SecretKey });
 
         const MarketName = symbolTradeTypeObject[symbol]
         const isLeverage = MarketName === "Spot" ? 0 : 1
@@ -790,9 +782,7 @@ const handleCancelOrderOC = async ({
 
     if (maxCancelOrderOCData[botID].totalOC < MAX_CANCEL_LIMIT) {
 
-        const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
-
-        const client = new RestClient(clientConfig);
+        const client = getRestClientConfig({ ApiKey, SecretKey });
 
         let textTele = ""
 
@@ -867,9 +857,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
         let messageListByBot = {}
         await Promise.allSettled(items.map(async item => {
 
-            const clientConfig = getRestClientConfig({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
-
-            const client = new RestClient(clientConfig);
+            const client = getRestClientConfig({ ApiKey: item.ApiKey, SecretKey: item.SecretKey });
 
             const list = Object.values(item.listOC || {})
 
@@ -993,9 +981,7 @@ const handleOrderMultipleOC = async ({
 }) => {
 
 
-    const clientConfig = getRestClientConfig({ ApiKey: scannerData.botID.ApiKey, SecretKey: scannerData.botID.SecretKey })
-
-    const client = new RestClient(clientConfig);
+    const client = getRestClientConfig({ ApiKey: scannerData.botID.ApiKey, SecretKey: scannerData.botID.SecretKey });
 
     const listOC = handleCalcOrderChange({ OrderChange: +scannerData.OrderChange, Numbs: +scannerData.Numbs })
 
@@ -1201,9 +1187,8 @@ const handleCancelOrderTP = async ({
 }) => {
 
     const botSymbolMissID = `${botID}-${symbol}`
-    const clientConfig = getRestClientConfig({ ApiKey, SecretKey })
+    const client = getRestClientConfig({ ApiKey, SecretKey });
 
-    const client = new RestClient(clientConfig);
     orderId && await client
         .cancelOrder({
             category: 'spot',
@@ -1475,10 +1460,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 // })
 
 
-                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey })
-
-                const wsOrder = new WebsocketClient(wsConfigOrder);
-
+                const wsOrder = getWebsocketClientConfig({ ApiKey, SecretKey });
 
                 wsOrder.subscribe(LIST_ORDER, 'spot').then(() => {
 
@@ -3464,9 +3446,7 @@ socketRealtime.on('bot-api', async (data) => {
         const ApiKeyBot = botApiData.ApiKey
         const SecretKeyBot = botApiData.SecretKey
 
-        const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
-
-        const wsOrder = new WebsocketClient(wsConfigOrder);
+        const wsOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
         await wsOrder.unsubscribe(LIST_ORDER, 'spot')
 
@@ -3478,9 +3458,7 @@ socketRealtime.on('bot-api', async (data) => {
 
 
 
-        const wsConfigOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey })
-
-        const wsOrderNew = new WebsocketClient(wsConfigOrderNew);
+        const wsOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey });
 
         await wsOrderNew.subscribe(LIST_ORDER, 'spot')
 
@@ -3581,9 +3559,7 @@ socketRealtime.on('bot-delete', async (data) => {
     const SecretKeyBot = botApiData.SecretKey
 
 
-    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
-
-    const wsOrder = new WebsocketClient(wsConfigOrder);
+    const wsOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
     await wsOrder.unsubscribe(LIST_ORDER, 'spot')
 

@@ -1,4 +1,4 @@
-const { RestClientV5, WebsocketClient } = require('bybit-api');
+const { RestClientV5 } = require('bybit-api');
 const ScannerModel = require('../../../../models/Configs/ByBit/V1/scanner.model')
 const SpotModel = require('../../../../models/Configs/ByBit/V1/spot.model');
 const MarginModel = require('../../../../models/Configs/ByBit/V1/margin.model');
@@ -9,7 +9,18 @@ const { default: mongoose } = require('mongoose');
 
 const dataCoinByBitController = {
     // SOCKET
-
+    getRestClientV5Config: ({
+        ApiKey,
+        SecretKey,
+    }) => {
+        return new RestClientV5({
+            testnet: false,
+            key: ApiKey,
+            secret: SecretKey,
+            syncTimeBeforePrivateRequests: true,
+            recvWindow: 100000,
+        })
+    },
     sendDataRealtime: ({
         type,
         data
@@ -28,15 +39,10 @@ const dataCoinByBitController = {
 
             let ListCoin1m = []
 
-            let wsConfig = {
-                market: 'v5',
-                recvWindow: 100000
-            }
-            let wsInfo = {
+            let CoinInfo = new RestClientV5({
                 testnet: false,
-            }
-            let wsSymbol = new WebsocketClient(wsConfig);
-            let CoinInfo = new RestClientV5(wsInfo);
+                recv_window: 100000
+            });
 
             let data = []
             await CoinInfo.getTickers({ category: 'linear' })
@@ -803,33 +809,6 @@ const dataCoinByBitController = {
     },
 
 
-
-    transferFunds: async (amount, FromWallet, ToWallet) => {
-
-        const client = new RestClientV5({
-            testnet: false,
-            key: API_KEY,
-            secret: SECRET_KEY,
-            syncTimeBeforePrivateRequests: true,
-        });
-
-        let myUUID = uuidv4();
-        client.createInternalTransfer(
-            myUUID,
-            'USDT',
-            amount,
-            FromWallet,
-            ToWallet,
-        )
-            .then((response) => {
-                console.log(response);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    },
-
-
     balanceWallet: async (req, res) => {
 
         try {
@@ -849,12 +828,9 @@ const dataCoinByBitController = {
                     ToWallet = "FUND"
                 }
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: resultApiKey.API_KEY,
-                    secret: resultApiKey.SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: resultApiKey.API_KEY,
+                    SecretKey: resultApiKey.SECRET_KEY,
                 });
 
                 let myUUID = uuidv4();
@@ -908,12 +884,10 @@ const dataCoinByBitController = {
             const resultApiKey = await dataCoinByBitController.getApiKeyByBot(botID)
 
             if (resultApiKey) {
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: resultApiKey.API_KEY,
-                    secret: resultApiKey.SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
 
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: resultApiKey.API_KEY,
+                    SecretKey: resultApiKey.SECRET_KEY,
                 });
 
                 // get field totalWalletBalance
@@ -946,12 +920,9 @@ const dataCoinByBitController = {
             const resultApiKey = await dataCoinByBitController.getApiKeyByBot(botID)
 
             if (resultApiKey) {
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: resultApiKey.API_KEY,
-                    secret: resultApiKey.SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: resultApiKey.API_KEY,
+                    SecretKey: resultApiKey.SECRET_KEY,
                 });
 
                 await client.getAllCoinsBalance({
@@ -987,12 +958,9 @@ const dataCoinByBitController = {
                 const API_KEY = resultApiKey.API_KEY;
                 const SECRET_KEY = resultApiKey.SECRET_KEY;
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: API_KEY,
-                    secret: SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: API_KEY,
+                    SecretKey: SECRET_KEY,
                 });
 
                 // get field totalWalletBalance
@@ -1036,14 +1004,10 @@ const dataCoinByBitController = {
                 const API_KEY = resultApiKey.API_KEY;
                 const SECRET_KEY = resultApiKey.SECRET_KEY;
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: API_KEY,
-                    secret: SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: API_KEY,
+                    SecretKey: SECRET_KEY,
                 });
-
                 // get field totalWalletBalance
                 const result = await client.getWalletBalance({
                     accountType: 'UNIFIED',
@@ -1083,13 +1047,9 @@ const dataCoinByBitController = {
                     FromWallet = "UNIFIED"
                     ToWallet = "FUND"
                 }
-
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: API_KEY,
-                    secret: SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: API_KEY,
+                    SecretKey: SECRET_KEY,
                 });
 
                 let myUUID = uuidv4();

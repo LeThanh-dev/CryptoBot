@@ -8,6 +8,19 @@ const { default: mongoose } = require('mongoose');
 const dataCoinByBitController = {
     // SOCKET
 
+    getRestClientV5Config: ({
+        ApiKey,
+        SecretKey,
+    }) => {
+        return new RestClientV5({
+            testnet: false,
+            key: ApiKey,
+            secret: SecretKey,
+            syncTimeBeforePrivateRequests: true,
+            recvWindow: 100000,
+        })
+         
+    },
     checkConditionStrategies: (strategiesData) => {
         return strategiesData.botID?.Status === "Running" && strategiesData.botID.ApiKey
     },
@@ -199,7 +212,7 @@ const dataCoinByBitController = {
 
             const userID = req.user._id
 
-            const {botType} = req.body
+            const { botType } = req.body
 
             const botListId = await BotModel.find({
                 userID,
@@ -915,12 +928,12 @@ const dataCoinByBitController = {
 
     transferFunds: async (amount, FromWallet, ToWallet) => {
 
-        const client = new RestClientV5({
-            testnet: false,
-            key: API_KEY,
-            secret: SECRET_KEY,
-            syncTimeBeforePrivateRequests: true,
+        
+        const client = dataCoinByBitController.getRestClientV5Config({
+            ApiKey: API_KEY,
+            SecretKey: SECRET_KEY,
         });
+
 
         let myUUID = uuidv4();
         client.createInternalTransfer(
@@ -958,13 +971,10 @@ const dataCoinByBitController = {
                     ToWallet = "FUND"
                 }
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: resultApiKey.API_KEY,
-                    secret: resultApiKey.SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-                });
-
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: resultApiKey.API_KEY,
+                    SecretKey: resultApiKey.SECRET_KEY,
+                })
                 let myUUID = uuidv4();
 
                 // console.log(myUUID, FromWallet, ToWallet, amount, futureLarger);
@@ -1016,13 +1026,11 @@ const dataCoinByBitController = {
             const resultApiKey = await dataCoinByBitController.getApiKeyByBot(botID)
 
             if (resultApiKey) {
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: resultApiKey.API_KEY,
-                    secret: resultApiKey.SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
 
-                });
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: resultApiKey.API_KEY,
+                    SecretKey: resultApiKey.SECRET_KEY,
+                })
 
                 // get field totalWalletBalance
                 await client.getWalletBalance({
@@ -1054,13 +1062,11 @@ const dataCoinByBitController = {
             const resultApiKey = await dataCoinByBitController.getApiKeyByBot(botID)
 
             if (resultApiKey) {
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: resultApiKey.API_KEY,
-                    secret: resultApiKey.SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
 
-                });
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: resultApiKey.API_KEY,
+                    SecretKey: resultApiKey.SECRET_KEY,
+                })
 
                 await client.getAllCoinsBalance({
                     accountType: 'FUND',
@@ -1095,13 +1101,10 @@ const dataCoinByBitController = {
                 const API_KEY = resultApiKey.API_KEY;
                 const SECRET_KEY = resultApiKey.SECRET_KEY;
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: API_KEY,
-                    secret: SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
-                });
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: API_KEY,
+                    SecretKey: SECRET_KEY,
+                })
 
                 // get field totalWalletBalance
                 const getFuture = client.getWalletBalance({
@@ -1144,13 +1147,10 @@ const dataCoinByBitController = {
                 const API_KEY = resultApiKey.API_KEY;
                 const SECRET_KEY = resultApiKey.SECRET_KEY;
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: API_KEY,
-                    secret: SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-
-                });
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: API_KEY,
+                    SecretKey: SECRET_KEY,
+                })
 
                 // get field totalWalletBalance
                 const result = await client.getWalletBalance({
@@ -1192,12 +1192,10 @@ const dataCoinByBitController = {
                     ToWallet = "FUND"
                 }
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: API_KEY,
-                    secret: SECRET_KEY,
-                    syncTimeBeforePrivateRequests: true,
-                });
+                const client = dataCoinByBitController.getRestClientV5Config({
+                    ApiKey: API_KEY,
+                    SecretKey: SECRET_KEY,
+                })
 
                 let myUUID = uuidv4();
 

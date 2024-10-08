@@ -233,7 +233,7 @@ const handleSubmitOrder = async ({
             scannerID: strategy.scannerID
         }
 
-        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
         const client = new RestClientV5(clientConfig);
 
@@ -340,7 +340,7 @@ const handleSubmitOrderTP = async ({
             TP: true
         }
     }
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
     const client = new RestClientV5(clientConfig);
 
@@ -411,7 +411,7 @@ const moveOrderTP = async ({
 }) => {
     // console.log(changeColorConsole.greenBright(`Price Move TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
     const client = new RestClientV5(clientConfig);
     await client
@@ -497,7 +497,7 @@ const handleCancelOrderOC = async ({
     botID
 }) => {
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
     const client = new RestClientV5(clientConfig);
 
@@ -529,7 +529,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
     if (items.length > 0) {
         await Promise.allSettled(items.map(async item => {
 
-            const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
+            const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey });
 
             const client = new RestClientV5(clientConfig);
 
@@ -619,7 +619,7 @@ const handleCancelOrderTP = async ({
 
     const botSymbolMissID = `${botID}-${symbol}`
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
     const client = new RestClientV5(clientConfig);
 
@@ -872,7 +872,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 const botID = botApiData.id
                 const botName = botApiList[botID]?.botName
 
-                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey })
+                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey });
 
                 const wsOrder = new WebsocketClient(wsConfigOrder);
 
@@ -2620,7 +2620,7 @@ try {
                                 }
                             }
                             if (checkMoveMain && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled) {
-                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
                                 const client = new RestClientV5(clientConfig);
 
@@ -2728,7 +2728,7 @@ try {
                                     price: coinCurrent,
                                     tickSize: strategy.digit
                                 })
-                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
 
                                 const client = new RestClientV5(clientConfig);
                                 client
@@ -3326,7 +3326,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 //         const SecretKeyBot = botApiData.SecretKey
 
 
-//         const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
+//         const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
 //         const wsOrder = new WebsocketClient(wsConfigOrder);
 
@@ -3338,7 +3338,7 @@ socketRealtime.on('bot-update', async (data = {}) => {
 //             SecretKey: newApiData.SecretKey,
 //         }
 
-//         const wsConfigOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey })
+//         const wsConfigOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey });
 
 //         const wsOrderNew = new WebsocketClient(wsConfigOrderNew);
 
@@ -3444,7 +3444,7 @@ socketRealtime.on('bot-delete', async (data) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
+    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
     const wsOrder = new WebsocketClient(wsConfigOrder);
 

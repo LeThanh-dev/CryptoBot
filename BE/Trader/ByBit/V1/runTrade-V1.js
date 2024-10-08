@@ -123,26 +123,26 @@ const getWebsocketClientConfig = ({
     ApiKey,
     SecretKey,
 }) => {
-    return {
+    return new WebsocketClient({
         testnet: false,
         key: ApiKey,
         secret: SecretKey,
         market: 'v5',
         recvWindow: 100000,
-    }
+    })
 }
 
 const getRestClientV5Config = ({
     ApiKey,
     SecretKey,
 }) => {
-    return {
+    return new RestClientV5({
         testnet: false,
         key: ApiKey,
         secret: SecretKey,
         syncTimeBeforePrivateRequests: true,
         recv_window: 100000,
-    }
+    })
 }
 
 const handleCalcOrderChange = ({ OrderChange, Numbs }) => {
@@ -306,9 +306,7 @@ const handleSubmitOrder = async ({
             OC: true
         }
 
-        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
-
-        const client = new RestClientV5(clientConfig);
+        const client = getRestClientV5Config({ ApiKey, SecretKey });;
 
         let textTele = ""
         await client
@@ -424,9 +422,8 @@ const handleMoveOrderOC = async ({
     );
     if (maxAmendOrderOCData[botID].totalOC < MAX_AMEND_LIMIT) {
 
-        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+        const client = getRestClientV5Config({ ApiKey, SecretKey });
 
-        const client = new RestClientV5(clientConfig);
         maxAmendOrderOCData[botID].totalOC += 1
         await client
             .amendOrder({
@@ -488,9 +485,8 @@ const handleSubmitOrderTP = async ({
         }
     }
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
-    const client = new RestClientV5(clientConfig);
     await client
         .submitOrder({
             category: 'spot',
@@ -572,9 +568,8 @@ const moveOrderTP = async ({
 }) => {
     // console.log(changeColorConsole.greenBright(`Price Move TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
-    const client = new RestClientV5(clientConfig);
     await client
         .amendOrder({
             category: 'spot',
@@ -663,8 +658,7 @@ const handleRepaySymbol = async ({
 
     repayCoinObject[botID][symbol] = true
 
-    const clientConfigRepay = getRestClientV5Config({ ApiKey, SecretKey })
-    const clientRepay = new RestClientV5(clientConfigRepay);
+    const clientRepay = getRestClientV5Config({ ApiKey, SecretKey });
 
     await clientRepay.repayLiability({ coin: symbol.replace("USDT", "") }).then((response) => {
         if (response.retCode == 0) {
@@ -714,9 +708,7 @@ const handleCloseMarket = async ({
             missTPDataBySymbol[botSymbolMissID].size = Math.abs(qtyMain)
         }
 
-        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
-
-        const client = new RestClientV5(clientConfig);
+        const client = getRestClientV5Config({ ApiKey, SecretKey });
 
         const MarketName = symbolTradeTypeObject[symbol]
         const isLeverage = MarketName === "Spot" ? 0 : 1
@@ -798,9 +790,7 @@ const handleCancelOrderOC = async ({
 
     if (maxCancelOrderOCData[botID].totalOC < MAX_CANCEL_LIMIT) {
 
-        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
-
-        const client = new RestClientV5(clientConfig);
+        const client = getRestClientV5Config({ ApiKey, SecretKey });
 
         let textTele = ""
 
@@ -875,9 +865,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
         let messageListByBot = {}
         await Promise.allSettled(items.map(async item => {
 
-            const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey })
-
-            const client = new RestClientV5(clientConfig);
+            const client = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey });
 
             const list = Object.values(item.listOC || {})
 
@@ -940,7 +928,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         const side = data.side
 
                         let textTele = ""
-                        
+
                         if (codeData.code == 0) {
                             textTele = `x OC ${side} ( ${OrderChange}% ) \n<b>${symbol.replace("USDT", "")}</b> ${handleIconMarketType(symbol)} | Bot: ${data.botName} \n<i>-> Success</i>`
                             console.log(textTele);
@@ -1001,9 +989,7 @@ const handleOrderMultipleOC = async ({
 }) => {
 
 
-    const clientConfig = getRestClientV5Config({ ApiKey: scannerData.botID.ApiKey, SecretKey: scannerData.botID.SecretKey })
-
-    const client = new RestClientV5(clientConfig);
+    const client = getRestClientV5Config({ ApiKey: scannerData.botID.ApiKey, SecretKey: scannerData.botID.SecretKey });
 
     const listOC = handleCalcOrderChange({ OrderChange: +scannerData.OrderChange, Numbs: +scannerData.Numbs })
 
@@ -1209,9 +1195,8 @@ const handleCancelOrderTP = async ({
 }) => {
 
     const botSymbolMissID = `${botID}-${symbol}`
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey })
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
-    const client = new RestClientV5(clientConfig);
     orderId && await client
         .cancelOrder({
             category: 'spot',
@@ -1483,10 +1468,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 // })
 
 
-                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey })
-
-                const wsOrder = new WebsocketClient(wsConfigOrder);
-
+                const wsOrder = getWebsocketClientConfig({ ApiKey, SecretKey });
 
                 wsOrder.subscribeV5(LIST_ORDER, 'spot').then(() => {
 
@@ -1623,7 +1605,6 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                                                     missTPDataBySymbol[botSymbolMissID].orderIDToDB = data.id
                                                                 }).catch(error => {
                                                                     console.log("ERROR getPositionBySymbol:", error)
-
                                                                 })
                                                             }
 
@@ -2880,10 +2861,6 @@ const handleSocketAddNew = async (newData = []) => {
             const ApiKey = newStrategiesData.botID.ApiKey
             const SecretKey = newStrategiesData.botID.SecretKey
 
-            console.log("OrderChange", newStrategiesData.OrderChange);
-
-
-
             if (!botApiList[botID]) {
                 botApiList[botID] = {
                     id: botID,
@@ -3127,7 +3104,7 @@ const handleSocketDelete = async (newData = []) => {
 }
 
 const handleSocketScannerUpdate = async (newData = []) => {
-    
+
     console.log("[...] Update Scanner From Realtime", newData.length);
     const newBotApiList = {}
 
@@ -3520,9 +3497,7 @@ socketRealtime.on('bot-api', async (data) => {
         const ApiKeyBot = botApiData.ApiKey
         const SecretKeyBot = botApiData.SecretKey
 
-        const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
-
-        const wsOrder = new WebsocketClient(wsConfigOrder);
+        const wsOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
         await wsOrder.unsubscribeV5(LIST_ORDER, 'spot')
 
@@ -3534,9 +3509,7 @@ socketRealtime.on('bot-api', async (data) => {
 
 
 
-        const wsConfigOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey })
-
-        const wsOrderNew = new WebsocketClient(wsConfigOrderNew);
+        const wsOrderNew = getWebsocketClientConfig({ ApiKey: newApiData.ApiKey, SecretKey: newApiData.SecretKey });
 
         await wsOrderNew.subscribeV5(LIST_ORDER, 'spot')
 
@@ -3637,9 +3610,7 @@ socketRealtime.on('bot-delete', async (data) => {
     const SecretKeyBot = botApiData.SecretKey
 
 
-    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot })
-
-    const wsOrder = new WebsocketClient(wsConfigOrder);
+    const wsOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
     await wsOrder.unsubscribeV5(LIST_ORDER, 'spot')
 

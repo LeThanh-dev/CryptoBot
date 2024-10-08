@@ -8,7 +8,18 @@ const InstrumentsInfoModel = require('../../../../models/instruments/ByBit/V1/in
 const PositionController = {
 
     // OTHER 
-
+    getRestClientV5Config: ({
+        ApiKey,
+        SecretKey,
+    }) => {
+        return new RestClientV5({
+            testnet: false,
+            key: ApiKey,
+            secret: SecretKey,
+            syncTimeBeforePrivateRequests: true,
+            recvWindow: 100000,
+        })
+    },
     sendDataRealtime: ({
         type,
         data
@@ -170,11 +181,9 @@ const PositionController = {
 
                 await Promise.allSettled(botListID.map(dataBotItem => {
 
-                    const client = new RestClientV5({
-                        testnet: false,
-                        key: dataBotItem.ApiKey,
-                        secret: dataBotItem.SecretKey,
-                        syncTimeBeforePrivateRequests: true,
+                    const client = PositionController.getRestClientV5Config({
+                        ApiKey: dataBotItem.ApiKey,
+                        SecretKey: dataBotItem.SecretKey,
                     });
 
                     const botID = dataBotItem.value
@@ -290,12 +299,11 @@ const PositionController = {
 
             await Promise.allSettled(botListID.map(dataBotItem => {
 
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: dataBotItem.ApiKey,
-                    secret: dataBotItem.SecretKey,
-                    syncTimeBeforePrivateRequests: true,
+                const client = PositionController.getRestClientV5Config({
+                    ApiKey: dataBotItem.ApiKey,
+                    SecretKey: dataBotItem.SecretKey,
                 });
+
 
                 const botID = dataBotItem.value
 
@@ -333,13 +341,11 @@ const PositionController = {
 
         if (items.length > 0) {
             await Promise.allSettled(items.map(async item => {
-                const client = new RestClientV5({
-                    testnet: false,
-                    key: item.ApiKey,
-                    secret: item.SecretKey,
-                    syncTimeBeforePrivateRequests: true,
-
+                const client = PositionController.getRestClientV5Config({
+                    ApiKey: item.ApiKey,
+                    SecretKey: item.SecretKey,
                 });
+
                 const list = Object.values(item.listOC || {})
 
                 if (list.length > 0) {
@@ -388,12 +394,11 @@ const PositionController = {
 
         const { positionData, Quantity } = req.body
 
-        const client = new RestClientV5({
-            testnet: false,
-            key: positionData.botData.ApiKey,
-            secret: positionData.botData.SecretKey,
-            syncTimeBeforePrivateRequests: true,
+        const client = PositionController.getRestClientV5Config({
+            ApiKey: positionData.botData.ApiKey,
+            SecretKey: positionData.botData.SecretKey,
         });
+
 
         const Symbol = positionData.Symbol
         const Side = positionData.Side
@@ -447,11 +452,9 @@ const PositionController = {
         const { positionData, Quantity, Price } = req.body
 
         const symbol = positionData.Symbol
-        const client = new RestClientV5({
-            testnet: false,
-            key: positionData.botData.ApiKey,
-            secret: positionData.botData.SecretKey,
-            syncTimeBeforePrivateRequests: true,
+        const client = PositionController.getRestClientV5Config({
+            ApiKey: positionData.botData.ApiKey,
+            SecretKey: positionData.botData.SecretKey,
         });
         client
             .submitOrder({
