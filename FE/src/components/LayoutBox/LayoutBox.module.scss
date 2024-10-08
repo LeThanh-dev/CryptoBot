@@ -4,9 +4,9 @@
     flex-wrap: wrap;
 
     &Item {
-        flex-basis: 16%;
+        flex-basis: 9%;
         background-color: var(--borderColor);
-        margin: 2%;
+        margin: 1%;
         color: #000000;
         padding: 32px;
         font-weight: 500;
@@ -24,8 +24,9 @@
 @media (max-width: 768px) {
     .LayoutBox {
         &Item {
-            flex-basis: 21%;
-            padding: 16px;
+            flex-basis: 19%;
+            margin: 3%;
+            padding: 24px;
         }
     }
 }
