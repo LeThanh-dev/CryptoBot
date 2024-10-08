@@ -2146,6 +2146,8 @@ const formatNumberString = number => {
         return number.toFixed(2);
     }
 }
+const checkInfinityValue = value => [Infinity, -Infinity].includes(value)
+const formatTime = time => new Date(time).toLocaleString()
 
 const tinhOC = (symbol, dataAll = []) => {
 
@@ -2153,15 +2155,36 @@ const tinhOC = (symbol, dataAll = []) => {
 
     if (dataAll.length > 0) {
 
-        let OC = 0
-        let TP = 0
-        let OCLong = 0
-        let TPLong = 0
+        let dataOC = {
+            close: 0,
+            open: 0,
+            high: 0,
+            low: 0,
+            OCData: {
+                OC: 0,
+                timestamp: 0,
+            },
+            TPData: {
+                TP: 0,
+                timestamp: 0,
+            }
+        }
+        let dataOCLong = {
+            close: 0,
+            open: 0,
+            high: 0,
+            low: 0,
+            OCData: {
+                OC: 0,
+                timestamp: 0,
+            },
+            TPData: {
+                TP: 0,
+                timestamp: 0,
+            }
+        }
 
-        let dataOC = ""
-        let timestamp = 0
-
-        const vol = dataAll[dataAll.length - 1].turnoverD - preTurnover[symbol]
+        const vol = dataAll[dataAll.length - 1].turnover - preTurnover[symbol]
 
         dataAll.forEach((data, index) => {
 
@@ -2169,64 +2192,80 @@ const tinhOC = (symbol, dataAll = []) => {
             const Open = +data.open
             const Highest = +data.high
             const Lowest = +data.low
+            // const turnover = data.turnover
+            const timestamp = data.timestamp
 
+            if (!dataOC.close) {
+                const OC = (Highest - Open) / Open
+                const TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
 
-            if (!dataOC) {
-                OC = (Highest - Open) / Open
-                OCLong = (Lowest - Open) / Open
-                TP = Math.abs((Highest - Close) / (Highest - Open)) || 0
-                TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
-                dataOC = {
-                    close: Close,
-                    open: Open,
-                    high: Highest,
-                    low: Lowest,
+                if (!checkInfinityValue(OC)) {
+                    dataOC = {
+                        close: Close,
+                        open: Open,
+                        high: Highest,
+                        low: Lowest,
+                        OCData: {
+                            OC,
+                            timestamp,
+                        },
+                        TPData: {
+                            TP: checkInfinityValue(TP) ? 0 : TP,
+                            timestamp,
+                        }
+                    }
                 }
-                timestamp = data.timestamp
+            }
+            else {
+                if (Lowest < dataOC.close) {
+                    const TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
+                    if (!checkInfinityValue(TPTemp) && TPTemp > dataOC.TPData.TP) {
+                        dataOC.TPData = {
+                            TP: TPTemp,
+                            timestamp,
+                        }
+                    }
+                }
+            }
+            if (!dataOCLong.close) {
+                const OCLong = (Lowest - Open) / Open
+                const TPLong = Math.abs(Close - Lowest) / (Open - Lowest) || 0
+                if (!checkInfinityValue(OCLong)) {
+                    dataOCLong = {
+                        close: Close,
+                        open: Open,
+                        high: Highest,
+                        low: Lowest,
+                        OCData: {
+                            OC: OCLong,
+                            timestamp,
+                        },
+                        TPData: {
+                            TP: checkInfinityValue(TPLong) ? 0 : TPLong,
+                            timestamp,
+                        }
+                    }
+                }
             }
             else {
 
-                let TPTemp = 0
-                let TPLongTemp = 0
-                if (Lowest < dataOC.close) {
-                    TPTemp = Math.abs((Lowest - dataOC.high) / (dataOC.high - dataOC.open)) || 0
-                }
-                if (Highest > dataOC.close) {
-                    TPLongTemp = Math.abs((Highest - dataOC.low) / (dataOC.low - dataOC.open)) || 0
-                }
+                if (Highest > dataOCLong.close) {
+                    const TPLongTemp = Math.abs((Highest - dataOCLong.low) / (dataOCLong.low - dataOCLong.open)) || 0
+                    if (!checkInfinityValue(TPLongTemp) && TPLongTemp > dataOCLong.TPData.TP) {
+                        dataOCLong.TPData = {
+                            TP: TPLongTemp,
+                            timestamp,
+                        }
 
-                if (TPTemp > TP) {
-                    TP = TPTemp
-                }
-                if (TPLongTemp > TPLong) {
-                    TPLong = TPLongTemp
+                    }
                 }
             }
         })
 
-
-        if ([Infinity, -Infinity].includes(OC)) {
-            OC = 0
-        }
-
-        if ([Infinity, -Infinity].includes(OCLong)) {
-            OCLong = 0
-        }
-        if ([Infinity, -Infinity].includes(TP)) {
-            TP = 0
-        }
-
-        if ([Infinity, -Infinity].includes(TPLong)) {
-            TPLong = 0
-        }
-
-        const OCRound = roundNumber(OC)
-        const TPRound = roundNumber(TP)
-        const OCLongRound = roundNumber(OCLong)
-        const TPLongRound = roundNumber(TPLong)
-
-        const timeOC = new Date(timestamp).toLocaleString()
-
+        const OCRound = roundNumber(dataOC.OCData.OC)
+        const TPRound = roundNumber(dataOC.TPData.TP)
+        const OCLongRound = roundNumber(dataOCLong.OCData.OC)
+        const TPLongRound = roundNumber(dataOCLong.TPData.TP)
 
         // if (symbol === "ZROUSDT") {
 
@@ -2305,7 +2344,7 @@ const tinhOC = (symbol, dataAll = []) => {
 
                         const OCLongRoundAbs = Math.abs(OCLongRound)
                         if (OCLongRoundAbs >= OrderChange && TPLongRound >= Elastic) {
-                            const htLong = (`\n[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
+                            const htLong = (`\n[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCLongRound}% - TP: ${TPLongRound}% - VOL: ${formatNumberString(vol)} - ${formatTime(dataOCLong.OCData.timestamp)}`)
                             console.log(changeColorConsole.cyanBright(htLong));
                             // console.log(dataAll);
                             if (!listConfigIDByScannerData?.length) {
@@ -2327,7 +2366,7 @@ const tinhOC = (symbol, dataAll = []) => {
                     else {
                         const OCRoundAbs = Math.abs(OCRound)
                         if (OCRoundAbs >= OrderChange && TPRound >= Elastic) {
-                            const ht = (`\n[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${timeOC}`)
+                            const ht = (`\n[RADA-${Market}] | ${symbol.replace("USDT", "")} - OC: ${OCRound}% - TP: ${TPRound}% - VOL: ${formatNumberString(vol)} - ${formatTime(dataOC.OCData.timestamp)}`)
                             console.log(changeColorConsole.cyanBright(ht));
                             // console.log(dataAll);
                             if (!listConfigIDByScannerData?.length) {

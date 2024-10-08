@@ -32,6 +32,7 @@ import CoinOKX from "../pages/Coins/OKX"
 import LayoutBox from "../components/LayoutBox"
 import bybitIcon from "../assets/bybit-logo.png"
 import OKXIcon from "../assets/okx_logo.png"
+import PositionOKXV1 from "../pages/Position/OKX/V1"
 
 const renderByBitIcon = () => <img src={bybitIcon} width={"70px"} style={{ borderRadius: "6px" }} />
 const renderOKXIcon = () => <img src={OKXIcon} width={"70px"} style={{ borderRadius: "6px" }} />
@@ -387,7 +388,7 @@ const routeList = [
                             },
                             {
                                 path: "V1",
-                                element: <PositionV1 />
+                                element: <PositionOKXV1 />
                             },
                         ]
                     },

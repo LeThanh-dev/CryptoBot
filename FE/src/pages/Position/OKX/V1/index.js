@@ -10,9 +10,9 @@ import DataGridCustom from "../../../../components/DataGridCustom";
 import { formatNumber } from "../../../../functions";
 import { getAllBotOnlyApiKeyByUserID } from "../../../../services/botService";
 import { addMessageToast } from "../../../../store/slices/Toast";
-import { updatePL } from "../../../../services/Positions/ByBIt/V1/positionService";
+import { updatePL } from "../../../../services/Positions/OKX/V1/positionService";
 
-function PositionByBitV1() {
+function PositionOKXV1() {
 
     const userData = useSelector(state => state.userDataSlice.userData)
 
@@ -219,7 +219,7 @@ function PositionByBitV1() {
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotOnlyApiKeyByUserID(userData._id, "ByBitV1")
+        getAllBotOnlyApiKeyByUserID(userData._id, "OKX_V1")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (
@@ -451,4 +451,4 @@ function PositionByBitV1() {
     );
 }
 
-export default PositionByBitV1;
+export default PositionOKXV1;

@@ -1,0 +1,41 @@
+.position {
+
+    &Header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin: 0 -6px 6px;
+        flex-basis: 80%;
+
+        &Item {
+            flex-basis: 12%;
+            margin:0  8px !important;
+
+            .formLabel {
+                margin-bottom: 6px;
+                white-space: nowrap;
+            }
+        }
+
+        .refreshBtn {
+            align-self: flex-end;
+            margin: 0 12px 10px auto;
+        }
+    }
+}
+
+@media (max-width: 740px) {
+    .position {
+        &Header {
+            margin: 0 -8px 6px;
+
+            &Item {
+                flex-basis: 40%
+            }
+
+            .refreshBtn {
+                // margin-left: 8px;
+            }
+        }
+    }
+}
