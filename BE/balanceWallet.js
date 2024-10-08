@@ -19,7 +19,7 @@ const getFutureSpot = async ({
             key: API_KEY,
             secret: SECRET_KEY,
             syncTimeBeforePrivateRequests: true,
-            recv_window:100000
+            recv_window: 100000
         });
 
         // get field totalWalletBalance
@@ -37,12 +37,12 @@ const getFutureSpot = async ({
             return {
                 future: result[0]?.result?.list?.[0]?.coin[0].walletBalance || 0,
                 spotTotal: result[1]?.result?.balance?.[0]?.walletBalance || 0,
-                code:0
+                code: 0
             }
         }
         else {
             return {
-                code:-1,
+                code: -1,
                 future: 0,
                 spotTotal: 0,
                 errorGetSpot: result[0].retMsg,
@@ -146,9 +146,6 @@ const handleWalletBalance = async () => {
 
         await Promise.allSettled(botListDataActive.map(async botData => {
 
-            console.log("botData",botData);
-            
-
             const newSpotAvailable = botData.spotTotal - botData.spotSavings
             const average = (newSpotAvailable + botData.future) / 2
 
@@ -190,15 +187,13 @@ const handleWalletBalance = async () => {
             }
 
             let teleText = `<b>Bot:</b> ${botData.botName}\n💵 <b>Balance:</b> ${balancePrice.toFixed(3)}$`
-            if(botData?.errorGetSpot)
-            {
+            if (botData?.errorGetSpot) {
                 teleText += `\n<code>Error Get Spot: ${botData?.errorGetSpot}</code>`
             }
-            if(botData?.errorGetFuture)
-            {
+            if (botData?.errorGetFuture) {
                 teleText += `\n<code>Error Get Future: ${botData?.errorGetFuture}</code>`
             }
-            
+
             sendMessageWithRetryByBot({
                 messageText: teleText,
                 telegramID: botData.telegramID,
@@ -212,8 +207,7 @@ const handleWalletBalance = async () => {
 
 
 try {
-    // cron.schedule('0 */3 * * *', async () => {
-    (async () => {
+    cron.schedule('0 */3 * * *', async () => {
         await handleWalletBalance();
         setTimeout(() => {
             const list = Object.entries(botBalance)
@@ -239,7 +233,7 @@ try {
                 }))
             }
         }, 500)
-    })()
+    })
 }
 
 catch (e) {
