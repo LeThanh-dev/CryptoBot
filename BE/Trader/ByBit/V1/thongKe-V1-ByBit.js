@@ -451,7 +451,7 @@ const tinhOC = (symbol, dataAll = []) => {
             const time = Date.now()
             if (time - trichMauTimeMainSendTele.pre >= 3000) {
                 sendTeleCount.total += 1
-                // sendMessageTinhOC(messageList)
+                sendMessageTinhOC(messageList)
                 messageList = []
                 trichMauTimeMainSendTele.pre = time
             }
