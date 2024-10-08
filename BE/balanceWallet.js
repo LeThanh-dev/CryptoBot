@@ -49,8 +49,6 @@ const getFutureSpot = async ({
                 errorGetFuture: result[1].retMsg,
             }
         }
-        return {}
-
 
     } catch (error) {
         return {}
@@ -79,7 +77,6 @@ const sendMessageWithRetryByBot = async ({
             })
             BOT_TOKEN_RUN_TRADE = newBotInit
             botListTelegram[telegramToken] = newBotInit
-            // BOT_TOKEN_RUN_TRADE.launch();
         }
         for (let i = 0; i < retries; i++) {
             try {
@@ -149,6 +146,9 @@ const handleWalletBalance = async () => {
 
         await Promise.allSettled(botListDataActive.map(async botData => {
 
+            console.log("botData",botData);
+            
+
             const newSpotAvailable = botData.spotTotal - botData.spotSavings
             const average = (newSpotAvailable + botData.future) / 2
 
@@ -199,12 +199,12 @@ const handleWalletBalance = async () => {
                 teleText += `\n<code>Error Get Future: ${botData?.errorGetFuture}</code>`
             }
             
-            sendMessageWithRetryByBot({
-                messageText: `<b>Bot:</b> ${botData.botName}\n💵 <b>Balance:</b> ${balancePrice.toFixed(3)}$`,
-                telegramID: botData.telegramID,
-                telegramToken: botData.telegramToken,
-                botName: botData.botName
-            })
+            // sendMessageWithRetryByBot({
+            //     messageText: `<b>Bot:</b> ${botData.botName}\n💵 <b>Balance:</b> ${balancePrice.toFixed(3)}$`,
+            //     telegramID: botData.telegramID,
+            //     telegramToken: botData.telegramToken,
+            //     botName: botData.botName
+            // })
         }))
     }
 
@@ -212,7 +212,7 @@ const handleWalletBalance = async () => {
 
 
 try {
-
+    // cron.schedule('0 */3 * * *', async () => {
     (async () => {
         await handleWalletBalance();
         setTimeout(() => {
@@ -222,12 +222,12 @@ try {
                 Promise.allSettled(list.map(async item => {
                     const key = item[0]
                     const value = item[1]
-                    sendMessageWithRetryByBot({
-                        messageText: `<b>BotType:</b> ${value.botType}\n💰 <b>Total Balance:</b> ${(value.totalBalanceAllBot).toFixed(3)}$`,
-                        telegramID: value.telegramInfo.telegramID,
-                        telegramToken: value.telegramInfo.telegramToken,
-                        botName: "Total Bot"
-                    })
+                    // sendMessageWithRetryByBot({
+                    //     messageText: `<b>BotType:</b> ${value.botType}\n💰 <b>Total Balance:</b> ${(value.totalBalanceAllBot).toFixed(3)}$`,
+                    //     telegramID: value.telegramInfo.telegramID,
+                    //     telegramToken: value.telegramInfo.telegramToken,
+                    //     botName: "Total Bot"
+                    // })
 
                     botBalance[key] = {
                         totalBalanceAllBot: 0,
