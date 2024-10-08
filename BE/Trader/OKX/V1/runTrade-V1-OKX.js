@@ -2452,8 +2452,6 @@ const Main = async () => {
 
     await syncDigit()
 
-    console.log(digitAllCoinObject);
-    
 
     await handleSocketBotApiList(botApiList)
 

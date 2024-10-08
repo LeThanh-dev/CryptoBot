@@ -5,6 +5,7 @@ const MarginModel = require('../../../../models/Configs/OKX/V1/margin.model');
 const BotModel = require('../../../../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');
+const positionOKXV1Model = require('../../../../models/Positions/OKX/V1/position.model');
 
 const dataCoinByBitController = {
     // SOCKET
@@ -1169,7 +1170,7 @@ const dataCoinByBitController = {
 
         try {
 
-            // const cancelPositionV3 = PositionV1Model.deleteMany({})
+            const cancelPositionV3 = positionOKXV1Model.deleteMany({})
             await Promise.allSettled([cancelPositionV3])
 
             console.log("[V] RESET All For New Successful");

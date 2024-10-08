@@ -6,14 +6,13 @@ import { useDispatch, useSelector } from "react-redux";
 
 import AddMarket from "./components/AddMarket";
 import { LoadingButton } from "@mui/lab";
-import AddBreadcrumbs from "../../../../components/BreadcrumbsCutom";
 import DataGridCustom from "../../../../components/DataGridCustom";
 import { formatNumber } from "../../../../functions";
 import { getAllBotOnlyApiKeyByUserID } from "../../../../services/botService";
-import { updatePL } from "../../../../services/Positions/ByBIt/V1/positionService";
+import { updatePL } from "../../../../services/Positions/OKX/V1/positionService";
 import { addMessageToast } from "../../../../store/slices/Toast";
 
-function PositionV1() {
+function PositionOKXV1() {
 
     const userData = useSelector(state => state.userDataSlice.userData)
 
@@ -220,15 +219,14 @@ function PositionV1() {
 
     const handleGetAllBotByUserID = () => {
 
-        getAllBotOnlyApiKeyByUserID(userData._id, "ByBitV1")
+        getAllBotOnlyApiKeyByUserID(userData._id, "OKX_V1")
             .then(res => {
                 const data = res.data.data;
                 const newData = data?.map(item => (
                     {
+                        ...item,
                         name: item?.botName,
                         value: item?._id,
-                        ApiKey: item?.ApiKey,
-                        SecretKey: item?.SecretKey,
                     }
                 ))
                 const newMain = [
@@ -334,7 +332,6 @@ function PositionV1() {
 
     return (
         <div>
-            <AddBreadcrumbs list={["PositionV1"]} />
 
             <div className={styles.position}>
 
@@ -454,4 +451,4 @@ function PositionV1() {
     );
 }
 
-export default PositionV1;
+export default PositionOKXV1;

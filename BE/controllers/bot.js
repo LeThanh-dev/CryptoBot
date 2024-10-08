@@ -606,14 +606,13 @@ const BotController = {
 
                     const getScannerV3ByBotID = ScannerV3Model.find({ botID }).populate("botID")
 
-
                     const resultAll = await Promise.allSettled([getAllStrategiesActiveByBotID, getScannerV3ByBotID])
 
                     const newDataSocketWithBotData = resultAll[0].value
                     const scannerV3List = resultAll[1].value
                     console.log(scannerV3List);
 
-                    const deleteBot = BotModel.deleteOne({ _id: botID })
+                    // const deleteBot = BotModel.deleteOne({ _id: botID })
 
                     const deleteAllStrategies = StrategiesModel.updateMany(
                         { "children.botID": botID },
@@ -621,7 +620,7 @@ const BotController = {
                     );
                     const deleteScannerV3 = ScannerV3Model.deleteMany({ botID })
 
-                    await Promise.allSettled([deleteBot, deleteAllStrategies, deleteScannerV3]);
+                    await Promise.allSettled([ deleteAllStrategies, deleteScannerV3]);
 
                     (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                         type: "bot-delete",
@@ -647,7 +646,6 @@ const BotController = {
                     const newDataSocketWithBotData1 = resultAll2[0].value
                     const scannerV1List = resultAll2[1].value
 
-                    const deleteBotV1 = BotModel.deleteOne({ _id: botID })
 
                     const deleteAllSpot = SpotModel.updateMany(
                         { "children.botID": botID },
@@ -659,7 +657,7 @@ const BotController = {
                     );
                     const deleteScannerV1 = ScannerV1Model.deleteMany({ botID })
 
-                    await Promise.allSettled([deleteBotV1, deleteAllSpot, deleteAllMargin, deleteScannerV1]);
+                    await Promise.allSettled([deleteAllSpot, deleteAllMargin, deleteScannerV1]);
 
                     (newDataSocketWithBotData1?.length > 0 || scannerV1List?.length > 0) && BotController.sendDataRealtime({
                         type: "bot-delete",
@@ -675,7 +673,14 @@ const BotController = {
                     break
             }
 
-            res.customResponse(200, "Delete Bot Successful");
+            const result = await BotModel.deleteOne({ _id: botID })
+            if (result.deletedCount && result.deletedCount !== 0) {
+
+                res.customResponse(200, "Delete Bot Successful");
+            }
+            else {
+                res.customResponse(200, "Delete Bot Failed");
+            }
 
 
         } catch (error) {
