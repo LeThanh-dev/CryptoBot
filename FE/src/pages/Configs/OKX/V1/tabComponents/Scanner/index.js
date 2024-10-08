@@ -449,7 +449,7 @@ function ScannerV1OKX() {
     const handleGetTotalFutureByBot = async () => {
 
         try {
-            const res = await getTotalFutureByBot(userData._id)
+            const res = await getTotalFutureByBot("OKX_V1")
             const { status, message, data: resData } = res.data
 
             dispatch(setTotalFuture({

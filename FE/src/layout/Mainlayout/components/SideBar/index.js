@@ -401,7 +401,7 @@ function SideBar({
                                     to={item.link}
                                 >
                                     {item.icon}
-                                    <p className={styles.sidebarItemName}>{item.name}</p>
+                                    <p className={styles.sidebarItemName}>{item.link}</p>
                                 </NavLink>
                             }
                         </div>

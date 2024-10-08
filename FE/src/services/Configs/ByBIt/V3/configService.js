@@ -15,8 +15,8 @@ export const getFutureAvailable = async (botID) => {
     return await api.get(`/configByBitV3/getFutureAvailable/${botID}`)
 }
 
-export const getTotalFutureByBot = async (userID) => {
-    return await api.get(`/configByBitV3/getTotalFutureByBot/${userID}`)
+export const getTotalFutureByBot = async (botType) => {
+    return await api.post(`/configByBitV3/getTotalFutureByBot`,{botType})
 }
 export const getTotalFutureSpot = async (userID) => {
     return await api.get(`/configByBitV3/getTotalFutureSpot/${userID}`)

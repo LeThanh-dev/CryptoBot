@@ -34,8 +34,14 @@ function Heading({
         navigate("/login")
     }
 
-    const routeName = useMemo(() => {
-        return location.pathname.split("/")[1]
+    const checkShowMoney = useMemo(() => {
+        const routeName =  location.pathname.slice(1)
+        return [
+            "Configs/ByBit/V1",
+            "Configs/ByBit/V3",
+            "Configs/OKX/V1",
+            "Configs/OKX/V3",
+        ].find(item=>routeName.includes(item))
     }, [location])
 
 
@@ -45,21 +51,21 @@ function Heading({
                 <img src={logoImage} />
                 <span className={styles.text}>CyberBot</span>
 
-                <img
+                {/* <img
                     src={teleIcon}
                     className={styles.teleIcon}
                     onClick={e => {
                         e.stopPropagation()
                         // window.open('https://t.me/yourgroup', '_blank')
                     }}
-                />
+                /> */}
             </NavLink>
             <DensityMediumIcon
                 className={styles.navbar}
                 onClick={toggleSidebar}
             />
             {
-                routeName === "Strategies" &&
+                checkShowMoney  &&
                 <p className={styles.totalMoneyFutureBot}>{formatNumber(Number.parseFloat((+totalFuture || 0)))} $</p>
             }
             <div className={styles.headingInfor} >

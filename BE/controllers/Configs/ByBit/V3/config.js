@@ -197,11 +197,13 @@ const dataCoinByBitController = {
     getTotalFutureByBot: async (req, res) => {
         try {
 
-            const userID = req.params.id;
+            const userID = req.user._id
+
+            const {botType} = req.body
 
             const botListId = await BotModel.find({
                 userID,
-                "botType": "ByBitV3",
+                botType,
                 ApiKey: { $exists: true, $ne: null },
                 SecretKey: { $exists: true, $ne: null }
             })

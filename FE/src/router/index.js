@@ -30,7 +30,9 @@ import InstrumentOKXV1 from "../pages/Instruments/OKX/V1"
 import InstrumentsInfo from "../pages/Instruments/ByBit/V1"
 import CoinOKX from "../pages/Coins/OKX"
 import LayoutBox from "../components/LayoutBox"
-
+import bybitIcon from "../assets/bybit-logo.png"
+import OKXIcon from "../assets/okx_logo.svg"
+import { Padding } from "@mui/icons-material"
 
 const routeList = [
     {
@@ -76,6 +78,29 @@ const routeList = [
                 </>,
                 children: [
                     {
+                        path: "",
+                        element: <LayoutBox
+                            list={[
+                                {
+                                    label: <img src={bybitIcon} width={"60px"} />,
+                                    link: "/Configs/ByBit",
+                                    style:{
+                                        padding: "12px",
+                                        flexBasis: 0
+                                    }
+                                },
+                                {
+                                    label: <img src={OKXIcon} width={"70px"} />,
+                                    link: "/Configs/OKX",
+                                    style:{
+                                        padding: "6px",
+                                        flexBasis: 0
+                                    }
+                                }
+                            ]}
+                        />
+                    },
+                    {
                         path: "ByBit",
                         element: <>
                             <Outlet />
@@ -83,16 +108,16 @@ const routeList = [
                         children: [
                             {
                                 path: "",
-                                element: <LayoutBox list = {[
+                                element: <LayoutBox list={[
                                     {
-                                        label:"V1",
-                                        link:"/Configs/ByBit/V1/Spot"
+                                        label: "V1",
+                                        link: "/Configs/ByBit/V1/Spot"
                                     },
                                     {
-                                        label:"V3",
-                                        link:"/Configs/ByBit/V3/Config"
+                                        label: "V3",
+                                        link: "/Configs/ByBit/V3/Config"
                                     }
-                                ]}/>
+                                ]} />
                             },
                             {
                                 path: "V3",
@@ -180,16 +205,16 @@ const routeList = [
                         children: [
                             {
                                 path: "",
-                                element: <LayoutBox list = {[
+                                element: <LayoutBox list={[
                                     {
-                                        label:"V1",
-                                        link:"/Configs/OKX/V1/Spot"
+                                        label: "V1",
+                                        link: "/Configs/OKX/V1/Spot"
                                     },
                                     {
-                                        label:"V3",
-                                        link:"/Configs/OKX/V3/Config"
+                                        label: "V3",
+                                        link: "/Configs/OKX/V3/Config"
                                     }
-                                ]}/>
+                                ]} />
                             },
                             {
                                 path: "V3",
@@ -280,11 +305,47 @@ const routeList = [
                 </>,
                 children: [
                     {
+                        path: "",
+                        element: <LayoutBox
+                            list={[
+                                {
+                                    label: <img src={bybitIcon} width={"60px"} />,
+                                    link: "/Positions/ByBit",
+                                    style:{
+                                        padding: "12px",
+                                        flexBasis: 0
+                                    }
+                                },
+                                {
+                                    label: <img src={OKXIcon} width={"70px"} />,
+                                    link: "/Positions/OKX",
+                                    style:{
+                                        padding: "6px",
+                                        flexBasis: 0
+                                    }
+                                }
+                            ]}
+                        />
+                    },
+                    {
                         path: "ByBit",
                         element: <>
                             <Outlet />
                         </>,
                         children: [
+                            {
+                                path: "",
+                                element: <LayoutBox list={[
+                                    {
+                                        label: "V1",
+                                        link: "/Positions/ByBit/V1"
+                                    },
+                                    {
+                                        label: "V3",
+                                        link: "/Positions/ByBit/V3"
+                                    }
+                                ]} />
+                            },
                             {
                                 path: "V3",
                                 element: <PositionV3 />
@@ -301,6 +362,19 @@ const routeList = [
                             <Outlet />
                         </>,
                         children: [
+                            {
+                                path: "",
+                                element: <LayoutBox list={[
+                                    {
+                                        label: "V1",
+                                        link: "/Positions/OKX/V1"
+                                    },
+                                    {
+                                        label: "V3",
+                                        link: "/Positions/OKX/V3"
+                                    }
+                                ]} />
+                            },
                             {
                                 path: "V3",
                                 element: <PositionV3 />
