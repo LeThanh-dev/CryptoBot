@@ -1,5 +1,6 @@
 const InstrumentOKXV1Model = require('../../../../models/instruments/OKX/V1/instrument.model')
-const OKX_API = require('../../../../Trader/OKX/Doc/api')
+const { RestClient } = require('okx-api');
+const client = new RestClient()
 
 
 const InstrumentOKXV1Controller = {
@@ -8,11 +9,11 @@ const InstrumentOKXV1Controller = {
         try {
 
             const list = {}
-            const getSpot = OKX_API.publicData.restAPI.getInstruments({ instType: "SPOT" })
-            const getMargin = OKX_API.publicData.restAPI.getInstruments({ instType: "MARGIN" })
+            const getSpot = client.getInstruments('SPOT')
+            const getMargin = client.getInstruments("MARGIN")
 
             const resultGetAll = await Promise.allSettled([getSpot, getMargin])
-            const getTickers = await OKX_API.orderBookTrading.marketData.getTickers({ instType: "SPOT" })
+            const getTickers = await client.getTickers("SPOT")
 
             const vol24hBySymbolObject = {}
 

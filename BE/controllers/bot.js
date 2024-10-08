@@ -8,9 +8,8 @@ const MarginModel = require('../models/Configs/ByBit/V1/margin.model');
 const ScannerV3Model = require('../models/Configs/ByBit/V3/scanner.model');
 const ScannerV1Model = require('../models/Configs/ByBit/V1/scanner.model');
 const { default: mongoose } = require('mongoose');
-const OKX_API = require('../Trader/OKX/Doc/api');
-
-// ByBitV3
+const { RestClient } = require('okx-api');
+const clientOKX = new RestClient()
 
 const BotController = {
     // SOCKET
@@ -750,16 +749,10 @@ const BotController = {
         try {
 
             const data = req.body
-
-            const botData = {
-                ApiKey: data.botData.ApiKey,
-                SecretKey: data.botData.SecretKey,
-                Password: data.password,
-            }
-
             const list = {}
-            const getSpot = OKX_API.publicData.restAPI.getInstruments({ instType: "SPOT" })
-            const getMargin = OKX_API.publicData.restAPI.getInstruments({ instType: "MARGIN" })
+
+            const getSpot = clientOKX.getInstruments('SPOT')
+            const getMargin = clientOKX.getInstruments("MARGIN")
 
             const resultGetAll = await Promise.allSettled([getSpot, getMargin])
 
@@ -777,19 +770,53 @@ const BotController = {
                     }
                 })
             })
+            const listSymbol = Object.values(list)
 
-           const resData =  await OKX_API.orderBookTrading.copyTrading.setLever({
-                listSymbol: Object.values(list),
-                botData
+            let index = 0;
+            const batchSize = 10
+
+            let errorText = ""
+
+            const clientOKXPrivate = new RestClient({
+                apiKey: data.botData.ApiKey,
+                apiSecret: data.botData.SecretKey,
+                apiPass: data.botData.Password,
             })
-            if(resData.code == 0)
-            {
-                res.customResponse(200, resData.msg,resData.data);
+            while (index < listSymbol.length) {
+                const batch = listSymbol.slice(index, index + batchSize);
+                await Promise.allSettled(batch.map(async item => (
+                    await Promise.allSettled(["isolated", "cross"].map(async mgnMode => {
+                        const symbol = item.symbol
+                        const lever = item.lever
+
+                        try {
+                            await clientOKXPrivate.setLeverage({
+                                lever,
+                                mgnMode,
+                                instId: symbol,
+                            })
+
+                        } catch (error) {
+                            console.log(`[!] Set lever ( ${symbol} - ${lever} )  error: ${error}`);
+                            errorText = error.response.data.msg
+                        }
+
+                    })
+                    ))));
+                if (errorText) {
+                    break
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                index += batchSize;
             }
-            else 
-            {
-                res.customResponse(400, resData.msg);
+            if (!errorText) {
+                res.customResponse(200, "Set Lever Successful", listSymbol);
             }
+            else {
+                res.customResponse(200, errorText, listSymbol);
+            }
+
+
 
         } catch (error) {
             // Xử lý lỗi nếu có

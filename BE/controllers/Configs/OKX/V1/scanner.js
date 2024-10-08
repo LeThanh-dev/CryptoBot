@@ -2,7 +2,6 @@ const { RestClientV5, WebsocketClient } = require('bybit-api');
 const ScannerModel = require('../../../../models/Configs/OKX/V1/scanner.model')
 const SpotModel = require('../../../../models/Configs/OKX/V1/spot.model');
 const MarginModel = require('../../../../models/Configs/OKX/V1/margin.model');
-// const PositionV1Model = require('../../../../models/Positions/OKX/V1/position.model');
 const BotModel = require('../../../../models/bot.model')
 const { v4: uuidv4 } = require('uuid');
 const { default: mongoose } = require('mongoose');

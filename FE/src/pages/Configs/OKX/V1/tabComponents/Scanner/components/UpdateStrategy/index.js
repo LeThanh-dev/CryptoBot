@@ -330,7 +330,7 @@ function UpdateStrategy({
                                     <Checkbox
                                         checked={selected}
                                     />
-                                    {option.name.split("USDT")[0]}
+                                    {option.name.split("-USDT")[0]}
                                 </li>
                             </>
                         )}
@@ -389,7 +389,7 @@ function UpdateStrategy({
                                     <Checkbox
                                         checked={selected}
                                     />
-                                    {option.name.split("USDT")[0]}
+                                    {option.name.split("-USDT")[0]}
                                 </li>
                             </>
                         )}

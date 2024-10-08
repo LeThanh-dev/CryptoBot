@@ -10,6 +10,7 @@ import styles from "./CreateStrategy.module.scss"
 import { createConfigScanner } from '../../../../../../../../services/Configs/OKX/V1/scannerService';
 import { getAllSymbolSpot, syncSymbolSpot } from '../../../../../../../../services/Configs/OKX/V1/spotService';
 import { getAllSymbolSpot as getAllSymbolMargin, syncSymbolSpot as syncSymbolMargin } from '../../../../../../../../services/Configs/OKX/V1/marginService';
+import { syncInstrumentOKXV1 } from '../../../../../../../../services/Instruments/OKX/V1/instrumentService';
 
 function CreateStrategy({
     botListInput,
@@ -131,11 +132,13 @@ function CreateStrategy({
                 setLoadingSyncCoin(true)
                 let res
                 if (symbolGroupDataList.label === "Spot") {
-                    res = await syncSymbolSpot()
+                    const resSync = await syncInstrumentOKXV1()
+                    res = await syncSymbolSpot(resSync.data?.data?.filter(item => item.market === "Spot") || [])
                     handleGetSpotDataList()
                 }
                 else {
-                    res = await syncSymbolMargin()
+                    const resSync = await syncInstrumentOKXV1()
+                    res = await syncSymbolMargin(resSync.data?.data?.filter(item => item.market === "Margin") || [])
                     handleGetMarginDataList()
                 }
                 const { status, message, data: resData } = res.data
@@ -159,7 +162,7 @@ function CreateStrategy({
 
     const handleSubmitCreate = async data => {
 
-        if (onlyPairsSelected.length > 0 && botList.length > 0)  {
+        if (onlyPairsSelected.length > 0 && botList.length > 0) {
 
             try {
                 const res = await createConfigScanner({
@@ -432,7 +435,7 @@ function CreateStrategy({
                                     <Checkbox
                                         checked={selected || onlyPairsSelected.findIndex(item => item === option.value) > -1}
                                     />
-                                    {option.name.split("USDT")[0]}
+                                    {option.name.split("-USDT")[0]}
                                 </li>
                             </>
                         )}
@@ -491,7 +494,7 @@ function CreateStrategy({
                                     <Checkbox
                                         checked={selected || blackListSelected.findIndex(item => item === option.value) > -1}
                                     />
-                                    {option.name.split("USDT")[0]}
+                                    {option.name.split("-USDT")[0]}
                                 </li>
                             </>
                         )}
@@ -671,7 +674,7 @@ function CreateStrategy({
                                     USDT
                                 </InputAdornment>
                             }}
-                            {...register("Turnover", )}
+                            {...register("Turnover",)}
                         />
 
                     </FormControl>

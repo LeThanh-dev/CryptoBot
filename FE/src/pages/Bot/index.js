@@ -15,7 +15,6 @@ import { getTotalFutureSpot, getTotalFutureSpotByBot } from '../../services/Conf
 import { formatNumber } from '../../functions';
 import { getAllBotType } from '../../services/botTypeService';
 import { LoadingButton } from '@mui/lab';
-import ConfirmSetLever from './components/ConfirmSetLever';
 
 function Bot() {
 
@@ -34,7 +33,7 @@ function Bot() {
             }
             case "OKX_V1": {
                 text = "Set Lever"
-                func = () => { setOpenConfirmSetLever(rowData) }
+                func = () => { handleSetLever(rowData) }
                 btnColor = "success"
                 break
             }
@@ -300,7 +299,6 @@ function Bot() {
     const [confirmActiveBot, setConfirmActiveBot] = useState(false);
     const [loadingSetMargin, setLoadingSetMargin] = useState("");
     const [totalFutureSpot, setTotalFutureSpot] = useState(0);
-    const [openConfirmSetLever, setOpenConfirmSetLever] = useState("");
 
     const totalFutureSpotOfMeDefault = useRef(0)
     const checkMyBotRef = useRef(true)
@@ -341,7 +339,28 @@ function Bot() {
         setLoadingSetMargin("")
     }
 
+    const handleSetLever = async (botData) => {
+        setLoadingSetMargin(botData._id)
+        try {
+            const res = await setLever({
+                botData,
+            })
+            const { status, message } = res.data
 
+            dispatch(addMessageToast({
+                status: status,
+                message: message,
+            }))
+
+        }
+        catch (err) {
+            dispatch(addMessageToast({
+                status: 500,
+                message: "Set Lever Error",
+            }))
+        }
+        setLoadingSetMargin("")
+    }
 
     const handleUpdateBot = async ({ botID, data }) => {
         try {
@@ -707,14 +726,7 @@ function Bot() {
                     </DialogCustom >
                 )
             }
-            {
-                openConfirmSetLever && <ConfirmSetLever
-                    onClose={() => { setOpenConfirmSetLever("") }}
-                    setLoadingSetMargin={setLoadingSetMargin}
-                    botData={openConfirmSetLever}
-                    loading = {loadingSetMargin}
-                />
-            }
+
         </div >
 
     );
