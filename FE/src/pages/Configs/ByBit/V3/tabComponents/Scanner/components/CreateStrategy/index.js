@@ -78,6 +78,7 @@ function CreateStrategy({
     } = useForm();
 
     const [maxFrame, setMaxFrame] = useState(undefined);
+    const [maxRangeFrame, setMaxRangeFrame] = useState(undefined);
     const [onlyPairsSelected, setOnlyPairsSelected] = useState([])
     const [blackListSelected, setBlackListSelected] = useState([])
     const [botList, setBotList] = useState([])
@@ -148,7 +149,8 @@ function CreateStrategy({
                 const res = await createConfigScannerV3({
                     data: {
                         ...data,
-                        Frame: `${data.Frame}${data.Time}`
+                        Frame: `${data.Frame}${data.Time}`,
+                        Range: `${data.Range}${data.RangeTime}`,
                     },
                     botListId: botList.map(item => item.value),
                     Blacklist: blackListSelected.map(item => item.value),
@@ -586,6 +588,47 @@ function CreateStrategy({
                         </FormControl>
                     </div>
 
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                type='number'
+                                label="Range"
+                                variant="outlined"
+                                size="medium"
+                                defaultValue={1}
+                                {...register("Range", { required: true, max: maxRangeFrame, min: 0.25 })}
+                            >
+                            </TextField>
+                            {errors.Range?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Range?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
+                            {errors.Range?.type === "max" && <p className="formControlErrorLabel">Max: {maxRangeFrame}</p>}
+
+                        </FormControl>
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                select
+                                label="Time"
+                                variant="outlined"
+                                size="medium"
+                                defaultValue={timeList[0].value}
+                                {...register("RangeTime", { required: true, })}
+                                onChange={e => {
+                                    setMaxRangeFrame(e.target.value == "h" ? undefined : 9)
+                                }}
+                            >
+                                {
+                                    timeList.map(item => (
+                                        <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                    ))
+                                }
+                            </TextField>
+                            {errors.RangeTime?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                        </FormControl>
+
+                    </div>
+                    
                     <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>

@@ -8,6 +8,7 @@ const strategiesSchema = new mongoose.Schema({
   Label: String,
 
   Frame: String,
+  Range:String,
   OCLength: Number,
   
   Candle: String,

@@ -315,9 +315,15 @@ function ScannerV3() {
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {
+            field: 'Range',
+            headerName: 'Range',
+            minWidth: window.innerWidth <= 740 ? 130 : 100,
+            flex: window.innerWidth <= 740 ? undefined : 1,
+        },
+        {
             field: 'Condition',
             headerName: 'Condition (%)',
-            minWidth: window.innerWidth <= 740 ? 200 : 130,
+            minWidth: window.innerWidth <= 740 ? 200 : 160,
             flex: window.innerWidth <= 740 ? undefined : 1,
         },
         {

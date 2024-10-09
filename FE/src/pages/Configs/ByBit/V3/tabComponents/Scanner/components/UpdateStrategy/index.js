@@ -18,14 +18,7 @@ function UpdateStrategy({
     dataCheckTreeDefaultObject
 }) {
 
-    const FrameMain = dataInput.Frame
-    const checkHourFrameTime = FrameMain.includes("h")
 
-    const TimeInput = checkHourFrameTime ? "h" : "D"
-
-    const Frame = FrameMain.split(TimeInput)
-
-    const FrameInput = Frame[0]
 
     const timeList = [
         {
@@ -54,6 +47,7 @@ function UpdateStrategy({
     const [blackListSelected, setBlackListSelected] = useState(blackListSelectedInput || [])
     const [loadingSyncCoin, setLoadingSyncCoin] = useState(false);
     const [maxFrame, setMaxFrame] = useState(undefined);
+    const [maxRangeFrame, setMaxRangeFrame] = useState(undefined);
 
     const dataChangeRef = useRef(false)
     const [symbolGroupDataList, setSymbolGroupDataList] = useState({
@@ -62,6 +56,25 @@ function UpdateStrategy({
     });
 
     const dispatch = useDispatch()
+
+    const handleSplitTimeFrame = (data) => {
+
+        const checkHourFrameTime = data.includes("h")
+
+        const Time = checkHourFrameTime ? "h" : "D"
+
+        const FrameSplit = data.split(Time)
+
+        const Frame = FrameSplit[0]
+
+        return {
+            Frame,
+            Time
+        }
+    }
+
+    const FrameDataInput = handleSplitTimeFrame(dataInput.Frame)
+    const RangeDataInput = handleSplitTimeFrame(dataInput.Range)
 
     const handleGetStrategyDataList = async (syncNew = true) => {
         try {
@@ -120,6 +133,7 @@ function UpdateStrategy({
                 ...dataInput,
                 ...data,
                 Frame: `${data.Frame}${data.Time}`,
+                Range: `${data.Range}${data.RangeTime}`,
                 Blacklist: [... new Set(blackListSelected.map(item => item.value))],
                 OnlyPairs: [... new Set(onlyPairsSelected.map(item => item.value))]
             }
@@ -183,6 +197,16 @@ function UpdateStrategy({
         handleGetStrategyDataList()
     }, []);
 
+    useEffect(() => {
+        if (FrameDataInput?.Time == "D") {
+            setMaxFrame(9)
+        }
+    }, [FrameDataInput]);
+    useEffect(() => {
+        if (RangeDataInput?.Time == "D") {
+            setMaxRangeFrame(9)
+        }
+    }, [RangeDataInput]);
 
     return (
         <DialogCustom
@@ -368,7 +392,7 @@ function UpdateStrategy({
                                     label="Frame"
                                     variant="outlined"
                                     size="medium"
-                                    defaultValue={FrameInput}
+                                    defaultValue={FrameDataInput.Frame}
                                     {...register("Frame", { required: true, max: maxFrame, min: 0.25 })}
                                 >
                                 </TextField>
@@ -384,7 +408,7 @@ function UpdateStrategy({
                                     label="Time"
                                     variant="outlined"
                                     size="medium"
-                                    defaultValue={TimeInput}
+                                    defaultValue={FrameDataInput.Time}
                                     {...register("Time", { required: true, })}
                                     onChange={e => {
                                         setMaxFrame(e.target.value == "h" ? undefined : 9)
@@ -486,6 +510,47 @@ function UpdateStrategy({
                             {errors.Adjust?.type === 'required' && <p className="formControlErrorLabel">The Adjust Required.</p>}
                             {errors.Adjust?.type === "min" && <p className="formControlErrorLabel">The Adjust must bigger 0.01.</p>}
                         </FormControl>
+                    </div>
+
+                    <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                type='number'
+                                label="Range"
+                                variant="outlined"
+                                size="medium"
+                                defaultValue={RangeDataInput.Frame}
+                                {...register("Range", { required: true, max: maxRangeFrame, min: 0.25 })}
+                            >
+                            </TextField>
+                            {errors.Range?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                            {errors.Range?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
+                            {errors.Range?.type === "max" && <p className="formControlErrorLabel">Max: {maxRangeFrame}</p>}
+
+                        </FormControl>
+
+                        <FormControl className={clsx(styles.formMainDataSmallItem)}>
+                            <TextField
+                                select
+                                label="Time"
+                                variant="outlined"
+                                size="medium"
+                                defaultValue={RangeDataInput.Time}
+                                {...register("RangeTime", { required: true, })}
+                                onChange={e => {
+                                    setMaxRangeFrame(e.target.value == "h" ? undefined : 9)
+                                }}
+                            >
+                                {
+                                    timeList.map(item => (
+                                        <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                    ))
+                                }
+                            </TextField>
+                            {errors.RangeTime?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                        </FormControl>
+
                     </div>
 
                     <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >

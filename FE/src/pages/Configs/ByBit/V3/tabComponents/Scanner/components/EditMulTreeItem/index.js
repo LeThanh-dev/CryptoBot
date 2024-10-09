@@ -120,6 +120,15 @@ function EditMulTreeItem({
                 compare: "=",
                 value: ""
             },
+            name: "Range",
+            value: "Range",
+            compareFilterList: ["="],
+        },
+        {
+            data: {
+                compare: "=",
+                value: ""
+            },
             name: "Longest",
             value: "Longest",
             compareFilterList: compareFilterListDefault,
@@ -201,6 +210,10 @@ function EditMulTreeItem({
     const [allSymbolList, setAllSymbolList] = useState([])
 
     const newFrameDataRef = useRef({
+        Frame: 1,
+        Time: 'h'
+    })
+    const newRangeDataRef = useRef({
         Frame: 1,
         Time: 'h'
     })
@@ -334,6 +347,50 @@ function EditMulTreeItem({
                             onChange={e => {
                                 newFrameDataRef.current = {
                                     ...newFrameDataRef.current,
+                                    Time: e.target.value
+                                }
+                            }}
+                        >
+                            {
+                                timeList.map(item => (
+                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                ))
+                            }
+                        </TextField>
+                    </FormControl>
+
+                </div>
+            case "Range":
+                return <div style={{ display: 'flex' }}>
+
+                    <FormControl style={{ flex: 1 }}>
+                        <TextField
+                            type='number'
+                            label="Range"
+                            variant="outlined"
+                            size="small"
+                            defaultValue={1}
+                            onChange={e => {
+                                newRangeDataRef.current = {
+                                    ...newRangeDataRef.current,
+                                    Frame: e.target.value
+                                }
+                            }}
+                        >
+                        </TextField>
+
+                    </FormControl>
+
+                    <FormControl style={{ flex: 1, marginLeft: "12px" }}>
+                        <TextField
+                            select
+                            label="Time"
+                            variant="outlined"
+                            size="small"
+                            defaultValue={timeList[0].value}
+                            onChange={e => {
+                                newRangeDataRef.current = {
+                                    ...newRangeDataRef.current,
                                     Time: e.target.value
                                 }
                             }}
@@ -557,7 +614,7 @@ function EditMulTreeItem({
                     UpdatedFields: filterDataRowList.map(filterRow => {
                         const filedValue = filterRow.value
                         let valueHandle = filedValue != "Label" ? handleCompare(dataCheckTreeItem[filedValue], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic", "Frame", "Blacklist", "OnlyPairs"].includes(filedValue)) {
+                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic", "Frame","Range", "Blacklist", "OnlyPairs"].includes(filedValue)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false
@@ -572,6 +629,23 @@ function EditMulTreeItem({
                             if (FrameValue && ((FrameValue >= 0.25 && TimeValue == "h") || (TimeValue == "D" && FrameValue <= 9))) {
                                 return {
                                     Frame: `${FrameData.Frame}${FrameData.Time}`
+                                }
+                            }
+                            else {
+                                checkValueMin = false
+                                FrameCheck = true
+                            }
+
+                        }
+                        else if (filedValue == 'Range') {
+                            const FrameData = newRangeDataRef.current
+
+                            const FrameValue = +FrameData.Frame
+                            const TimeValue = FrameData.Time
+
+                            if (FrameValue && ((FrameValue >= 0.25 && TimeValue == "h") || (TimeValue == "D" && FrameValue <= 9))) {
+                                return {
+                                    Range: `${FrameData.Frame}${FrameData.Time}`
                                 }
                             }
                             else {
