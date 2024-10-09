@@ -319,6 +319,9 @@ function ScannerV3() {
             headerName: 'Range',
             minWidth: window.innerWidth <= 740 ? 130 : 100,
             flex: window.innerWidth <= 740 ? undefined : 1,
+            renderCell: params => {
+                return <p >{formatNumberString(params.row['Range'] || "1D")}</p>
+            }
         },
         {
             field: 'Condition',
