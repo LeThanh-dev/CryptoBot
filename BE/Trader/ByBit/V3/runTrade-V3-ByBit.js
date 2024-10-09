@@ -835,12 +835,14 @@ const sendAllBotTelegram = async (text) => {
 
 
 
-const handleSocketBotApiList = async (botApiListInput = {}) => {
+const handleSocketBotApiList = async (botApiListInput = {}, showLog = true) => {
 
     try {
         const objectToArray = Object.values(botApiListInput);
         const objectToArrayLength = objectToArray.length;
-        // console.log(changeColorConsole.greenBright("[New-Bot-API] Length:", objectToArrayLength));
+        if (showLog) {
+            console.log(changeColorConsole.greenBright("[New-Bot-API] Length:", objectToArrayLength));
+        }
 
         if (objectToArrayLength > 0) {
 
@@ -1441,7 +1443,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                 const listOCByBot = listOCByCandleBot?.[candle]?.[botID]
                                 const listObject = listOCByBot?.listOC
                                 listOCByBot && handleCancelAllOrderOC([listOCByBot])
-                
+
                                 listObject && Object.values(listObject).map(strategyData => {
                                     const strategyID = strategyData.strategyID
                                     cancelAll({ botID, strategyID })
@@ -1688,7 +1690,7 @@ const handleSocketUpdate = async (newData = [], showLog = true) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    await handleSocketBotApiList(newBotApiList)
+    await handleSocketBotApiList(newBotApiList, showLog)
 }
 const handleSocketDelete = async (newData = []) => {
 
