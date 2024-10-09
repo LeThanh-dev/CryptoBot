@@ -1821,7 +1821,7 @@ const history = async ({
             const listOCLong = [];
             const listOCLongShort = [];
 
-            const listAllData = response.result.list
+            const listAllData = response?.result?.list
 
             if (listAllData?.length > 0) {
 
@@ -2011,7 +2011,8 @@ const handleScannerDataList = async ({
             const CandlestickOnlyNumber = scannerData.Candle.split("m")[0]
             const botName = botApiList[botID]?.botName || botData.botName
 
-            if (scannerData.IsActive && botApiList[botID]?.IsActive) {
+            const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
+            if (scannerData.IsActive && botApiList[botID]?.IsActive && allHistory) {
 
                 const FrameMain = scannerData.Frame
                 const checkTimeFrameHour = FrameMain.includes("h")
@@ -2021,7 +2022,6 @@ const handleScannerDataList = async ({
 
                 const candleQty = Math.round(Frame[0] * TimeHandle / 15)
 
-                const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
                 const allHistory15 = allHistoryByCandleSymbol["15"][symbol]
 
                 let allHistoryList = []
