@@ -3732,7 +3732,7 @@ socketRealtime.on('close-upcode', async () => {
     await Promise.allSettled([cancelOC, deleteAll])
 
     console.log("PM2 Kill Success");
-    exec("pm2 stop runTrade-V1")
+    exec("pm2 stop runTrade-V1-ByBit")
 
 });
 
