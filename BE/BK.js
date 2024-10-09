@@ -78,6 +78,6 @@ async function main() {
 }
 
 
-cron.schedule('0 */6 * * *', () => {
+cron.schedule('0 */1 * * *', () => {
     main();
 });
