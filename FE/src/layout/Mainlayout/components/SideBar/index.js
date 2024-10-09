@@ -226,12 +226,12 @@ function SideBar({
                 {
                     link: "Coins/ByBit",
                     name: "ByBit",
-                    icon: <RadarIcon className={styles.icon} />,
+                    icon: renderByBitIcon(),
                 },
                 {
                     link: "Coins/OKX",
                     name: "OKX",
-                    icon: <ViewInArIcon className={styles.icon} />,
+                    icon: renderOKXIcon(),
                 },
 
             ]
@@ -252,12 +252,13 @@ function SideBar({
                 {
                     link: "Instruments/ByBit",
                     name: "ByBit",
-                    icon: <RadarIcon className={styles.icon} />,
+                    icon: renderByBitIcon(),
+
                 },
                 {
                     link: "Instruments/OKX",
                     name: "OKX",
-                    icon: <ViewInArIcon className={styles.icon} />,
+                    icon: renderOKXIcon(),
                 },
 
             ]

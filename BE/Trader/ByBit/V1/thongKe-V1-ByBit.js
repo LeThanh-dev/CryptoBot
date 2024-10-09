@@ -23,13 +23,9 @@ var sendTeleCount = {
     logError: false,
     total: 0
 }
-let digit = []
-let OpenTimem1 = []
-let CoinFT = []
 let messageList = []
 var listKlineObject = {}
 
-var delayTimeOut = ""
 var coinAllClose = false
 var preTurnover = {}
 var trichMauData = {}

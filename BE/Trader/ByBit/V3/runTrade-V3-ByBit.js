@@ -28,13 +28,10 @@ const {
 
 const { getAllStrategiesActiveScannerV3BE } = require('../../../controllers/Configs/ByBit/V3/scanner');
 
-const wsConfig = {
+const wsSymbol = new WebsocketClient({
     market: 'v5',
-    // recvWindow: 100000,
-    // pongTimeout: 5000
-}
-
-const wsSymbol = new WebsocketClient(wsConfig);
+    recvWindow: 100000,
+});
 
 const limitNen = 100;
 const LIST_ORDER = ["order", "position"]
@@ -2633,7 +2630,7 @@ try {
                                         if (response.retCode == 0) {
                                             allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderID = response.result.orderId
                                             console.log(changeColorConsole.blueBright(`[->] Move Order OC Compare ( ${botName} - ${side} - ${symbol} - ${candle} ) successful:`, priceMoveOC))
-                                            console.log(changeColorConsole.blackBright(`[_OC orderID Move_] ( ${botName} - ${side} - ${symbol} - ${candle} ) :`, response.result.orderId));
+                                            // console.log(changeColorConsole.blackBright(`[_OC orderID Move_] ( ${botName} - ${side} - ${symbol} - ${candle} ) :`, response.result.orderId));
 
                                             const textQuayDau = `😃 Dịch OC ( ${strategy.OrderChange}% -> ${newOCTemp.toFixed(2)}% ) ( ${botName} - ${side} - ${symbol} - ${candle} ) `
                                             console.log(changeColorConsole.yellowBright(textQuayDau));

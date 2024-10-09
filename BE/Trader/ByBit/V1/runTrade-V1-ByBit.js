@@ -40,12 +40,13 @@ const {
 
 const { RestClientV5, WebsocketClient } = require('bybit-api');
 
-const wsConfig = {
-}
-
 const wsSymbol = new WebsocketClient({
     market: 'v5',
     recvWindow: 100000,
+});
+const clientDigit = new RestClientV5({
+    testnet: false,
+    recv_window: 100000,
 });
 
 const LIST_ORDER = ["order", "execution"]
@@ -62,10 +63,7 @@ const SPOT_MODEL_DEFAULT = {
     AmountIncreaseOC: 8,
 }
 
-const clientDigit = new RestClientV5({
-    testnet: false,
-    recv_window: 100000,
-});
+
 
 // ----------------------------------------------------------------------------------
 let missTPDataBySymbol = {}
