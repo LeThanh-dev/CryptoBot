@@ -3,9 +3,11 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
+require('dotenv').config();
 
-const TOKEN = '7430422460:AAHWBefQH7clQPt8AbCfZuuqlpJ2fsP7Tt8';
-const CHAT_ID = '-1002162225326';
+const TOKEN = process.env.TOKEN_BK;
+const CHAT_ID = process.env.CHAT_ID_BK;
+
 const MONGO_URI = 'mongodb://localhost:27017/crypto-bot'; // URI kết nối MongoDB
 const BACKUP_FILE = path.join(__dirname, 'bk', 'backup.gz');
 
