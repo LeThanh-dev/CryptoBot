@@ -1233,7 +1233,6 @@ const dataCoinByBitController = {
 
     getAllStrategiesActive: async () => {
         try {
-            require("../../../../models/bot.model")
 
             const resultFilter = await StrategiesModel.aggregate([
                 {

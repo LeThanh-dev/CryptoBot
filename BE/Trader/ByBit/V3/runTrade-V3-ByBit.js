@@ -2189,20 +2189,17 @@ const syncVol24 = async () => {
 const Main = async () => {
 
 
-    let allStrategiesActiveBE = getAllStrategiesActive()
-    let allSymbolBE = getAllSymbolBE()
+    const allStrategiesActiveBE = getAllStrategiesActive()
+    const allSymbolBE = getAllSymbolBE()
     const getAllConfigScanner = getAllStrategiesActiveScannerV3BE()
     const deleteAll = deleteAllScannerBE()
     const deleteAllUPcode = deleteAllForUPcode()
-
-
 
     const result = await Promise.allSettled([allStrategiesActiveBE, allSymbolBE, getAllConfigScanner, deleteAll, deleteAllUPcode])
 
     const allStrategiesActiveObject = result[0].value || []
     const allSymbolArray = result[1].value || []
     const getAllConfigScannerRes = result[2].value || []
-
 
     allStrategiesActiveObject.forEach(strategyItem => {
         if (checkConditionBot(strategyItem)) {
@@ -2232,15 +2229,6 @@ const Main = async () => {
         }
     })
 
-    const resultDigitAll = await Digit()
-    resultDigitAll?.length > 0 && (
-        resultDigitAll.reduce((pre, cur) => {
-            if (cur.symbol.includes("USDT")) {
-                pre[cur.symbol] = cur.priceScale
-            }
-            return pre
-        }, digitAllCoinObject)
-    );
 
     allSymbolArray.forEach(item => {
         const symbol = item.value
@@ -2303,7 +2291,16 @@ const Main = async () => {
         })
     });
 
-    // await handleStatistic([{ value: "ARKUSDT" }])
+
+    const resultDigitAll = await Digit()
+    resultDigitAll?.length > 0 && (
+        resultDigitAll.reduce((pre, cur) => {
+            if (cur.symbol.includes("USDT")) {
+                pre[cur.symbol] = cur.priceScale
+            }
+            return pre
+        }, digitAllCoinObject)
+    );
 
     await handleStatistic()
 
@@ -2315,6 +2312,8 @@ const Main = async () => {
             handleScannerDataList({ candle, symbol: item.value })
         })
     })
+    
+    
     await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(listKline)
@@ -3108,16 +3107,14 @@ socketRealtime.on('bot-update', async (data = {}) => {
                 }
             }
         }
-        else {
-            botApiList[botID] = {
-                id: botID,
-                ApiKey,
-                SecretKey,
-                botName,
-                telegramID: strategiesData.botID.telegramID,
-                telegramToken: strategiesData.botID.telegramToken,
-                IsActive: botActive
-            }
+        botApiList[botID] = {
+            id: botID,
+            ApiKey,
+            SecretKey,
+            botName,
+            telegramID: strategiesData.botID.telegramID,
+            telegramToken: strategiesData.botID.telegramToken,
+            IsActive: botActive
         }
 
         const cancelDataObject = {
@@ -3185,16 +3182,14 @@ socketRealtime.on('bot-update', async (data = {}) => {
                 }
             }
         }
-        else {
-            botApiList[botID] = {
-                id: botID,
-                ApiKey,
-                SecretKey,
-                botName,
-                telegramID: scannerItem.botID.telegramID,
-                telegramToken: scannerItem.botID.telegramToken,
-                IsActive: botActive
-            }
+        botApiList[botID] = {
+            id: botID,
+            ApiKey,
+            SecretKey,
+            botName,
+            telegramID: scannerItem.botID.telegramID,
+            telegramToken: scannerItem.botID.telegramToken,
+            IsActive: botActive
         }
         OnlyPairs.forEach(symbol => {
             delete allScannerDataObject[Candlestick]?.[symbol]?.[scannerID]
@@ -3451,13 +3446,15 @@ socketRealtime.on('bot-telegram', async (data) => {
 
     const botNameExist = botApiList[botIDMain]?.botName || botIDMain
 
-    console.log(`[...] Bot Telegram ( ${botNameExist} ) Update From Realtime`);
+    console.log(`[...] Bot-Telegram ( ${botNameExist} ) Update From Realtime`);
 
-    botApiList[botIDMain] = {
-        ...botApiList[botIDMain],
-        telegramID: newApiData.telegramID,
-        telegramToken: newApiData.telegramToken,
-        botName: newApiData.botName,
+    if (botApiList[botIDMain]) {
+        botApiList[botIDMain] = {
+            ...botApiList[botIDMain],
+            telegramID: newApiData.telegramID,
+            telegramToken: newApiData.telegramToken,
+            botName: newApiData.botName,
+        }
     }
 
 });

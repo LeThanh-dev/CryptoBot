@@ -1218,7 +1218,6 @@ const dataCoinByBitController = {
 
     getAllStrategiesActiveMarginBE: async () => {
         try {
-            require("../../../../models/bot.model")
 
             const resultFilter = await MarginModel.aggregate([
                 {

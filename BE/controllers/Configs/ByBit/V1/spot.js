@@ -1217,7 +1217,6 @@ const dataCoinByBitController = {
 
     getAllStrategiesActiveSpotBE: async () => {
         try {
-            require("../../../../models/bot.model")
 
             const resultFilter = await SpotModel.aggregate([
                 {

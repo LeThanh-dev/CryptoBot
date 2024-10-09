@@ -79,7 +79,7 @@ function AddBot({
                     <TextField
                         {...register("botName", {
                             required: true,
-                            pattern: /^[a-zA-Z0-9\s]*$/ // Chỉ cho phép chữ cái, số và khoảng trắng
+                            // pattern: /^[a-zA-Z0-9\s]*$/ // Chỉ cho phép chữ cái, số và khoảng trắng
                         })}
                         size="small"
                     />

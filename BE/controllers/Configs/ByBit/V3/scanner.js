@@ -899,7 +899,6 @@ const dataCoinByBitController = {
 
     getAllStrategiesActiveScannerV3BE: async () => {
         try {
-            require("../models/bot.model")
 
             const result = await ScannerV3Model.find({ IsActive: true }).populate("botID")
             return result || []
