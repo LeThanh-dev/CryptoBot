@@ -1955,6 +1955,8 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
     const limitNen = handleGetLimitNen(interval)
     const countLoopGet = Math.ceil(limitNen / 1000)
 
+    // console.log(interval,limitNen, countLoopGet);
+
     while (index < coinList.length) {
         const batch = coinList.slice(index, index + batchSize)
 
