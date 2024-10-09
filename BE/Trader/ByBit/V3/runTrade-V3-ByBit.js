@@ -2011,7 +2011,7 @@ const handleScannerDataList = async ({
             const CandlestickOnlyNumber = scannerData.Candle.split("m")[0]
             const botName = botApiList[botID]?.botName || botData.botName
 
-            const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
+            const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber]?.[symbol]
             if (scannerData.IsActive && botApiList[botID]?.IsActive && allHistory) {
 
                 const FrameMain = scannerData.Frame
