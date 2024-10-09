@@ -256,9 +256,6 @@ const handleSubmitOrder = async ({
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.orderLinkId = newOrderLinkID
                     allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen = coinOpen
 
-
-
-
                     const newOC = Math.abs((price - coinOpen)) / coinOpen * 100
 
                     const text = `\n[+OC] Order OC ( ${strategy.OrderChange}% -> ${newOC.toFixed(2)}% ) ( ${botName} - ${side} - ${symbol} - ${candle} ) successful`
@@ -547,9 +544,6 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             console.log(`[V] Cancel order OC ( ${cur.botName} - ${cur.side} -  ${cur.symbol} - ${candleTemp} ) has been filled `);
-                            if (allStrategiesByBotIDAndStrategiesID?.[botIDTemp]?.[strategyIDTemp]?.OC?.orderID) {
-                                console.log(changeColorConsole.magentaBright(`[!] Tồn đọng OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} )`));
-                            }
                         }
                         return pre
                     }, [])
