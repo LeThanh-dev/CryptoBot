@@ -258,12 +258,12 @@ const dataCoinByBitController = {
             const resultAll = await Promise.allSettled(botListId.map(async botData => dataCoinByBitController.getFutureSpotBE(botData._id)))
 
             if (resultAll.some(item => item?.value?.future && item?.value?.spotTotal)) {
-                res.customResponse(200, "Get Total Future-Spot Successful", resultAll.reduce((pre, cur) => {
+                res.customResponse(200, "Get Total Money Successful", resultAll.reduce((pre, cur) => {
                     return pre + (+cur?.value?.future || 0) + (+cur?.value?.spotTotal || 0)
                 }, 0))
             }
             else {
-                res.customResponse(400, "Get Total Future-Spot Failed", "");
+                res.customResponse(400, "Get Total Money Failed", "");
             }
 
         }
@@ -280,12 +280,12 @@ const dataCoinByBitController = {
             const resultAll = await Promise.allSettled(botListId.map(async botID => dataCoinByBitController.getFutureSpotBE(botID)))
 
             if (resultAll.some(item => item?.value?.future && item?.value?.spotTotal)) {
-                res.customResponse(200, "Get Total Future-Spot By Bot Successful", resultAll.reduce((pre, cur) => {
+                res.customResponse(200, "Get Total Money Successful", resultAll.reduce((pre, cur) => {
                     return pre + (+cur?.value?.future || 0) + (+cur?.value?.spotTotal || 0)
                 }, 0))
             }
             else {
-                res.customResponse(400, "Get Total Future-Spot By Bot Failed", "");
+                res.customResponse(400, "Get Total Money Failed", "");
             }
 
         }

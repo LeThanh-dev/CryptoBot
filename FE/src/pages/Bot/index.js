@@ -489,7 +489,7 @@ function Bot() {
         catch (err) {
             dispatch(addMessageToast({
                 status: 500,
-                message: "Get Total Future-Spot Error",
+                message: "Get Total Money Error",
             }))
         }
         setLoadingGetMoney(false)
@@ -502,15 +502,20 @@ function Bot() {
 
             try {
                 const res = await getTotalFutureSpotByBot(botListData)
-                const { data: resData } = res.data
+                const { data: resData, status, message } = res.data
 
                 setTotalFutureSpot(resData || 0)
 
+                dispatch(addMessageToast({
+                    status,
+                    message
+                }))
             }
+
             catch (err) {
                 dispatch(addMessageToast({
                     status: 500,
-                    message: "Get Total Future-Spot Error",
+                    message: "Get Total Money Error",
                 }))
             }
         }
@@ -623,12 +628,12 @@ function Bot() {
             </div>
             <div className={styles.botTableContainer}>
                 <div className={styles.botTableContainerTitle}>
-                    <b style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Total: {!loadingGetMoney ? `${formatNumber(totalFutureSpot)} $` :  <CircularProgress style={{
-                                width: "16px",
-                                height: "16px",
-                                color: "#2e75db",
-                                marginLeft:"6px"
-                            }} color='inherit' />} </b>
+                    <b style={{ fontWeight: "bold", fontSize: "1.2rem" }}>Total: {!loadingGetMoney ? `${formatNumber(totalFutureSpot)} $` : <CircularProgress style={{
+                        width: "16px",
+                        height: "16px",
+                        color: "#2e75db",
+                        marginLeft: "6px"
+                    }} color='inherit' />} </b>
                     <div>
                         {/* {dataTableChange.length > 0 && (
                             <Button
