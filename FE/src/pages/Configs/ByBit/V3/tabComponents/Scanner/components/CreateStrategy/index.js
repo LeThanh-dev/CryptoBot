@@ -184,7 +184,8 @@ function CreateStrategy({
             const res = await createConfigScannerV3({
                 data: {
                     ...data,
-                    Frame: `${data.Frame}${data.Time}`
+                    Frame: `${data.Frame}${data.Time}`,
+                    Range: `${data.Range}${data.RangeTime}`,
                 },
                 botListId: botList.map(item => item.value),
                 Blacklist: blackListSelected.map(item => item.value),
@@ -628,7 +629,7 @@ function CreateStrategy({
                         </FormControl>
 
                     </div>
-                    
+
                     <div className={clsx(styles.formControl, styles.formMainDataItem, styles.formMainDataSmall)} >
 
                         <FormControl className={clsx(styles.formMainDataSmallItem)}>

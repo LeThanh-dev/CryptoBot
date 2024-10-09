@@ -1820,7 +1820,7 @@ const history = async ({
             const listOCLong = [];
             const listOCLongShort = [];
 
-            const listAllData = response.result.list
+            const listAllData = response?.result?.list
 
             if (listAllData?.length > 0) {
 
@@ -1955,8 +1955,6 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
     const limitNen = handleGetLimitNen(interval)
     const countLoopGet = Math.ceil(limitNen / 1000)
 
-    // console.log(interval,limitNen, countLoopGet);
-
     while (index < coinList.length) {
         const batch = coinList.slice(index, index + batchSize)
 
@@ -1971,6 +1969,7 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
                 await delay(1000);
             }
         }))
+        
         await delay(1000);
         index += batchSize
     }
@@ -1990,7 +1989,6 @@ const handleStatistic = async (coinList = Object.values(allSymbol)) => {
         });
         await delay(1000);
     }
-
 }
 
 // ---
@@ -2024,9 +2022,10 @@ const handleScannerDataList = async ({
             const CandlestickOnlyNumber = scannerData.Candle.split("m")[0]
             const botName = botApiList[botID]?.botName || botData.botName
 
-            if (scannerData.IsActive && botApiList[botID]?.IsActive) {
+            const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
+            if (scannerData.IsActive && botApiList[botID]?.IsActive && allHistory) {
 
-                const FrameMain = scannerData.Frame
+                const FrameMain = scannerData.Frame || "1D"
                 const checkTimeFrameHour = FrameMain.includes("h")
                 const Frame = checkTimeFrameHour ? FrameMain.split("h") : FrameMain.split("D")
 
@@ -2034,7 +2033,6 @@ const handleScannerDataList = async ({
 
                 const candleQty = Math.round(Frame[0] * TimeHandle / 15)
 
-                const allHistory = allHistoryByCandleSymbol[CandlestickOnlyNumber][symbol]
                 const allHistory15 = allHistoryByCandleSymbol["15"][symbol]
 
                 let allHistoryList = []
@@ -2058,7 +2056,6 @@ const handleScannerDataList = async ({
                         break
                 }
 
-                const allHistoryListLimit50 = allHistoryList.slice(0, limitNen * conditionLongShort)
 
                 // Check expire 
                 if (Expire && (new Date() - scannerData.ExpirePre) >= Expire * 60 * 60 * 1000) {
@@ -2092,6 +2089,16 @@ const handleScannerDataList = async ({
 
                 if (OCLengthCheck && Math.abs(allSymbol[symbol].volume24h || 0) >= Math.abs(scannerData.Turnover)) {
 
+                    const RangeMain = scannerData.Range || "1D"
+                    const checkTimeFrameHour = RangeMain.includes("h")
+                    const Frame = checkTimeFrameHour ? RangeMain.split("h") : RangeMain.split("D")
+
+                    const TimeHandle = checkTimeFrameHour ? 60 : 24 * 60
+
+                    const limitNenTrue = Math.round(Frame[0] * TimeHandle / Math.abs(candle))
+
+                    const allHistoryListLimit50 = allHistoryList.slice(0, limitNenTrue * conditionLongShort)
+
                     const LongestQty = Math.round(allHistoryListLimit50.length * scannerData.Longest / 100)
                     const RatioQty = Math.round(LongestQty * scannerData.Ratio / 100)
                     const Elastic = Math.abs(scannerData.Elastic)
@@ -2106,11 +2113,11 @@ const handleScannerDataList = async ({
 
                     const allHistoryListSlice = allHistoryListSort.slice(0, LongestQty).filter(allHistory => Math.abs(allHistory.TP) >= Elastic)
 
-                    const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
+                    // const allHistoryListLongestTop3 = allHistoryListSort.slice(0, 3)
 
-                    // console.log("allHistoryListSlice", allHistoryListSlice, allHistoryListSlice.length);
+                    if (allHistoryListSlice.length >= RatioQty / conditionLongShort) {
 
-                    if (allHistoryListSlice.length >= RatioQty / 2) {
+                        const allHistoryListLongestTop3 = allHistoryListSlice
 
                         const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
                             return pre + Math.abs(cur.OC)
@@ -2317,15 +2324,14 @@ const Main = async () => {
         }, digitAllCoinObject)
     );
 
-    await handleStatistic([{ value: "ARKUSDT" }])
-    console.log(allHistoryByCandleSymbol[1]["ARKUSDT"].listOC?.length);
-    console.log(allHistoryByCandleSymbol[3]["ARKUSDT"].listOC?.length);
-    console.log(allHistoryByCandleSymbol[5]["ARKUSDT"].listOC?.length);
-    console.log(allHistoryByCandleSymbol[15]["ARKUSDT"].listOC?.length);
 
-    // await handleStatistic()
+    await handleStatistic()
 
     await syncVol24()
+    
+    await handleSocketBotApiList(botApiList)
+    
+    await handleSocketListKline(listKline)
 
     allSymbolArray.forEach(item => {
         const listKlineNumber = [1, 3, 5, 15]
@@ -2333,11 +2339,6 @@ const Main = async () => {
             handleScannerDataList({ candle, symbol: item.value })
         })
     })
-
-
-    // await handleSocketBotApiList(botApiList)
-
-    // await handleSocketListKline(listKline)
 
 }
 

@@ -2095,7 +2095,7 @@ const handleScannerDataList = async ({
 
                     // console.log("allHistoryListSlice", allHistoryListSlice, allHistoryListSlice.length);
 
-                    if (allHistoryListSlice.length >= RatioQty / 2) {
+                    if (allHistoryListSlice.length >= RatioQty / conditionLongShort) {
 
                         const OCTotal = allHistoryListLongestTop3.reduce((pre, cur) => {
                             return pre + Math.abs(cur.OC)
@@ -2312,8 +2312,8 @@ const Main = async () => {
             handleScannerDataList({ candle, symbol: item.value })
         })
     })
-    
-    
+
+
     await handleSocketBotApiList(botApiList)
 
     await handleSocketListKline(listKline)
