@@ -812,14 +812,22 @@ const getMoneyFuture = async (botApiListInput) => {
 
         if (resultGetFuture.length > 0) {
             resultGetFuture.forEach(({ value: data }) => {
-                if (data?.botID) {
-                    botAmountListObject[data.botID] = +data?.totalWalletBalance || 0;
+                const botID = data?.botID
+                if (botID) {
+                    const money = +data?.totalWalletBalance
+                    botAmountListObject[data.botID] = money || 0;
+                    if (!money) {
+                        console.log(changeColorConsole.redBright("[!] Failed to get money: " + botApiList[botID]?.botName || botID));
+                    }
+                    else 
+                    {
+                        console.log(changeColorConsole.greenBright("[V] Success to get money: " + botApiList[botID]?.botName || botID));
+                    }
                 }
             })
         }
     }
 }
-
 const sendAllBotTelegram = async (text) => {
 
     await Promise.allSettled(Object.values(botApiList).map(botApiData => {

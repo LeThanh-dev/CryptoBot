@@ -811,8 +811,17 @@ const getMoneyFuture = async (botApiListInput) => {
 
         if (resultGetFuture.length > 0) {
             resultGetFuture.forEach(({ value: data }) => {
-                if (data?.botID) {
-                    botAmountListObject[data.botID] = +data?.totalWalletBalance || 0;
+                const botID = data?.botID
+                if (botID) {
+                    const money = +data?.totalWalletBalance
+                    botAmountListObject[data.botID] = money || 0;
+                    if (!money) {
+                        console.log(changeColorConsole.redBright("[!] Failed to get money: " + botApiList[botID]?.botName || botID));
+                    }
+                    else 
+                    {
+                        console.log(changeColorConsole.greenBright("[V] Success to get money: " + botApiList[botID]?.botName || botID));
+                    }
                 }
             })
         }
@@ -1969,7 +1978,7 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
                 await delay(1000);
             }
         }))
-        
+
         await delay(1000);
         index += batchSize
     }
@@ -2328,10 +2337,6 @@ const Main = async () => {
     await handleStatistic()
 
     await syncVol24()
-    
-    await handleSocketBotApiList(botApiList)
-    
-    await handleSocketListKline(listKline)
 
     allSymbolArray.forEach(item => {
         const listKlineNumber = [1, 3, 5, 15]
@@ -2339,6 +2344,10 @@ const Main = async () => {
             handleScannerDataList({ candle, symbol: item.value })
         })
     })
+    await handleSocketBotApiList(botApiList)
+
+    await handleSocketListKline(listKline)
+
 
 }
 
