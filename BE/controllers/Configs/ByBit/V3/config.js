@@ -19,7 +19,7 @@ const dataCoinByBitController = {
             syncTimeBeforePrivateRequests: true,
             recvWindow: 100000,
         })
-         
+
     },
     checkConditionStrategies: (strategiesData) => {
         return strategiesData.botID?.Status === "Running" && strategiesData.botID.ApiKey
@@ -87,6 +87,7 @@ const dataCoinByBitController = {
 
             let CoinInfo = new RestClientV5({
                 testnet: false,
+                recvWindow: 100000,
             });
 
             let data = []
@@ -928,7 +929,7 @@ const dataCoinByBitController = {
 
     transferFunds: async (amount, FromWallet, ToWallet) => {
 
-        
+
         const client = dataCoinByBitController.getRestClientV5Config({
             ApiKey: API_KEY,
             SecretKey: SECRET_KEY,

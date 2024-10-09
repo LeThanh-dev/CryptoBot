@@ -79,6 +79,7 @@ const dataCoinByBitController = {
 
             let CoinInfo = new RestClientV5({
                 testnet: false,
+                recvWindow: 100000,
             });
 
             let data = []
@@ -848,90 +849,90 @@ const dataCoinByBitController = {
     },
 
     syncSymbolSpot: async (req, res) => {
-            try {
-    
-                const listSymbolObject = await dataCoinByBitController.getSymbolFromCloud();
-    
-                if (listSymbolObject?.length) {
-    
-                    const existingDocs = await SpotModel.find();
-    
-                    const existingValues = existingDocs.reduce((pre, cur) => {
-                        const symbol = cur.value
-                        pre[symbol] = symbol
-                        return pre
-                    }, {});
-    
-                    const newSymbolList = []
-                    const newSymbolNameList = []
-    
-                    listSymbolObject.forEach((value) => {
-                        const symbol = value.symbol
-    
-                        if (!existingValues[symbol]) {
-                            newSymbolList.push({
-                                label: symbol,
-                                value: symbol,
-                                volume24h: value.volume24h,
-                                children: [],
-                            });
-                            newSymbolNameList.push(symbol);
-                        }
-                        else {
-                            delete existingValues[symbol]
-                        }
-                    })
-                    const deleteList = Object.values(existingValues)
-    
-                    const insertSymbolNew = SpotModel.insertMany(newSymbolList)
-    
-                    const bulkOperations = listSymbolObject.map(data => ({
-                        updateOne: {
-                            filter: { "label": data.symbol },
-                            update: {
-                                $set: {
-                                    "volume24h": data.volume24h,
-                                }
-                            }
-                        }
-                    }));
-    
-    
-                    const insertVol24 = SpotModel.bulkWrite(bulkOperations);
-                    const bulkOperationsDeletedRes = SpotModel.deleteMany({ value: { $in: deleteList } })
-    
-                    await Promise.allSettled([insertSymbolNew, insertVol24, bulkOperationsDeletedRes])
-    
-                    if (newSymbolList.length > 0) {
-    
-                        const newSymbolResult = await SpotModel.find({
-                            value: { $in: newSymbolNameList }
-                        })
-    
-                        dataCoinByBitController.sendDataRealtime({
-                            type: "sync-symbol",
-                            data: newSymbolResult
-                        })
-                        res.customResponse(200, "Have New Sync Successful", {
-                            new: newSymbolList,
-                            deleted: deleteList
-                        })
-    
+        try {
+
+            const listSymbolObject = await dataCoinByBitController.getSymbolFromCloud();
+
+            if (listSymbolObject?.length) {
+
+                const existingDocs = await SpotModel.find();
+
+                const existingValues = existingDocs.reduce((pre, cur) => {
+                    const symbol = cur.value
+                    pre[symbol] = symbol
+                    return pre
+                }, {});
+
+                const newSymbolList = []
+                const newSymbolNameList = []
+
+                listSymbolObject.forEach((value) => {
+                    const symbol = value.symbol
+
+                    if (!existingValues[symbol]) {
+                        newSymbolList.push({
+                            label: symbol,
+                            value: symbol,
+                            volume24h: value.volume24h,
+                            children: [],
+                        });
+                        newSymbolNameList.push(symbol);
                     }
                     else {
-                        res.customResponse(200, "Sync Successful", {
-                            list: listSymbolObject,
-                            deleted: deleteList
-                        })
+                        delete existingValues[symbol]
                     }
+                })
+                const deleteList = Object.values(existingValues)
+
+                const insertSymbolNew = SpotModel.insertMany(newSymbolList)
+
+                const bulkOperations = listSymbolObject.map(data => ({
+                    updateOne: {
+                        filter: { "label": data.symbol },
+                        update: {
+                            $set: {
+                                "volume24h": data.volume24h,
+                            }
+                        }
+                    }
+                }));
+
+
+                const insertVol24 = SpotModel.bulkWrite(bulkOperations);
+                const bulkOperationsDeletedRes = SpotModel.deleteMany({ value: { $in: deleteList } })
+
+                await Promise.allSettled([insertSymbolNew, insertVol24, bulkOperationsDeletedRes])
+
+                if (newSymbolList.length > 0) {
+
+                    const newSymbolResult = await SpotModel.find({
+                        value: { $in: newSymbolNameList }
+                    })
+
+                    dataCoinByBitController.sendDataRealtime({
+                        type: "sync-symbol",
+                        data: newSymbolResult
+                    })
+                    res.customResponse(200, "Have New Sync Successful", {
+                        new: newSymbolList,
+                        deleted: deleteList
+                    })
+
                 }
                 else {
-                    res.customResponse(400, "Sync Failed", []);
+                    res.customResponse(200, "Sync Successful", {
+                        list: listSymbolObject,
+                        deleted: deleteList
+                    })
                 }
-    
-            } catch (error) {
-                res.status(500).json({ message: error.message });
             }
+            else {
+                res.customResponse(400, "Sync Failed", []);
+            }
+
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
     },
 
     balanceWallet: async (req, res) => {

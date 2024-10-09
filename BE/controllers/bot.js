@@ -620,7 +620,7 @@ const BotController = {
                     );
                     const deleteScannerV3 = ScannerV3Model.deleteMany({ botID })
 
-                    await Promise.allSettled([ deleteAllStrategies, deleteScannerV3]);
+                    await Promise.allSettled([deleteAllStrategies, deleteScannerV3]);
 
                     (newDataSocketWithBotData?.length > 0 || scannerV3List?.length > 0) && BotController.sendDataRealtime({
                         type: "bot-delete",
@@ -842,6 +842,7 @@ const BotController = {
                 key: botData.ApiKey,
                 secret: botData.SecretKey,
                 syncTimeBeforePrivateRequests: true,
+                recv_window: 100000
             });
 
             await client.getCollateralInfo()

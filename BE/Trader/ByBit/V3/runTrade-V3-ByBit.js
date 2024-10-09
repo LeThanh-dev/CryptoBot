@@ -40,7 +40,7 @@ const limitNen = 100;
 const LIST_ORDER = ["order", "position"]
 const MAX_ORDER_LIMIT = 10
 
-const clientDigit = new RestClientV5({
+const clientPublic = new RestClientV5({
     testnet: false,
     recv_window: 100000,
 });
@@ -102,25 +102,25 @@ const getWebsocketClientConfig = ({
     ApiKey,
     SecretKey,
 }) => {
-    return {
+    return new WebsocketClient({
         testnet: false,
         key: ApiKey,
         secret: SecretKey,
         market: 'v5',
         recvWindow: 100000,
-    }
+    })
 }
 const getRestClientV5Config = ({
     ApiKey,
     SecretKey,
 }) => {
-    return {
+    return new RestClientV5({
         testnet: false,
         key: ApiKey,
         secret: SecretKey,
         syncTimeBeforePrivateRequests: true,
-        recvWindow: 100000,
-    }
+        recvWindow: 10000,
+    })
 }
 
 // ----------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ const cancelAllListOrderOC = async (listOCByCandleBotInput) => {
 
 const Digit = async () => {// proScale
     let PScale = []
-    await clientDigit.getInstrumentsInfo({
+    await clientPublic.getInstrumentsInfo({
         category: 'linear',
     })
         .then((response) => {
@@ -233,11 +233,7 @@ const handleSubmitOrder = async ({
             scannerID: strategy.scannerID
         }
 
-        const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
-
-        const client = new RestClientV5(clientConfig);
-
-
+        const client = getRestClientV5Config({ ApiKey, SecretKey });
 
         await client
             .submitOrder({
@@ -340,9 +336,7 @@ const handleSubmitOrderTP = async ({
             TP: true
         }
     }
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
-
-    const client = new RestClientV5(clientConfig);
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
     await client
         .submitOrder({
@@ -411,9 +405,8 @@ const moveOrderTP = async ({
 }) => {
     // console.log(changeColorConsole.greenBright(`Price Move TP ( ${botName} - ${side} - ${symbol} - ${candle} ):`, price));
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
-    const client = new RestClientV5(clientConfig);
     await client
         .amendOrder({
             category: 'linear',
@@ -497,9 +490,7 @@ const handleCancelOrderOC = async ({
     botID
 }) => {
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
-
-    const client = new RestClientV5(clientConfig);
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
     !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled &&
         await client
@@ -529,9 +520,7 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
     if (items.length > 0) {
         await Promise.allSettled(items.map(async item => {
 
-            const clientConfig = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey });
-
-            const client = new RestClientV5(clientConfig);
+            const client = getRestClientV5Config({ ApiKey: item.ApiKey, SecretKey: item.SecretKey });
 
             const list = Object.values(item.listOC || {})
 
@@ -558,6 +547,9 @@ const handleCancelAllOrderOC = async (items = [], batchSize = 10) => {
                         }
                         else {
                             console.log(`[V] Cancel order OC ( ${cur.botName} - ${cur.side} -  ${cur.symbol} - ${candleTemp} ) has been filled `);
+                            if (allStrategiesByBotIDAndStrategiesID?.[botIDTemp]?.[strategyIDTemp]?.OC?.orderID) {
+                                console.log(changeColorConsole.magentaBright(`[!] Tồn đọng OC ( ${data.botName} - ${data.side} -  ${data.symbol} - ${candleTemp} )`));
+                            }
                         }
                         return pre
                     }, [])
@@ -619,9 +611,7 @@ const handleCancelOrderTP = async ({
 
     const botSymbolMissID = `${botID}-${symbol}`
 
-    const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
-
-    const client = new RestClientV5(clientConfig);
+    const client = getRestClientV5Config({ ApiKey, SecretKey });
 
     orderId && await client
         .cancelOrder({
@@ -872,10 +862,7 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                 const botID = botApiData.id
                 const botName = botApiList[botID]?.botName
 
-                const wsConfigOrder = getWebsocketClientConfig({ ApiKey, SecretKey });
-
-                const wsOrder = new WebsocketClient(wsConfigOrder);
-
+                const wsOrder = getWebsocketClientConfig({ ApiKey, SecretKey });
 
                 wsOrder.subscribeV5(LIST_ORDER, 'linear').then(() => {
 
@@ -1458,6 +1445,19 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                 telegramID,
                                 telegramToken
                             })
+
+                            ["1m", "3m", "5m", "15m"].forEach(candle => {
+                                const listOCByBot = listOCByCandleBot?.[candle]?.[botID]
+                                const listObject = listOCByBot?.listOC
+                                listOCByBot && handleCancelAllOrderOC([listOCByBot])
+                
+                                listObject && Object.values(listObject).map(strategyData => {
+                                    const strategyID = strategyData.strategyID
+                                    cancelAll({ botID, strategyID })
+                                    delete listOCByCandleBot[candle][botID].listOC[strategyID]
+                                    console.log(`[V] RESET-Reconnected | ${strategyData.symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                                })
+                            });
                         }
                     });
 
@@ -1785,7 +1785,7 @@ const roundNumber = (number) => {
 
 async function TimeS0(interval) {
     let TimeStart = ""
-    await clientDigit.getKline({
+    await clientPublic.getKline({
         category: 'linear',
         symbol: "BTCUSDT",
         interval,
@@ -1813,7 +1813,7 @@ const history = async ({
     const TimeStart = OpenTime - limitNen * 60000 * interval
     const TimeSop = OpenTime - 60000 * interval
 
-    await clientDigit.getKline({
+    await clientPublic.getKline({
         category: 'linear',
         symbol,
         interval,
@@ -2620,9 +2620,7 @@ try {
                                 }
                             }
                             if (checkMoveMain && !allStrategiesByBotIDAndStrategiesID?.[botID]?.[strategyID]?.OC?.orderFilled) {
-                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
-
-                                const client = new RestClientV5(clientConfig);
+                                const client = getRestClientV5Config({ ApiKey, SecretKey });
 
                                 const newOCTemp = Math.abs((coinCurrent - coinOpen)) / coinOpen * 100
 
@@ -2728,9 +2726,8 @@ try {
                                     price: coinCurrent,
                                     tickSize: strategy.digit
                                 })
-                                const clientConfig = getRestClientV5Config({ ApiKey, SecretKey });
+                                const client = getRestClientV5Config({ ApiKey, SecretKey });
 
-                                const client = new RestClientV5(clientConfig);
                                 client
                                     .amendOrder({
                                         category: 'linear',
@@ -3444,9 +3441,7 @@ socketRealtime.on('bot-delete', async (data) => {
 
     await Promise.allSettled([cancelAllOC, cancelAllTP])
 
-    const wsConfigOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
-
-    const wsOrder = new WebsocketClient(wsConfigOrder);
+    const wsOrder = getWebsocketClientConfig({ ApiKey: ApiKeyBot, SecretKey: SecretKeyBot });
 
     await wsOrder.unsubscribeV5(LIST_ORDER, 'linear')
 

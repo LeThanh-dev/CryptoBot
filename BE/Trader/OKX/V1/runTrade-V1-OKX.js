@@ -2046,6 +2046,19 @@ const handleSocketBotApiList = async (botApiListInput = {}) => {
                                 telegramID,
                                 telegramToken
                             })
+
+                            ["1m", "3m", "5m", "15m"].forEach(candle => {
+                                const listOCByBot = listOCByCandleBot?.[candle]?.[botID]
+                                const listObject = listOCByBot?.listOC
+                                listOCByBot && handleCancelAllOrderOC([listOCByBot])
+                
+                                listObject && Object.values(listObject).map(strategyData => {
+                                    const strategyID = strategyData.strategyID
+                                    cancelAll({ botID, strategyID })
+                                    delete listOCByCandleBot[candle][botID].listOC[strategyID]
+                                    console.log(`[V] RESET-Reconnected | ${strategyData.symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                                })
+                            });
                         }
                     });
 
@@ -3362,7 +3375,27 @@ socketRealtime.on('bot-update', async (data = {}) => {
     })
     await cancelAllListOrderOC(listOrderOC)
 
-    !botApiData && await handleSocketBotApiList(newBotApiList);
+    if (!botApiData) {
+        await handleSocketBotApiList(newBotApiList)
+    }
+
+    else {
+
+        if (!botActive) {
+            ["1m", "3m", "5m", "15m"].forEach(candle => {
+                const listOCByBot = listOCByCandleBot?.[candle]?.[botIDMain]
+                const listObject = listOCByBot?.listOC
+                listOCByBot && handleCancelAllOrderOC([listOCByBot])
+
+                listObject && Object.values(listObject).map(strategyData => {
+                    const strategyID = strategyData.strategyID
+                    cancelAll({ botID: botIDMain, strategyID })
+                    delete listOCByCandleBot[candle][botIDMain].listOC[strategyID]
+                    console.log(`[V] RESET | ${strategyData.symbol.replace("USDT", "")} - ${strategyData.side} - ${strategyData.candle} - Bot: ${strategyData.botName}`);
+                })
+            });
+        }
+    }
 
 });
 

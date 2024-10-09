@@ -371,6 +371,7 @@ const PositionController = {
 
             const client = new RestClientV5({
                 testnet: false,
+                recvWindow: 100000,
             });
 
             await client.getKline({

@@ -1,4 +1,4 @@
-const { RestClientV5, WebsocketClient } = require('bybit-api');
+const { RestClientV5 } = require('bybit-api');
 const CoinModel = require('../models/coin.model');
 
 const CoinController = {
@@ -8,16 +8,10 @@ const CoinController = {
 
             let ListCoin1m = []
 
-            let wsConfig = {
-                market: 'v5',
-                recvWindow: 100000
-
-            }
-            let wsInfo = {
+            let CoinInfo = new RestClientV5({
                 testnet: false,
-            }
-            let wsSymbol = new WebsocketClient(wsConfig);
-            let CoinInfo = new RestClientV5(wsInfo);
+                recv_window: 100000
+            });
 
             let data = []
             await CoinInfo.getTickers({ category: 'linear' })

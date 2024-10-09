@@ -1,7 +1,6 @@
 require('dotenv').config({
     path: "../../../.env"
 });
-const { exec } = require('child_process');
 
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -42,17 +41,15 @@ var trichMauTimeMainSendTele = {
     pre: 0,
 }
 
-let botListTelegram = {}
-
-let wsConfig = {
+let wsSymbol = new WebsocketClient({
     market: 'v5',
     recvWindow: 100000
-}
-let wsSymbol = new WebsocketClient(wsConfig);
-let wsInfo = {
+});
+
+let CoinInfo = new RestClientV5({
     testnet: false,
-}
-let CoinInfo = new RestClientV5(wsInfo);
+    recvWindow: 100000,
+});
 
 //Funcition
 

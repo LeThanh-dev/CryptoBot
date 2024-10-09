@@ -7,6 +7,7 @@ const InstrumentsInfoController = {
         try {
             const clientDigit = new RestClientV5({
                 testnet: false,
+                recvWindow: 100000,
             });
 
 
@@ -20,7 +21,7 @@ const InstrumentsInfoController = {
                 if (symbol.split("USDT")[1] === "") {
                     list.push({
                         symbol: e.symbol,
-                        market:e.marginTrading != "none" ? "Margin" : "Spot",
+                        market: e.marginTrading != "none" ? "Margin" : "Spot",
                         minOrderQty: e.lotSizeFilter.minOrderQty,
                         basePrecision: e.lotSizeFilter.basePrecision,
                         tickSize: e.priceFilter.tickSize
@@ -50,9 +51,9 @@ const InstrumentsInfoController = {
             const bulkOperations = resData.map(data => ({
                 updateOne: {
                     filter: {
-                         "symbol": data.symbol, 
-                         "market": data.market, 
-                        },
+                        "symbol": data.symbol,
+                        "market": data.market,
+                    },
                     update: {
                         $set: {
                             "minOrderQty": data.minOrderQty,
@@ -61,7 +62,7 @@ const InstrumentsInfoController = {
                             "tickSize": data.tickSize,
                         }
                     },
-                    upsert:true
+                    upsert: true
                 }
             }));
 
