@@ -1975,7 +1975,7 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
                     interval,
                     index: i + 1
                 });
-                await delay(2000);
+                await delay(1000);
             }
         }))
 
