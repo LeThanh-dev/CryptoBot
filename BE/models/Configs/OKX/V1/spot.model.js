@@ -27,7 +27,7 @@ const childrenStrategiesSchema = new mongoose.Schema({
   value: String,
   scannerID: {
     type: mongoose.Types.ObjectId,
-    ref: 'Scanner',
+    ref: 'ScannerOKX',
   },
 });
 

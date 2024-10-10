@@ -11,6 +11,7 @@ import { addMessageToast } from '../../../../../../../../store/slices/Toast';
 import { copyMultipleStrategiesToBotScannerV3, deleteStrategiesMultipleScannerV3, updateStrategiesMultipleScannerV3 } from '../../../../../../../../services/Configs/ByBIt/V3/scannerService';
 import { NumericFormat } from 'react-number-format';
 import { getAllSymbol } from '../../../../../../../../services/Configs/ByBIt/V3/configService';
+import { useForm } from 'react-hook-form';
 
 function EditMulTreeItem({
     onClose,
@@ -19,6 +20,17 @@ function EditMulTreeItem({
 }) {
 
     const userData = useSelector(state => state.userDataSlice.userData)
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitted },
+        setValue
+    } = useForm();
+
+    const [maxFrame, setMaxFrame] = useState(undefined);
+    const [maxRangeFrame, setMaxRangeFrame] = useState(undefined);
 
     const compareFilterListDefault = [
         "=",
@@ -206,6 +218,11 @@ function EditMulTreeItem({
     const [roleNameMainVIP, setRoleNameMainVIP] = useState("");
     const [onlyPairsSelected, setOnlyPairsSelected] = useState([])
     const [blackListSelected, setBlackListSelected] = useState([])
+    const [dialogFrame, setDialogFrame] = useState(false);
+    const [dialogRange, setDialogRange] = useState(false);
+    const [dialogOnlyPairs, setDialogOnlyPairs] = useState(false);
+    const [dialogBlacklist, setDialogBlacklist] = useState(false);
+
 
     const [allSymbolList, setAllSymbolList] = useState([])
 
@@ -317,202 +334,309 @@ function EditMulTreeItem({
                 >
                 </TextField>
             case "Frame":
-                return <div style={{ display: 'flex' }}>
-
-                    <FormControl style={{ flex: 1 }}>
+                const FrameData = newFrameDataRef.current
+                return (
+                    <>
                         <TextField
-                            type='number'
-                            label="Frame"
-                            variant="outlined"
                             size="small"
-                            defaultValue={1}
-                            onChange={e => {
-                                newFrameDataRef.current = {
-                                    ...newFrameDataRef.current,
-                                    Frame: e.target.value
-                                }
+                            value={`${FrameData.Frame}${FrameData.Time}`}
+                            onClick={() => {
+                                setDialogFrame(true)
                             }}
                         >
                         </TextField>
-
-                    </FormControl>
-
-                    <FormControl style={{ flex: 1, marginLeft: "12px" }}>
-                        <TextField
-                            select
-                            label="Time"
-                            variant="outlined"
-                            size="small"
-                            defaultValue={timeList[0].value}
-                            onChange={e => {
+                        <DialogCustom
+                            open={dialogFrame}
+                            onClose={() => { setDialogFrame(false) }}
+                            dialogTitle='Set Frame'
+                            submitBtnText='Apply'
+                            maxWidth='sm'
+                            onSubmit={handleSubmit(data => {
                                 newFrameDataRef.current = {
-                                    ...newFrameDataRef.current,
-                                    Time: e.target.value
+                                    Frame: data.Frame,
+                                    Time: data.Time
                                 }
-                            }}
+                                setDialogFrame(false)
+                            })}
+                        // loading={loadingSubmit}
                         >
-                            {
-                                timeList.map(item => (
-                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
-                                ))
-                            }
-                        </TextField>
-                    </FormControl>
+                            <div style={{ display: 'flex', marginTop: "12px" }}>
 
-                </div>
+                                <FormControl style={{ flex: 1, margin: "0 6px" }}>
+                                    <TextField
+                                        type='number'
+                                        label="Frame"
+                                        variant="outlined"
+                                        size="medium"
+                                        defaultValue={FrameData.Frame}
+                                        {...register("Frame", { required: true, max: maxFrame, min: 0.25 })}
+                                    >
+                                    </TextField>
+                                    {errors.Frame?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                                    {errors.Frame?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
+                                    {errors.Frame?.type === "max" && <p className="formControlErrorLabel">Max: {maxFrame}</p>}
+
+                                </FormControl>
+
+                                <FormControl style={{ flex: 1, margin: "0 6px" }}>
+                                    <TextField
+                                        select
+                                        label="Time"
+                                        variant="outlined"
+                                        size="medium"
+                                        defaultValue={FrameData.Time}
+                                        {...register("Time", { required: true, })}
+                                        onChange={e => {
+                                            setMaxFrame(e.target.value == "h" ? undefined : 9)
+                                        }}
+                                    >
+                                        {
+                                            timeList.map(item => (
+                                                <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                            ))
+                                        }
+                                    </TextField>
+                                    {errors.Time?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                                </FormControl>
+
+                            </div>
+                        </DialogCustom>
+                    </>
+                )
             case "Range":
-                return <div style={{ display: 'flex' }}>
+                const RangeData = newRangeDataRef.current
 
-                    <FormControl style={{ flex: 1 }}>
+                return (
+                    <>
                         <TextField
-                            type='number'
-                            label="Range"
-                            variant="outlined"
                             size="small"
-                            defaultValue={1}
-                            onChange={e => {
-                                newRangeDataRef.current = {
-                                    ...newRangeDataRef.current,
-                                    Frame: e.target.value
-                                }
+                            value={`${RangeData.Frame}${RangeData.Time}`}
+                            onClick={() => {
+                                setDialogRange(true)
                             }}
                         >
                         </TextField>
+                        <DialogCustom
+                            open={dialogRange}
+                            onClose={() => { setDialogRange(false) }}
+                            dialogTitle='Set Frame'
+                            submitBtnText='Apply'
+                            maxWidth='sm'
+                            onSubmit={handleSubmit(data => {
+                                console.log(data);
 
-                    </FormControl>
-
-                    <FormControl style={{ flex: 1, marginLeft: "12px" }}>
-                        <TextField
-                            select
-                            label="Time"
-                            variant="outlined"
-                            size="small"
-                            defaultValue={timeList[0].value}
-                            onChange={e => {
                                 newRangeDataRef.current = {
-                                    ...newRangeDataRef.current,
-                                    Time: e.target.value
+                                    Frame: data.Range,
+                                    Time: data.RangeTime
                                 }
-                            }}
+                                setDialogRange(false)
+                            })}
+                        // loading={loadingSubmit}
                         >
-                            {
-                                timeList.map(item => (
-                                    <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
-                                ))
-                            }
-                        </TextField>
-                    </FormControl>
+                            <div style={{ display: 'flex', marginTop: "12px" }}>
 
-                </div>
+                                <FormControl style={{ flex: 1, margin: "0 6px" }}>
+                                    <TextField
+                                        type='number'
+                                        label="Range"
+                                        variant="outlined"
+                                        size="medium"
+                                        defaultValue={RangeData.Frame}
+                                        {...register("Range", { required: true, max: maxRangeFrame, min: 0.25 })}
+                                    >
+                                    </TextField>
+                                    {errors.Range?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                                    {errors.Range?.type === "min" && <p className="formControlErrorLabel">Min: 0.25</p>}
+                                    {errors.Range?.type === "max" && <p className="formControlErrorLabel">Max: {maxRangeFrame}</p>}
+
+                                </FormControl>
+
+                                <FormControl style={{ flex: 1, margin: "0 6px" }}>
+                                    <TextField
+                                        select
+                                        label="Time"
+                                        variant="outlined"
+                                        size="medium"
+                                        defaultValue={RangeData.Time}
+                                        {...register("RangeTime", { required: true, })}
+                                        onChange={e => {
+                                            setMaxRangeFrame(e.target.value == "h" ? undefined : 9)
+                                        }}
+                                    >
+                                        {
+                                            timeList.map(item => (
+                                                <MenuItem value={item?.value} key={item?.value}>{item?.name}</MenuItem>
+                                            ))
+                                        }
+                                    </TextField>
+                                    {errors.RangeTime?.type === 'required' && <p className="formControlErrorLabel">Required.</p>}
+                                </FormControl>
+
+                            </div>
+                        </DialogCustom>
+                    </>
+                )
             case "OnlyPairs":
 
-                handleGetAlLSymbol()
-                return <Autocomplete
-                    multiple
-                    limitTags={2}
-                    value={onlyPairsSelected}
-                    disableCloseOnSelect
-                    options={allSymbolList}
-                    size="small"
-                    getOptionLabel={(option) => option.name}
-                    onChange={(e, value) => {
-                        setOnlyPairsSelected(value)
-                    }}
-                    renderInput={(params) => (
-                        <TextField {...params} placeholder="Select..." />
-                    )}
-                    renderOption={(props, option, { selected, index }) => (
-                        <>
-                            {index === 0 && (
-                                <>
-                                    <Button
-                                        color="inherit"
-                                        style={{ width: '50%' }}
-                                        onClick={() => {
-                                            setOnlyPairsSelected(allSymbolList)
-                                        }}
-                                    >
-                                        Select All
-                                    </Button>
-                                    <Button
-                                        color="inherit"
-                                        style={{ width: '50%' }}
-                                        onClick={() => {
-                                            setOnlyPairsSelected([])
-                                        }}
-                                    >
-                                        Deselect All
-                                    </Button>
-                                </>
-                            )}
-                            <li {...props}>
-                                <Checkbox
-                                    checked={selected || onlyPairsSelected.findIndex(item => item === option.value) > -1}
-                                />
-                                {option.name.split("USDT")[0]}
-                            </li>
-                        </>
-                    )}
-                    renderTags={(value) => {
-                        return <p style={{ marginLeft: "6px" }}>{value.length} items selected</p>
-                    }}
-                >
+                return (
+                    <>
+                        <Button
+                            size="small"
+                            variant='contained'
+                            color='inherit'
+                            onClick={() => {
+                                setDialogOnlyPairs(true)
+                                handleGetAlLSymbol()
+                            }}
+                        >
+                            {onlyPairsSelected.length ? onlyPairsSelected.length : "Set"}
+                        </Button>
+                        <DialogCustom
+                            open={dialogOnlyPairs}
+                            onClose={() => {
+                                setDialogOnlyPairs(false)
+                            }}
+                            dialogTitle='Set Only Pairs'
+                            submitBtnText='Apply'
+                            maxWidth='xs'
+                            onSubmit={() => { setDialogOnlyPairs(false) }}
+                            hideCloseBtn
+                        >
+                            <Autocomplete
+                                multiple
+                                limitTags={2}
+                                value={onlyPairsSelected}
+                                disableCloseOnSelect
+                                options={allSymbolList}
+                                size="small"
+                                getOptionLabel={(option) => option.name}
+                                onChange={(e, value) => {
+                                    setOnlyPairsSelected(value)
+                                }}
+                                renderInput={(params) => (
+                                    <TextField {...params} placeholder="Select..." />
+                                )}
+                                renderOption={(props, option, { selected, index }) => (
+                                    <>
+                                        {index === 0 && (
+                                            <>
+                                                <Button
+                                                    color="inherit"
+                                                    style={{ width: '50%' }}
+                                                    onClick={() => {
+                                                        setOnlyPairsSelected(allSymbolList)
+                                                    }}
+                                                >
+                                                    Select All
+                                                </Button>
+                                                <Button
+                                                    color="inherit"
+                                                    style={{ width: '50%' }}
+                                                    onClick={() => {
+                                                        setOnlyPairsSelected([])
+                                                    }}
+                                                >
+                                                    Deselect All
+                                                </Button>
+                                            </>
+                                        )}
+                                        <li {...props}>
+                                            <Checkbox
+                                                checked={selected || onlyPairsSelected.findIndex(item => item === option.value) > -1}
+                                            />
+                                            {option.name.split("USDT")[0]}
+                                        </li>
+                                    </>
+                                )}
+                                renderTags={(value) => {
+                                    return <p style={{ marginLeft: "6px" }}>{value.length} items selected</p>
+                                }}
+                            >
 
-                </Autocomplete>
+                            </Autocomplete>
+                        </DialogCustom >
+                    </>
+                )
             case "Blacklist":
-                handleGetAlLSymbol()
-                return <Autocomplete
-                    multiple
-                    limitTags={2}
-                    value={blackListSelected}
-                    disableCloseOnSelect
-                    options={allSymbolList}
-                    size="small"
-                    getOptionLabel={(option) => option.name}
-                    onChange={(e, value) => {
-                        setBlackListSelected(value)
-                    }}
-                    renderInput={(params) => (
-                        <TextField {...params} placeholder="Select..." />
-                    )}
-                    renderOption={(props, option, { selected, index }) => (
-                        <>
-                            {index === 0 && (
-                                <>
-                                    <Button
-                                        color="inherit"
-                                        style={{ width: '50%' }}
-                                        onClick={() => {
-                                            setBlackListSelected(allSymbolList)
-                                        }}
-                                    >
-                                        Select All
-                                    </Button>
-                                    <Button
-                                        color="inherit"
-                                        style={{ width: '50%' }}
-                                        onClick={() => {
-                                            setBlackListSelected([])
-                                        }}
-                                    >
-                                        Deselect All
-                                    </Button>
-                                </>
-                            )}
-                            <li {...props}>
-                                <Checkbox
-                                    checked={selected || blackListSelected.findIndex(item => item === option.value) > -1}
-                                />
-                                {option.name.split("USDT")[0]}
-                            </li>
-                        </>
-                    )}
-                    renderTags={(value) => {
-                        return <p style={{ marginLeft: "6px" }}>{value.length} items selected</p>
-                    }}
-                >
+                return (
+                    <>
+                        <Button
+                            size="small"
+                            variant='contained'
+                            color='inherit'
+                            onClick={() => {
+                                setDialogBlacklist(true)
+                                handleGetAlLSymbol()
+                            }}
+                        >
+                            {blackListSelected.length ? blackListSelected.length : "Set"}
+                        </Button>
+                        <DialogCustom
+                            open={dialogBlacklist}
+                            onClose={() => {
+                                setDialogBlacklist(false)
+                            }}
+                            dialogTitle='Set Blacklist'
+                            submitBtnText='Apply'
+                            maxWidth='xs'
+                            onSubmit={() => { setDialogBlacklist(false) }}
+                            hideCloseBtn
+                        >
+                            <Autocomplete
+                                multiple
+                                limitTags={2}
+                                value={blackListSelected}
+                                disableCloseOnSelect
+                                options={allSymbolList}
+                                size="small"
+                                getOptionLabel={(option) => option.name}
+                                onChange={(e, value) => {
+                                    setBlackListSelected(value)
+                                }}
+                                renderInput={(params) => (
+                                    <TextField {...params} placeholder="Select..." />
+                                )}
+                                renderOption={(props, option, { selected, index }) => (
+                                    <>
+                                        {index === 0 && (
+                                            <>
+                                                <Button
+                                                    color="inherit"
+                                                    style={{ width: '50%' }}
+                                                    onClick={() => {
+                                                        setBlackListSelected(allSymbolList)
+                                                    }}
+                                                >
+                                                    Select All
+                                                </Button>
+                                                <Button
+                                                    color="inherit"
+                                                    style={{ width: '50%' }}
+                                                    onClick={() => {
+                                                        setBlackListSelected([])
+                                                    }}
+                                                >
+                                                    Deselect All
+                                                </Button>
+                                            </>
+                                        )}
+                                        <li {...props}>
+                                            <Checkbox
+                                                checked={selected || blackListSelected.findIndex(item => item === option.value) > -1}
+                                            />
+                                            {option.name.split("USDT")[0]}
+                                        </li>
+                                    </>
+                                )}
+                                renderTags={(value) => {
+                                    return <p style={{ marginLeft: "6px" }}>{value.length} items selected</p>
+                                }}
+                            >
 
-                </Autocomplete>
+                            </Autocomplete>
+                        </DialogCustom>
+                    </>
+                )
             default:
                 // return <TextField
                 //     type='number'
@@ -605,7 +729,6 @@ function EditMulTreeItem({
     const handleUpdate = async () => {
 
         let checkValueMin = true
-        let FrameCheck = false
 
         try {
             const newData = handleDataCheckTreeSelected.map((dataCheckTreeItem) => (
@@ -614,7 +737,7 @@ function EditMulTreeItem({
                     UpdatedFields: filterDataRowList.map(filterRow => {
                         const filedValue = filterRow.value
                         let valueHandle = filedValue != "Label" ? handleCompare(dataCheckTreeItem[filedValue], filterRow.data.compare, filterRow.data.value) : filterRow.data.value
-                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic", "Frame","Range", "Blacklist", "OnlyPairs"].includes(filedValue)) {
+                        if (typeof (valueHandle) === "number" && !["Expire", "Turnover", "OCLength", "Elastic", "Frame", "Range", "Blacklist", "OnlyPairs"].includes(filedValue)) {
                             valueHandle = parseFloat(valueHandle.toFixed(4))
                             if (valueHandle < 0.01) {
                                 checkValueMin = false
@@ -622,37 +745,16 @@ function EditMulTreeItem({
                         }
                         if (filedValue == 'Frame') {
                             const FrameData = newFrameDataRef.current
-
-                            const FrameValue = +FrameData.Frame
-                            const TimeValue = FrameData.Time
-
-                            if (FrameValue && ((FrameValue >= 0.25 && TimeValue == "h") || (TimeValue == "D" && FrameValue <= 9))) {
-                                return {
-                                    Frame: `${FrameData.Frame}${FrameData.Time}`
-                                }
-                            }
-                            else {
-                                checkValueMin = false
-                                FrameCheck = true
+                            return {
+                                Frame: `${FrameData.Frame}${FrameData.Time}`
                             }
 
                         }
                         else if (filedValue == 'Range') {
                             const FrameData = newRangeDataRef.current
-
-                            const FrameValue = +FrameData.Frame
-                            const TimeValue = FrameData.Time
-
-                            if (FrameValue && ((FrameValue >= 0.25 && TimeValue == "h") || (TimeValue == "D" && FrameValue <= 9))) {
-                                return {
-                                    Range: `${FrameData.Frame}${FrameData.Time}`
-                                }
+                            return {
+                                Range: `${FrameData.Frame}${FrameData.Time}`
                             }
-                            else {
-                                checkValueMin = false
-                                FrameCheck = true
-                            }
-
                         }
                         else if (filedValue === "OnlyPairs") {
                             if (!onlyPairsSelected.length) {
@@ -697,12 +799,9 @@ function EditMulTreeItem({
                 }
             }
             else {
-                !FrameCheck ? dispatch(addMessageToast({
+                dispatch(addMessageToast({
                     status: 400,
                     message: "All Field Value >= 0.01",
-                })) : dispatch(addMessageToast({
-                    status: 400,
-                    message: "0.25h <= Frame <= 9Days",
                 }))
             }
         }

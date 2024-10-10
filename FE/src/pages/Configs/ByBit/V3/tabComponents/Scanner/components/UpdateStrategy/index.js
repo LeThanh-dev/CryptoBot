@@ -59,7 +59,7 @@ function UpdateStrategy({
 
     const handleSplitTimeFrame = (data) => {
 
-        const checkHourFrameTime = data.includes("h")
+        const checkHourFrameTime = data?.includes("h")
 
         const Time = checkHourFrameTime ? "h" : "D"
 

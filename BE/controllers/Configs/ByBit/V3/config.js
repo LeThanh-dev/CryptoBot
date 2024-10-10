@@ -1254,9 +1254,12 @@ const dataCoinByBitController = {
                 }
             ]);
             const result = await StrategiesModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
-
+                path: 'children',
+                populate: [
+                    { path: 'botID' },
+                    { path: 'scannerID' }
+                ]
+            });
 
             const handleResult = result.flatMap((data) => data.children.map(child => {
                 child.symbol = data.value
@@ -1367,8 +1370,12 @@ const dataCoinByBitController = {
             ]);
 
             const resultGet = await StrategiesModel.populate(resultFilter, {
-                path: 'children.botID',
-            })
+                path: 'children',
+                populate: [
+                    { path: 'botID' },
+                    { path: 'scannerID' }
+                ]
+            });
 
             const handleResult = resultGet.flatMap((data) => data.children.map(child => {
                 child.symbol = data.value
