@@ -2208,7 +2208,7 @@ const handleScannerDataList = async ({
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
                                     listConfigIDByScanner[scannerID][symbol] = newData
 
-                                    await handleSocketAddNew(newData, true)
+                                    await handleSocketAddNew(newData, false)
                                 }
                             }
 

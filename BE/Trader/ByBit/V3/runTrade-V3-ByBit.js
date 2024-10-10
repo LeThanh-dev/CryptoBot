@@ -819,8 +819,7 @@ const getMoneyFuture = async (botApiListInput) => {
                     if (!money) {
                         console.log(changeColorConsole.redBright("[!] Get money failed: " + botApiList[botID]?.botName || botID));
                     }
-                    else 
-                    {
+                    else {
                         console.log(changeColorConsole.greenBright("[V] Get money success: " + botApiList[botID]?.botName || botID));
                     }
                 }
@@ -1519,9 +1518,10 @@ const checkConditionBot = (botData) => {
     return botData.botID?.Status === "Running" && botData.botID?.ApiKey && botData.botID?.SecretKey
 }
 
-const handleSocketAddNew = async (newData = []) => {
-    console.log("[...] Add New Strategies From Realtime", newData.length);
-
+const handleSocketAddNew = async (newData = [], showLog = true) => {
+    if (showLog) {
+        console.log("[...] Add New Strategies From Realtime", newData.length);
+    }
     const newBotApiList = {}
 
     await Promise.allSettled(newData.map(async newStrategiesData => {
@@ -2169,7 +2169,7 @@ const handleScannerDataList = async ({
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
                                     listConfigIDByScanner[scannerID][symbol] = newData
 
-                                    await handleSocketAddNew(newData)
+                                    await handleSocketAddNew(newData, false)
                                 }
                             }
 
