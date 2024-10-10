@@ -2204,11 +2204,11 @@ const handleScannerDataList = async ({
                                 const newData = res.data
 
                                 if (newData.length > 0) {
-                                    // console.log(changeColorConsole.cyanBright("\n", res.message));
+                                    console.log(changeColorConsole.cyanBright("\n", res.message));
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
                                     listConfigIDByScanner[scannerID][symbol] = newData
 
-                                    await handleSocketAddNew(newData, false)
+                                    await handleSocketAddNew(newData, true)
                                 }
                             }
 
