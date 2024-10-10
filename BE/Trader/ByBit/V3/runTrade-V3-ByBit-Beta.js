@@ -818,9 +818,9 @@ const getMoneyFuture = async (botApiListInput) => {
                     if (!money) {
                         console.log(changeColorConsole.redBright("[!] Get money failed for bot: " + botApiList[botID]?.botName || botID));
                     }
-                    else {
-                        console.log(changeColorConsole.greenBright("[V] Get money success for bot: " + botApiList[botID]?.botName || botID));
-                    }
+                    // else {
+                    //     console.log(changeColorConsole.greenBright("[V] Get money success for bot: " + botApiList[botID]?.botName || botID));
+                    // }
                 }
             })
         }
