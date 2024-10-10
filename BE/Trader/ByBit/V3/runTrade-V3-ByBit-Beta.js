@@ -1516,9 +1516,10 @@ const checkConditionBot = (botData) => {
     return botData.botID?.Status === "Running" && botData.botID?.ApiKey && botData.botID?.SecretKey
 }
 
-const handleSocketAddNew = async (newData = []) => {
-    console.log("[...] Add New Strategies From Realtime", newData.length);
-
+const handleSocketAddNew = async (newData = [], showLog = true) => {
+    if (showLog) {
+        console.log("[...] Add New Strategies From Realtime", newData.length);
+    }
     const newBotApiList = {}
 
     await Promise.allSettled(newData.map(async newStrategiesData => {
@@ -1574,7 +1575,7 @@ const handleSocketAddNew = async (newData = []) => {
 
     }))
 
-    await handleSocketBotApiList(newBotApiList)
+    await handleSocketBotApiList(newBotApiList,showLog)
 }
 const handleSocketUpdate = async (newData = [], showLog = true) => {
 
@@ -1993,11 +1994,11 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
                 await delay(1000);
             }
         }))
-        
+
         await delay(1000);
         index += batchSize
     }
-    
+
     console.timeEnd(`Timer ${interval}`);
     console.log(`[V] Process history candle ( ${interval}m ) finished`);
 
@@ -2201,11 +2202,11 @@ const handleScannerDataList = async ({
                                 const newData = res.data
 
                                 if (newData.length > 0) {
-                                    console.log(changeColorConsole.cyanBright("\n", res.message));
+                                    // console.log(changeColorConsole.cyanBright("\n", res.message));
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
                                     listConfigIDByScanner[scannerID][symbol] = newData
 
-                                    await handleSocketAddNew(newData)
+                                    await handleSocketAddNew(newData, false)
                                 }
                             }
 
