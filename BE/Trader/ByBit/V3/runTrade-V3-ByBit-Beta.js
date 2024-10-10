@@ -936,6 +936,8 @@ const handleSocketBotApiList = async (botApiListInput = {}, showLog = true) => {
                                         const OrderChangeFilled = strategyData.OrderChangeFilled
                                         // const coinOpenOC = allStrategiesByBotIDAndStrategiesID[botID][strategyID].OC.coinOpen || strategy.coinOpen
 
+                                        const scannerIDData = strategy?.scannerID
+
                                         if (orderStatus === "Filled") {
 
                                             if (OCTrue) {
