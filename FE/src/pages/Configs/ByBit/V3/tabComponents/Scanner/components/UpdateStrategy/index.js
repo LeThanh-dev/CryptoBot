@@ -201,12 +201,13 @@ function UpdateStrategy({
         if (FrameDataInput?.Time == "D") {
             setMaxFrame(9)
         }
-    }, [FrameDataInput]);
+    }, []);
+    
     useEffect(() => {
         if (RangeDataInput?.Time == "D") {
             setMaxRangeFrame(9)
         }
-    }, [RangeDataInput]);
+    }, []);
 
     return (
         <DialogCustom
