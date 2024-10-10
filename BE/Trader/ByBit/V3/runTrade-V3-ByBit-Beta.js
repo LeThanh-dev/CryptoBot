@@ -1807,7 +1807,7 @@ const handleGetLimitNen = (candle) => {
     let day = 1
     switch (candle) {
         case 1:
-            day = 1
+            day = 2
             break
         case 3:
             day = 2
