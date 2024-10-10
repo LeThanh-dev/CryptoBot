@@ -1803,7 +1803,22 @@ const sortListReverse = (arr) => {
     return [...arr].sort((a, b) => Math.abs(b.OC) - Math.abs(a.OC))
 }
 const handleGetLimitNen = (candle) => {
-    return 9 * 24 * 60 / Math.abs(candle)
+    let day = 1
+    switch (candle) {
+        case 1:
+            day = 1
+            break
+        case 3:
+            day = 2
+            break
+        case 5:
+            day = 3
+            break
+        case 15:
+            day = 5
+            break
+    }
+    return day * 24 * 60 / Math.abs(candle)
 }
 const history = async ({
     symbol,
@@ -1959,7 +1974,7 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
     console.time(`Timer ${interval}`);
 
     let index = 0
-    const batchSize = 5
+    const batchSize = 50
 
     const limitNen = handleGetLimitNen(interval)
     const countLoopGet = Math.ceil(limitNen / 1000)
@@ -1978,13 +1993,13 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
                 await delay(1000);
             }
         }))
-
+        
         await delay(1000);
         index += batchSize
     }
-
-    console.log(`[V] Process history candle ( ${interval}m ) finished`);
+    
     console.timeEnd(`Timer ${interval}`);
+    console.log(`[V] Process history candle ( ${interval}m ) finished`);
 
 }
 
