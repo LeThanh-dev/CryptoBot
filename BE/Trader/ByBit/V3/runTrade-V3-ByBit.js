@@ -819,9 +819,9 @@ const getMoneyFuture = async (botApiListInput) => {
                     if (!money) {
                         console.log(changeColorConsole.redBright("[!] Get money failed: " + botApiList[botID]?.botName || botID));
                     }
-                    else {
-                        console.log(changeColorConsole.greenBright("[V] Get money success: " + botApiList[botID]?.botName || botID));
-                    }
+                    // else {
+                    //     console.log(changeColorConsole.greenBright("[V] Get money success: " + botApiList[botID]?.botName || botID));
+                    // }
                 }
             })
         }
@@ -1578,7 +1578,7 @@ const handleSocketAddNew = async (newData = [], showLog = true) => {
 
     }))
 
-    await handleSocketBotApiList(newBotApiList)
+    await handleSocketBotApiList(newBotApiList,showLog)
 }
 const handleSocketUpdate = async (newData = [], showLog = true) => {
 
@@ -2166,7 +2166,7 @@ const handleScannerDataList = async ({
                                 const newData = res.data
 
                                 if (newData.length > 0) {
-                                    // console.log(changeColorConsole.cyanBright("\n", res.message));
+                                    console.log(changeColorConsole.cyanBright("\n", res.message));
                                     listConfigIDByScanner[scannerID] = listConfigIDByScanner[scannerID] || {}
                                     listConfigIDByScanner[scannerID][symbol] = newData
 
@@ -3014,7 +3014,7 @@ try {
     });
 
     setTimeout(() => {
-        cron.schedule('*/15 * * * *', () => {
+        cron.schedule('*/1 * * * *', () => {
             getMoneyFuture(botApiList)
         });
     }, 1000)

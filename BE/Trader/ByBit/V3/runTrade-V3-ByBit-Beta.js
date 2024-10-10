@@ -2151,11 +2151,17 @@ const handleScannerDataList = async ({
                             return pre + Math.abs(cur.OC)
                         }, 0)
 
-                        const OCAvg = Math.abs((OCTotal / allHistoryListLongestTop3.length).toFixed(3))
+                        let OCAvg = Math.abs((OCTotal / allHistoryListLongestTop3.length).toFixed(3))
 
                         // console.log("OCAvg", OCAvg, symbol, candle,PositionSide);
 
                         if (OCAvg >= Math.abs(scannerData.OrderChange)) {
+
+                            const nearestCoin = Math.abs(allHistoryListLimit50[0].OC)
+                            if (nearestCoin > OCAvg) {
+                                console.log(changeColorConsole.cyanBright("[V] Coin New > OCAvg", nearestCoin));
+                                OCAvg = Math.abs(((nearestCoin + OCAvg) / 2).toFixed(3))
+                            }
 
                             const newOC = Math.abs((OCAvg * Adjust).toFixed(3))
                             const OCAdjust = `${OCAvg} x ${Adjust}`
