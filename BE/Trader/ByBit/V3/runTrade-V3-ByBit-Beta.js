@@ -816,10 +816,10 @@ const getMoneyFuture = async (botApiListInput) => {
                     const money = +data?.totalWalletBalance
                     botAmountListObject[data.botID] = money || 0;
                     if (!money) {
-                        console.log(changeColorConsole.redBright("[!] Get money failed: " + botApiList[botID]?.botName || botID));
+                        console.log(changeColorConsole.redBright("[!] Get money failed for bot: " + botApiList[botID]?.botName || botID));
                     }
                     else {
-                        console.log(changeColorConsole.greenBright("[V] Get money success: " + botApiList[botID]?.botName || botID));
+                        console.log(changeColorConsole.greenBright("[V] Get money success for bot: " + botApiList[botID]?.botName || botID));
                     }
                 }
             })
@@ -1959,7 +1959,7 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
     console.time(`Timer ${interval}`);
 
     let index = 0
-    const batchSize = 200
+    const batchSize = 100
 
     const limitNen = handleGetLimitNen(interval)
     const countLoopGet = Math.ceil(limitNen / 1000)
@@ -1975,11 +1975,11 @@ async function getHistoryAllCoin({ coinList, interval, OpenTime }) {
                     interval,
                     index: i + 1
                 });
-                await delay(3000);
+                await delay(2000);
             }
         }))
 
-        await delay(3000);
+        await delay(1000);
         index += batchSize
     }
 

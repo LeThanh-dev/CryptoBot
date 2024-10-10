@@ -59,7 +59,7 @@ function UpdateStrategy({
 
     const handleSplitTimeFrame = (data) => {
 
-        const checkHourFrameTime = data?.includes("h")
+        const checkHourFrameTime = data.includes("h")
 
         const Time = checkHourFrameTime ? "h" : "D"
 
@@ -73,8 +73,8 @@ function UpdateStrategy({
         }
     }
 
-    const FrameDataInput = handleSplitTimeFrame(dataInput.Frame)
-    const RangeDataInput = handleSplitTimeFrame(dataInput.Range)
+    const FrameDataInput = handleSplitTimeFrame(dataInput.Frame || "1D")
+    const RangeDataInput = handleSplitTimeFrame(dataInput.Range || "1D")
 
     const handleGetStrategyDataList = async (syncNew = true) => {
         try {
